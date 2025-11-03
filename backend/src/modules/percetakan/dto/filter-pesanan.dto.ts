@@ -93,7 +93,7 @@ export class FilterPesananDtoClass implements FilterPesananDto {
     default: 1,
     required: false,
   })
-  halaman: number;
+  halaman!: number;
 
   @ApiProperty({
     description: 'Jumlah data per halaman',
@@ -103,7 +103,7 @@ export class FilterPesananDtoClass implements FilterPesananDto {
     default: 20,
     required: false,
   })
-  limit: number;
+  limit!: number;
 
   @ApiProperty({
     description: 'Filter berdasarkan status pesanan',
@@ -183,7 +183,7 @@ export class FilterPesananDtoClass implements FilterPesananDto {
     default: 'tanggalPesan',
     required: false,
   })
-  urutkan: 'tanggalPesan' | 'hargaTotal' | 'jumlah' | 'status';
+  urutkan!: 'tanggalPesan' | 'hargaTotal' | 'jumlah' | 'status';
 
   @ApiProperty({
     description: 'Arah sorting',
@@ -192,5 +192,5 @@ export class FilterPesananDtoClass implements FilterPesananDto {
     default: 'desc',
     required: false,
   })
-  arah: 'asc' | 'desc';
+  arah!: 'asc' | 'desc';
 }
