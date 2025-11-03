@@ -32,12 +32,12 @@ export class LoginDtoClass {
     example: 'penulis@publishify.com',
     type: String,
   })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'Kata sandi pengguna',
     example: 'Password123!',
     type: String,
   })
-  kataSandi: string;
+  kataSandi!: string;
 }
