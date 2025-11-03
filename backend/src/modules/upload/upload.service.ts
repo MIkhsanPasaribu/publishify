@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   BadRequestException,
@@ -154,7 +155,8 @@ export class UploadService {
         await fs.unlink(filePath);
       } catch {}
 
-      throw new InternalServerErrorException('Gagal mengupload file: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new InternalServerErrorException('Gagal mengupload file: ' + errorMessage);
     }
   }
 
@@ -174,9 +176,10 @@ export class UploadService {
         const result = await this.uploadFile(file, dto, idPengguna);
         berhasil.push(result);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         gagal.push({
           namaFile: file.originalname,
-          error: error.message,
+          error: errorMessage,
         });
       }
     }
@@ -479,7 +482,8 @@ export class UploadService {
         diuploadPada: newFile.diuploadPada,
       };
     } catch (error) {
-      throw new InternalServerErrorException('Gagal memproses gambar: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new InternalServerErrorException('Gagal memproses gambar: ' + errorMessage);
     }
   }
 
