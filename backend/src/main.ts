@@ -20,8 +20,14 @@ async function bootstrap() {
   // Compression
   app.use(compression());
 
-  // Global prefix
-  app.setGlobalPrefix('api');
+  // Global prefix untuk semua API routes kecuali root & health
+  app.setGlobalPrefix('api', {
+    exclude: [
+      '/', // Root route
+      'health', // Health check
+      'favicon.ico', // Browser favicon request
+    ],
+  });
 
   // Validation
   app.useGlobalPipes(
