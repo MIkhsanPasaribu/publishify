@@ -34,7 +34,7 @@ export class SubmitReviewDtoClass {
     enum: Rekomendasi,
     example: 'setujui',
   })
-  rekomendasi: Rekomendasi;
+  rekomendasi!: Rekomendasi;
 
   @ApiProperty({
     description: 'Catatan kesimpulan review',
@@ -44,5 +44,5 @@ export class SubmitReviewDtoClass {
     maxLength: 2000,
     type: String,
   })
-  catatan: string;
+  catatan!: string;
 }
