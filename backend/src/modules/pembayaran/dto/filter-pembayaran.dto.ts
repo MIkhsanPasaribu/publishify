@@ -86,7 +86,7 @@ export class FilterPembayaranDtoClass implements FilterPembayaranDto {
     default: 1,
     required: false,
   })
-  halaman: number;
+  halaman!: number;
 
   @ApiProperty({
     description: 'Jumlah data per halaman',
@@ -96,7 +96,7 @@ export class FilterPembayaranDtoClass implements FilterPembayaranDto {
     default: 20,
     required: false,
   })
-  limit: number;
+  limit!: number;
 
   @ApiProperty({
     description: 'Filter berdasarkan status pembayaran',
@@ -160,7 +160,7 @@ export class FilterPembayaranDtoClass implements FilterPembayaranDto {
     default: 'dibuatPada',
     required: false,
   })
-  urutkan: 'dibuatPada' | 'tanggalPembayaran' | 'jumlah' | 'status';
+  urutkan!: 'dibuatPada' | 'tanggalPembayaran' | 'jumlah' | 'status';
 
   @ApiProperty({
     description: 'Arah sorting',
@@ -169,5 +169,5 @@ export class FilterPembayaranDtoClass implements FilterPembayaranDto {
     default: 'desc',
     required: false,
   })
-  arah: 'asc' | 'desc';
+  arah!: 'asc' | 'desc';
 }
