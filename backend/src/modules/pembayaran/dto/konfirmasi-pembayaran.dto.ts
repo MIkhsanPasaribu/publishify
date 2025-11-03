@@ -25,7 +25,7 @@ export class KonfirmasiPembayaranDtoClass implements KonfirmasiPembayaranDto {
     description: 'Apakah pembayaran diterima atau ditolak',
     example: true,
   })
-  diterima: boolean;
+  diterima!: boolean;
 
   @ApiProperty({
     description: 'Catatan konfirmasi (wajib jika ditolak)',
