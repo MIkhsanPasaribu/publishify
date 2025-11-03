@@ -24,9 +24,9 @@ export type LupaPasswordDto = z.infer<typeof LupaPasswordSchema>;
  */
 export class LupaPasswordDtoClass {
   @ApiProperty({
-    description: 'Alamat email pengguna yang lupa password',
+    description: 'Alamat email untuk reset password',
     example: 'penulis@publishify.com',
     type: String,
   })
-  email: string;
+  email!: string;
 }
