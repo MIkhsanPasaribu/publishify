@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -28,8 +28,10 @@ import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter'
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
+
+// Middlewares
+import { PrismaRlsMiddleware } from './common/middlewares/prisma-rls.middleware';
 
 @Module({
   imports: [
@@ -97,6 +99,29 @@ import { ThrottlerGuard } from '@nestjs/throttler';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+
+    // Middleware providers
+    PrismaRlsMiddleware,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /**
+   * Configure middleware untuk RLS
+   * Middleware akan diterapkan ke semua routes kecuali yang di-exclude
+   */
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(PrismaRlsMiddleware)
+      .exclude(
+        // Exclude public routes yang tidak memerlukan RLS
+        '/auth/login',
+        '/auth/register',
+        '/auth/verify-email/(.*)',
+        '/auth/forgot-password',
+        '/auth/reset-password/(.*)',
+        '/health',
+        '/api/docs(.*)', // Swagger docs
+      )
+      .forRoutes('*'); // Apply ke semua routes lainnya
+  }
+}
