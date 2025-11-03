@@ -34,7 +34,7 @@ export class UpdateStatusDtoClass implements UpdateStatusDto {
     enum: ['diterima', 'dalam_produksi', 'kontrol_kualitas', 'siap', 'dikirim', 'terkirim'],
     example: 'dalam_produksi',
   })
-  status: 'diterima' | 'dalam_produksi' | 'kontrol_kualitas' | 'siap' | 'dikirim' | 'terkirim';
+  status!: 'diterima' | 'dalam_produksi' | 'kontrol_kualitas' | 'siap' | 'dikirim' | 'terkirim';
 
   @ApiProperty({
     description: 'Catatan tambahan untuk update status',
