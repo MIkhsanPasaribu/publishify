@@ -37,7 +37,7 @@ export class KonfirmasiPesananDtoClass implements KonfirmasiPesananDto {
     description: 'Apakah pesanan diterima atau ditolak',
     example: true,
   })
-  diterima: boolean;
+  diterima!: boolean;
 
   @ApiProperty({
     description: 'Harga total yang dikonfirmasi oleh percetakan',
