@@ -8,25 +8,25 @@ export class UploadResponseDto {
     description: 'ID file yang diupload',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Nama file asli',
     example: 'naskah-buku-saya.pdf',
   })
-  namaFileAsli: string;
+  namaFileAsli!: string;
 
   @ApiProperty({
     description: 'Nama file yang disimpan di server',
     example: '2024-01-15_naskah-buku-saya_abc123.pdf',
   })
-  namaFileSimpan: string;
+  namaFileSimpan!: string;
 
   @ApiProperty({
     description: 'URL untuk mengakses file',
     example: '/uploads/naskah/2024-01-15_naskah-buku-saya_abc123.pdf',
   })
-  url: string;
+  url!: string;
 
   @ApiProperty({
     description: 'URL publik jika file bisa diakses publik',
@@ -39,37 +39,37 @@ export class UploadResponseDto {
     description: 'Ukuran file dalam bytes',
     example: 1048576,
   })
-  ukuran: number;
+  ukuran!: number;
 
   @ApiProperty({
     description: 'MIME type file',
     example: 'application/pdf',
   })
-  mimeType: string;
+  mimeType!: string;
 
   @ApiProperty({
     description: 'Ekstensi file',
     example: '.pdf',
   })
-  ekstensi: string;
+  ekstensi!: string;
 
   @ApiProperty({
     description: 'Tujuan upload (naskah/sampul/gambar/dokumen)',
     example: 'naskah',
   })
-  tujuan: string;
+  tujuan!: string;
 
   @ApiProperty({
     description: 'Path lengkap file di server',
     example: '/uploads/naskah/2024-01-15_naskah-buku-saya_abc123.pdf',
   })
-  path: string;
+  path!: string;
 
   @ApiProperty({
     description: 'Timestamp upload',
     example: '2024-01-15T10:30:00.000Z',
   })
-  diuploadPada: Date;
+  diuploadPada!: Date;
 }
 
 /**
@@ -80,7 +80,7 @@ export class UploadMultipleResponseDto {
     description: 'Daftar file yang berhasil diupload',
     type: [UploadResponseDto],
   })
-  berhasil: UploadResponseDto[];
+  berhasil!: UploadResponseDto[];
 
   @ApiProperty({
     description: 'Daftar file yang gagal diupload',
@@ -92,7 +92,7 @@ export class UploadMultipleResponseDto {
       },
     ],
   })
-  gagal: Array<{
+  gagal!: Array<{
     namaFile: string;
     error: string;
   }>;
@@ -101,11 +101,11 @@ export class UploadMultipleResponseDto {
     description: 'Total file yang berhasil diupload',
     example: 3,
   })
-  totalBerhasil: number;
+  totalBerhasil!: number;
 
   @ApiProperty({
     description: 'Total file yang gagal diupload',
     example: 1,
   })
-  totalGagal: number;
+  totalGagal!: number;
 }
