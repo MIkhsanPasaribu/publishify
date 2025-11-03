@@ -24,5 +24,5 @@ export class VerifikasiEmailDtoClass {
     example: 'abc123def456...',
     type: String,
   })
-  token: string;
+  token!: string;
 }
