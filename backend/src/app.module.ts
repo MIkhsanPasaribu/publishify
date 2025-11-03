@@ -33,6 +33,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 // Middlewares
 import { PrismaRlsMiddleware } from './common/middlewares/prisma-rls.middleware';
 
+// Controllers
+import { AppController } from './app.controller';
+
 @Module({
   imports: [
     // Konfigurasi global
@@ -69,6 +72,7 @@ import { PrismaRlsMiddleware } from './common/middlewares/prisma-rls.middleware'
     PembayaranModule,
     NotifikasiModule,
   ],
+  controllers: [AppController],
   providers: [
     // Global Exception Filters
     {
