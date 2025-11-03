@@ -78,7 +78,7 @@ export class BuatNaskahDtoClass {
     maxLength: 200,
     type: String,
   })
-  judul: string;
+  judul!: string;
 
   @ApiProperty({
     description: 'Sub judul naskah',
@@ -96,21 +96,21 @@ export class BuatNaskahDtoClass {
     maxLength: 2000,
     type: String,
   })
-  sinopsis: string;
+  sinopsis!: string;
 
   @ApiProperty({
     description: 'ID kategori naskah',
     example: '550e8400-e29b-41d4-a716-446655440000',
     type: String,
   })
-  idKategori: string;
+  idKategori!: string;
 
   @ApiProperty({
     description: 'ID genre naskah',
     example: '550e8400-e29b-41d4-a716-446655440001',
     type: String,
   })
-  idGenre: string;
+  idGenre!: string;
 
   @ApiProperty({
     description: 'Bahasa tulisan (kode ISO 639-1)',
