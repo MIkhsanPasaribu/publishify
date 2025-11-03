@@ -39,7 +39,7 @@ export class WebhookPembayaranDtoClass implements WebhookPembayaranDto {
     description: 'Nomor transaksi dari sistem',
     example: 'TRX-20240129-1234',
   })
-  nomorTransaksi: string;
+  nomorTransaksi!: string;
 
   @ApiProperty({
     description: 'ID transaksi dari payment gateway',
@@ -53,7 +53,7 @@ export class WebhookPembayaranDtoClass implements WebhookPembayaranDto {
     enum: ['pending', 'success', 'failed', 'cancelled', 'refunded'],
     example: 'success',
   })
-  status: 'pending' | 'success' | 'failed' | 'cancelled' | 'refunded';
+  status!: 'pending' | 'success' | 'failed' | 'cancelled' | 'refunded';
 
   @ApiProperty({
     description: 'Jumlah pembayaran',
