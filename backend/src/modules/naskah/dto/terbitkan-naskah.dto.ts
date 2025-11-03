@@ -38,7 +38,7 @@ export class TerbitkanNaskahDtoClass {
     example: '978-3-16-148410-0',
     type: String,
   })
-  isbn: string;
+  isbn!: string;
 
   @ApiProperty({
     description: 'Tanggal penerbitan (ISO 8601 format)',
