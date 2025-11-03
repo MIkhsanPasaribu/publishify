@@ -1,6 +1,15 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Interface untuk user context yang akan di-inject ke RLS
+ */
+export interface UserContext {
+  userId: string;
+  email: string;
+  role?: string;
+}
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
@@ -42,10 +51,77 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   /**
+   * Set user context untuk RLS (Row Level Security) di Supabase
+   * Method ini akan dipanggil dari middleware untuk setiap request
+   *
+   * @param context - User context (userId, email, role)
+   * @returns PrismaClient instance dengan context yang sudah di-set
+   */
+  async setUserContext(context: UserContext): Promise<PrismaClient> {
+    try {
+      // Set JWT claims ke PostgreSQL session untuk RLS
+      // Format: {"sub": "uuid", "email": "email@example.com", "role": "penulis"}
+      const claims = {
+        sub: context.userId,
+        email: context.email,
+        role: context.role || 'authenticated',
+      };
+
+      // Execute SQL untuk set JWT claims di session
+      await this.$executeRawUnsafe(
+        `SELECT set_config('request.jwt.claims', $1, true)`,
+        JSON.stringify(claims),
+      );
+
+      this.logger.debug(`🔐 User context di-set untuk: ${context.email} (${context.userId})`);
+
+      return this;
+    } catch (error: any) {
+      this.logger.error(`❌ Gagal set user context: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Clear user context setelah request selesai
+   * Penting untuk membersihkan context agar tidak bocor ke request lain
+   */
+  async clearUserContext(): Promise<void> {
+    try {
+      await this.$executeRawUnsafe(`SELECT set_config('request.jwt.claims', NULL, true)`);
+      this.logger.debug('🔓 User context dibersihkan');
+    } catch (error: any) {
+      this.logger.error(`❌ Gagal clear user context: ${error.message}`);
+    }
+  }
+
+  /**
+   * Wrapper untuk query dengan auto set/clear context
+   * Digunakan untuk memastikan context selalu di-set dan dibersihkan
+   *
+   * @param context - User context
+   * @param fn - Function yang akan dijalankan dengan context
+   */
+  async withUserContext<T>(
+    context: UserContext,
+    fn: (prisma: PrismaClient) => Promise<T>,
+  ): Promise<T> {
+    try {
+      await this.setUserContext(context);
+      const result = await fn(this);
+      return result;
+    } finally {
+      await this.clearUserContext();
+    }
+  }
+
+  /**
    * Helper untuk menangani transaksi dengan retry logic
    */
   async runTransaction<T>(
-    fn: (prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => Promise<T>,
+    fn: (
+      prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>,
+    ) => Promise<T>,
     maxRetries = 3,
   ): Promise<T> {
     let lastError: any;
