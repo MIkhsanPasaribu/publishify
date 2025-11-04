@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { uploadApi } from "@/lib/api/upload";
+import { naskahApi, type Kategori, type Genre } from "@/lib/api/naskah";
 
 type ModeInput = "tulis" | "upload";
 
 export default function AjukanDrafPage() {
   const [modeInput, setModeInput] = useState<ModeInput>("tulis");
+  const router = useRouter();
   const [formData, setFormData] = useState({
     judul: "",
     subJudul: "",
@@ -20,26 +25,31 @@ export default function AjukanDrafPage() {
   const [fileSampul, setFileSampul] = useState<File | null>(null);
   const [fileNaskah, setFileNaskah] = useState<File | null>(null);
   const [previewSampul, setPreviewSampul] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [progressSampul, setProgressSampul] = useState(0);
+  const [progressNaskah, setProgressNaskah] = useState(0);
 
-  // Dummy data - nanti akan diambil dari API
-  const kategoriList = [
+  // Dummy data default - akan dicoba diganti dari API
+  const [kategoriList, setKategoriList] = useState<Array<Pick<Kategori, "id" | "nama">>>([
     { id: "1", nama: "Fiksi" },
-    { id: "2", nama: "Non-Fiksi" },
+    { id: "03c0aa00-6d3d-4c7c-9694-9dfcd3c3b42f", nama: "Non-Fiksi" },
     { id: "3", nama: "Pendidikan" },
     { id: "4", nama: "Biografi" },
     { id: "5", nama: "Teknologi" },
-  ];
+  ]);
 
-  const genreList = [
+  const [genreList, setGenreList] = useState<Array<Pick<Genre, "id" | "nama">>>([
     { id: "1", nama: "Romance" },
     { id: "2", nama: "Fantasy" },
     { id: "3", nama: "Mystery" },
-    { id: "4", nama: "Horror" },
+    { id: "2c99601a-9221-406c-a913-5714d7a4e5ca", nama: "Horror" },
     { id: "5", nama: "Sci-Fi" },
     { id: "6", nama: "Thriller" },
     { id: "7", nama: "Self-Help" },
     { id: "8", nama: "History" },
-  ];
+  ]);
+  const [statusKategori, setStatusKategori] = useState<"idle" | "loading" | "sukses" | "gagal">("idle");
+  const [statusGenre, setStatusGenre] = useState<"idle" | "loading" | "sukses" | "gagal">("idle");
 
   const bahasaList = [
     { kode: "id", nama: "Bahasa Indonesia" },
@@ -72,36 +82,164 @@ export default function AjukanDrafPage() {
     if (file && file.type === "application/pdf") {
       setFileNaskah(file);
     } else {
-      alert("Hanya file PDF yang diperbolehkan");
+      toast.error("Hanya file PDF yang diperbolehkan");
     }
   };
 
+  const fetchMeta = useCallback(async () => {
+    setStatusKategori("loading");
+    setStatusGenre("loading");
+    try {
+      const [katRes, genRes] = await Promise.all([
+        naskahApi.ambilKategori().catch(() => null),
+        naskahApi.ambilGenre().catch(() => null),
+      ]);
+      if (katRes?.data?.length) {
+        setKategoriList(katRes.data.map((k) => ({ id: k.id, nama: k.nama })));
+        setStatusKategori("sukses");
+      } else {
+        setStatusKategori("gagal");
+      }
+      if (genRes?.data?.length) {
+        setGenreList(genRes.data.map((g) => ({ id: g.id, nama: g.nama })));
+        setStatusGenre("sukses");
+      } else {
+        setStatusGenre("gagal");
+      }
+    } catch {
+      setStatusKategori("gagal");
+      setStatusGenre("gagal");
+    }
+  }, []);
+
+  useEffect(() => {
+    // coba muat meta saat awal
+    fetchMeta();
+  }, [fetchMeta]);
+
+  const minimalKataSinopsisTerpenuhi = useMemo(() => {
+    const kata = formData.sinopsis.trim().split(/\s+/).filter(Boolean).length;
+    return kata >= 50;
+  }, [formData.sinopsis]);
+
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (loading) return;
+
     // Validasi
     if (!formData.judul || !formData.sinopsis || !formData.idKategori || !formData.idGenre) {
-      alert("Mohon lengkapi field yang wajib diisi");
+      toast.error("Mohon lengkapi field yang wajib diisi");
+      return;
+    }
+
+    if (!minimalKataSinopsisTerpenuhi) {
+      toast.error("Sinopsis minimal 50 kata");
       return;
     }
 
     if (modeInput === "upload" && !fileNaskah) {
-      alert("Mohon upload file naskah PDF");
+      toast.error("Mohon upload file naskah PDF");
       return;
     }
 
     if (modeInput === "tulis" && !formData.kontenTeks) {
-      alert("Mohon tulis konten naskah");
+      toast.error("Mohon tulis konten naskah");
       return;
     }
 
-    // TODO: Implementasi submit ke API
-    console.log("Form Data:", formData);
-    console.log("Mode Input:", modeInput);
-    console.log("File Sampul:", fileSampul);
-    console.log("File Naskah:", fileNaskah);
-    
-    alert("Draf berhasil diajukan! (Demo)");
+    setLoading(true);
+    setProgressSampul(0);
+    setProgressNaskah(0);
+
+    try {
+      let urlSampul: string | undefined;
+      let urlFile: string | undefined;
+
+      // Upload sampul jika ada
+      if (fileSampul) {
+        const res = await uploadApi.uploadFile(
+          fileSampul,
+          "sampul",
+          "Sampul naskah",
+          undefined,
+          (p) => setProgressSampul(p)
+        );
+        urlSampul = res.urlPublik || res.url;
+      }
+
+      // Siapkan file naskah
+      if (modeInput === "upload" && fileNaskah) {
+        const res = await uploadApi.uploadFile(
+          fileNaskah,
+          "naskah",
+          "File naskah (PDF)",
+          undefined,
+          (p) => setProgressNaskah(p)
+        );
+        urlFile = res.urlPublik || res.url;
+      } else if (modeInput === "tulis") {
+        const blob = new Blob([formData.kontenTeks], { type: "text/plain;charset=utf-8" });
+        const nama = `${slugify(formData.judul) || "naskah"}.txt`;
+        const fileTxt = new File([blob], nama, { type: "text/plain" });
+        const res = await uploadApi.uploadFile(
+          fileTxt,
+          "naskah",
+          "Naskah teks",
+          undefined,
+          (p) => setProgressNaskah(p)
+        );
+        urlFile = res.urlPublik || res.url;
+      }
+
+      // Validasi UUID untuk idKategori & idGenre (hindari kirim dummy)
+      const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRe.test(formData.idKategori) || !uuidRe.test(formData.idGenre)) {
+        const metaSiap = statusKategori === "sukses" && statusGenre === "sukses";
+        if (!metaSiap) {
+          toast.error(
+            "Gagal mengajukan: daftar kategori/genre belum dimuat dari server. Klik 'Muat Ulang Daftar' lalu pilih kategori & genre."
+          );
+        } else {
+          toast.error("Kategori/Genre belum dipilih dengan benar. Silakan pilih ulang dari daftar.");
+        }
+        return;
+      }
+
+      const hitungJumlahKata = formData.kontenTeks
+        ? formData.kontenTeks.trim().split(/\s+/).filter(Boolean).length
+        : undefined;
+      const jumlahKata = hitungJumlahKata && hitungJumlahKata >= 100 ? hitungJumlahKata : undefined;
+
+      // Submit naskah
+      await naskahApi.buatNaskah({
+        judul: formData.judul,
+        subJudul: formData.subJudul || undefined,
+        sinopsis: formData.sinopsis,
+        idKategori: formData.idKategori,
+        idGenre: formData.idGenre,
+        bahasaTulis: formData.bahasaTulis,
+        jumlahKata,
+        urlSampul,
+        urlFile,
+        publik: false,
+      });
+
+      toast.success("Naskah berhasil diajukan sebagai draft");
+      router.replace("/dashboard");
+    } catch (err: any) {
+      const msg = err?.response?.data?.pesan || err?.message || "Gagal mengajukan naskah";
+      toast.error(String(msg));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const hitungKata = (teks: string) => {
@@ -252,16 +390,33 @@ export default function AjukanDrafPage() {
                       name="idKategori"
                       value={formData.idKategori}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent"
+                      disabled={statusKategori === "loading"}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent ${
+                        statusKategori === "loading" ? "border-gray-200 bg-gray-50 text-gray-400" : "border-gray-300"
+                      }`}
                       required
                     >
-                      <option value="">Pilih Kategori</option>
+                      <option value="">
+                        {statusKategori === "loading" ? "Memuat kategori..." : "Pilih Kategori"}
+                      </option>
                       {kategoriList.map((kat) => (
                         <option key={kat.id} value={kat.id}>
                           {kat.nama}
                         </option>
                       ))}
                     </select>
+                    {statusKategori === "gagal" && (
+                      <div className="mt-1 text-xs text-red-600">
+                        Gagal memuat kategori dari server.
+                        <button
+                          type="button"
+                          onClick={fetchMeta}
+                          className="ml-2 underline text-[#0d9488]"
+                        >
+                          Muat Ulang Daftar
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -272,16 +427,33 @@ export default function AjukanDrafPage() {
                       name="idGenre"
                       value={formData.idGenre}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent"
+                      disabled={statusGenre === "loading"}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent ${
+                        statusGenre === "loading" ? "border-gray-200 bg-gray-50 text-gray-400" : "border-gray-300"
+                      }`}
                       required
                     >
-                      <option value="">Pilih Genre</option>
+                      <option value="">
+                        {statusGenre === "loading" ? "Memuat genre..." : "Pilih Genre"}
+                      </option>
                       {genreList.map((gen) => (
                         <option key={gen.id} value={gen.id}>
                           {gen.nama}
                         </option>
                       ))}
                     </select>
+                    {statusGenre === "gagal" && (
+                      <div className="mt-1 text-xs text-red-600">
+                        Gagal memuat genre dari server.
+                        <button
+                          type="button"
+                          onClick={fetchMeta}
+                          className="ml-2 underline text-[#0d9488]"
+                        >
+                          Muat Ulang Daftar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -380,6 +552,9 @@ export default function AjukanDrafPage() {
                     </label>
                   )}
                 </div>
+                {fileSampul && progressSampul > 0 && progressSampul < 100 && (
+                  <div className="mt-2 text-xs text-gray-600">Upload sampul: {progressSampul}%</div>
+                )}
               </div>
             </div>
           </div>
@@ -484,6 +659,9 @@ export default function AjukanDrafPage() {
                 <p className="text-xs text-gray-500 mt-2">
                   * File PDF akan disimpan dengan lebih efisien di server
                 </p>
+                {fileNaskah && progressNaskah > 0 && progressNaskah < 100 && (
+                  <div className="mt-2 text-xs text-gray-600">Upload naskah: {progressNaskah}%</div>
+                )}
               </div>
             )}
           </div>
@@ -501,15 +679,26 @@ export default function AjukanDrafPage() {
             <div className="flex gap-4">
               <button
                 type="button"
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={loading}
+                onClick={handleSubmit as any}
+                className={`px-6 py-3 rounded-lg transition-colors ${
+                  loading
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
               >
                 Simpan Draft
               </button>
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white rounded-lg hover:from-[#0d9488] hover:to-[#0a7a73] transition-all shadow-lg hover:shadow-xl"
+                disabled={loading}
+                className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
+                  loading
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white hover:from-[#0d9488] hover:to-[#0a7a73]"
+                }`}
               >
-                Ajukan untuk Review
+                {loading ? "Mengirim..." : "Ajukan untuk Review"}
               </button>
             </div>
           </div>
