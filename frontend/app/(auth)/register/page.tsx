@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { authApi } from "@/lib/api/auth";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1); // 1: Login Info, 2: Profile Info, 3: Additional Info
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     // Step 1 - Login Info
     email: "",
-    password: "",
-    confirmPassword: "",
+    kataSandi: "",
+    konfirmasiKataSandi: "",
     telepon: "",
+    jenisPeran: "penulis" as "penulis" | "editor" | "percetakan",
     
     // Step 2 - Profile Info
     namaDepan: "",
@@ -28,13 +34,48 @@ export default function RegisterPage() {
     kota: "",
     provinsi: "",
     kodePos: "",
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  });  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  // Validasi kekuatan password berdasarkan requirement backend
+  const passwordValidation = useMemo(() => {
+    const password = formData.kataSandi;
+    return {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      isValid: password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password),
+    };
+  }, [formData.kataSandi]);
+
+  // Hitung strength level (0-4)
+  const passwordStrength = useMemo(() => {
+    const checks = [
+      passwordValidation.minLength,
+      passwordValidation.hasUpperCase,
+      passwordValidation.hasLowerCase,
+      passwordValidation.hasNumber,
+    ];
+    return checks.filter(Boolean).length;
+  }, [passwordValidation]);
+
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength === 0) return "bg-gray-300";
+    if (passwordStrength <= 2) return "bg-red-500";
+    if (passwordStrength === 3) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength === 0) return "";
+    if (passwordStrength <= 2) return "Lemah";
+    if (passwordStrength === 3) return "Sedang";
+    return "Kuat";
   };
 
   const handleNextStep = (e: React.FormEvent) => {
@@ -50,10 +91,37 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log("Register:", formData);
+    
+    // Validasi password strength sebelum submit
+    if (!passwordValidation.isValid) {
+      toast.error("Kata sandi harus memenuhi semua persyaratan keamanan");
+      return;
+    }
+    
+    if (formData.kataSandi !== formData.konfirmasiKataSandi) {
+      toast.error("Konfirmasi kata sandi tidak cocok");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authApi.register({
+        email: formData.email,
+        kataSandi: formData.kataSandi,
+        konfirmasiKataSandi: formData.konfirmasiKataSandi,
+        namaDepan: formData.namaDepan,
+        namaBelakang: formData.namaBelakang || undefined,
+        telepon: formData.telepon || undefined,
+        jenisPeran: formData.jenisPeran,
+      });
+      toast.success("Registrasi berhasil. Silakan login.");
+      router.replace("/login");
+    } catch (err: any) {
+      toast.error(err?.message || "Registrasi gagal. Coba lagi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -173,17 +241,38 @@ export default function RegisterPage() {
                 />
               </div>
 
+              {/* Jenis Peran Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Daftar Sebagai <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="jenisPeran"
+                  value={formData.jenisPeran}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#14b8a6] focus:outline-none transition-colors text-gray-700 bg-white"
+                  required
+                >
+                  <option value="penulis">Penulis</option>
+                  <option value="editor">Editor</option>
+                  <option value="percetakan">Percetakan</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Pilih peran yang sesuai dengan kebutuhan Anda
+                </p>
+              </div>
+
               {/* Password Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password <span className="text-red-500">*</span>
+                  Kata Sandi <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    name="password"
+                    name="kataSandi"
                     placeholder="Minimal 8 karakter"
-                    value={formData.password}
+                    value={formData.kataSandi}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-[#14b8a6] focus:outline-none transition-colors text-gray-700"
                     required
@@ -206,19 +295,85 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator */}
+                {formData.kataSandi && (
+                  <div className="mt-3 space-y-2">
+                    {/* Progress Bar */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                          style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength <= 2 ? "text-red-600" :
+                        passwordStrength === 3 ? "text-yellow-600" :
+                        "text-green-600"
+                      }`}>
+                        {getPasswordStrengthText()}
+                      </span>
+                    </div>
+
+                    {/* Requirements Checklist */}
+                    <div className="space-y-1 text-xs">
+                      <div className={`flex items-center gap-2 ${passwordValidation.minLength ? "text-green-600" : "text-gray-500"}`}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          {passwordValidation.minLength ? (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          ) : (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          )}
+                        </svg>
+                        <span>Minimal 8 karakter</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${passwordValidation.hasUpperCase ? "text-green-600" : "text-gray-500"}`}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          {passwordValidation.hasUpperCase ? (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          ) : (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          )}
+                        </svg>
+                        <span>Mengandung huruf besar (A-Z)</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${passwordValidation.hasLowerCase ? "text-green-600" : "text-gray-500"}`}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          {passwordValidation.hasLowerCase ? (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          ) : (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          )}
+                        </svg>
+                        <span>Mengandung huruf kecil (a-z)</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${passwordValidation.hasNumber ? "text-green-600" : "text-gray-500"}`}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          {passwordValidation.hasNumber ? (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          ) : (
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          )}
+                        </svg>
+                        <span>Mengandung angka (0-9)</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Confirm Password Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Konfirmasi Password <span className="text-red-500">*</span>
+                  Konfirmasi Kata Sandi <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
+                    name="konfirmasiKataSandi"
                     placeholder="Ulangi password"
-                    value={formData.confirmPassword}
+                    value={formData.konfirmasiKataSandi}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-[#14b8a6] focus:outline-none transition-colors text-gray-700"
                     required
@@ -420,8 +575,9 @@ export default function RegisterPage() {
             <button
               type="submit"
               className="flex-1 bg-[#14b8a6] text-white py-3 rounded-lg hover:bg-[#0d9488] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              disabled={loading}
             >
-              {step === 3 ? "Daftar" : "Lanjut"}
+              {step === 3 ? (loading ? "Memproses..." : "Daftar") : "Lanjut"}
             </button>
           </div>
         </form>

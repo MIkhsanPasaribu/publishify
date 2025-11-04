@@ -2,18 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/use-auth-store";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const login = useAuthStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    email: "",
+    kataSandi: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login:", formData);
+    setLoading(true);
+    try {
+      await login(formData.email, formData.kataSandi);
+      toast.success("Login berhasil. Selamat datang kembali!");
+      router.replace("/dashboard");
+    } catch (err: any) {
+      toast.error(err?.message || "Email atau kata sandi salah");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -99,7 +113,7 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username Field */}
+          {/* Email Field */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none border-r border-gray-300 pr-4">
               <svg
@@ -107,16 +121,14 @@ export default function LoginPage() {
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                <path d="M2 6a2 2 0 012-2h16a2 2 0 012 2v.01L12 12 2 6.01V6zm0 2.238V18a2 2 0 002 2h16a2 2 0 002-2V8.238l-9.553 5.506a2 2 0 01-1.894 0L2 8.238z" />
               </svg>
             </div>
             <input
-              type="text"
-              placeholder="Username"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full pl-16 pr-4 py-4 border-2 border-gray-300 rounded-lg focus:border-[#14b8a6] focus:outline-none transition-colors text-gray-700"
               required
             />
@@ -142,10 +154,8 @@ export default function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              value={formData.kataSandi}
+              onChange={(e) => setFormData({ ...formData, kataSandi: e.target.value })}
               className="w-full pl-16 pr-14 py-4 border-2 border-gray-300 rounded-lg focus:border-[#14b8a6] focus:outline-none transition-colors text-gray-700"
               required
             />
@@ -206,8 +216,9 @@ export default function LoginPage() {
           <button
             type="submit"
             className="w-full bg-[#0d7377] text-white py-4 rounded-lg hover:bg-[#0a5c5f] transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            disabled={loading}
           >
-            Login
+            {loading ? "Memproses..." : "Login"}
           </button>
         </form>
 
