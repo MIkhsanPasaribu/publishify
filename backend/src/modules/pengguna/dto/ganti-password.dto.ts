@@ -48,7 +48,7 @@ export class GantiPasswordDtoClass {
     example: 'OldPassword123!',
     type: String,
   })
-  kataSandiLama: string;
+  kataSandiLama!: string;
 
   @ApiProperty({
     description: 'Kata sandi baru (minimal 8 karakter, harus ada huruf besar, kecil, dan angka)',
@@ -57,12 +57,12 @@ export class GantiPasswordDtoClass {
     maxLength: 100,
     type: String,
   })
-  kataSandiBaru: string;
+  kataSandiBaru!: string;
 
   @ApiProperty({
     description: 'Konfirmasi kata sandi baru (harus sama dengan kata sandi baru)',
     example: 'NewPassword123!',
     type: String,
   })
-  konfirmasiKataSandiBaru: string;
+  konfirmasiKataSandiBaru!: string;
 }

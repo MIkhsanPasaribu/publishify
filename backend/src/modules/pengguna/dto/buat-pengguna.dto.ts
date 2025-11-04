@@ -63,7 +63,7 @@ export class BuatPenggunaDtoClass {
     example: 'user@publishify.com',
     type: String,
   })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'Kata sandi pengguna',
@@ -72,7 +72,7 @@ export class BuatPenggunaDtoClass {
     maxLength: 100,
     type: String,
   })
-  kataSandi: string;
+  kataSandi!: string;
 
   @ApiProperty({
     description: 'Nomor telepon pengguna',
@@ -89,7 +89,7 @@ export class BuatPenggunaDtoClass {
     maxLength: 50,
     type: String,
   })
-  namaDepan: string;
+  namaDepan!: string;
 
   @ApiProperty({
     description: 'Nama belakang pengguna',
@@ -107,12 +107,12 @@ export class BuatPenggunaDtoClass {
     example: 'penulis',
     type: String,
   })
-  jenisPeran: 'penulis' | 'editor' | 'percetakan' | 'admin';
+  jenisPeran!: 'penulis' | 'editor' | 'percetakan' | 'admin';
 
   @ApiProperty({
     description: 'Status aktif pengguna',
     default: true,
     type: Boolean,
   })
-  aktif: boolean;
+  aktif!: boolean;
 }

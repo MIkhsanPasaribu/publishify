@@ -20,9 +20,9 @@ export type RefreshTokenDto = z.infer<typeof RefreshTokenSchema>;
  */
 export class RefreshTokenDtoClass {
   @ApiProperty({
-    description: 'Refresh token yang diterima saat login',
+    description: 'Refresh token yang valid',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
     type: String,
   })
-  refreshToken: string;
+  refreshToken!: string;
 }

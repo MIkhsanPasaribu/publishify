@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -233,7 +234,7 @@ async function main() {
 
   // 9. Buat sample naskah
   const genreDrama = await prisma.genre.findFirst({ where: { slug: 'drama' } });
-  
+
   const naskahSample = await prisma.naskah.create({
     data: {
       idPenulis: penulis.id,

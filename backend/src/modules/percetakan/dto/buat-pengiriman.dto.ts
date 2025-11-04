@@ -60,7 +60,7 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 3,
     maxLength: 100,
   })
-  namaEkspedisi: string;
+  namaEkspedisi!: string;
 
   @ApiProperty({
     description: 'Nomor resi pengiriman',
@@ -76,7 +76,7 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     example: 50000,
     minimum: 0,
   })
-  biayaPengiriman: number;
+  biayaPengiriman!: number;
 
   @ApiProperty({
     description: 'Alamat lengkap tujuan pengiriman',
@@ -84,7 +84,7 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 10,
     maxLength: 500,
   })
-  alamatTujuan: string;
+  alamatTujuan!: string;
 
   @ApiProperty({
     description: 'Nama penerima paket',
@@ -92,14 +92,14 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 3,
     maxLength: 100,
   })
-  namaPenerima: string;
+  namaPenerima!: string;
 
   @ApiProperty({
     description: 'Nomor telepon penerima (format Indonesia)',
     example: '081234567890',
     pattern: '^(\\+62|62|0)[0-9]{9,12}$',
   })
-  teleponPenerima: string;
+  teleponPenerima!: string;
 
   @ApiProperty({
     description: 'Estimasi tanggal tiba paket (ISO 8601)',

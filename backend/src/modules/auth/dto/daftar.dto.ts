@@ -37,11 +37,7 @@ export const DaftarSchema = z
       .max(50, 'Nama depan maksimal 50 karakter')
       .trim(),
 
-    namaBelakang: z
-      .string()
-      .max(50, 'Nama belakang maksimal 50 karakter')
-      .trim()
-      .optional(),
+    namaBelakang: z.string().max(50, 'Nama belakang maksimal 50 karakter').trim().optional(),
 
     telepon: z
       .string()
@@ -74,23 +70,24 @@ export class DaftarDtoClass {
     example: 'penulis@publishify.com',
     type: String,
   })
-  email: string;
+  email!: string;
 
   @ApiProperty({
-    description: 'Kata sandi pengguna (minimal 8 karakter, harus ada huruf besar, kecil, dan angka)',
+    description:
+      'Kata sandi pengguna (minimal 8 karakter, harus ada huruf besar, kecil, dan angka)',
     example: 'Password123!',
     minLength: 8,
     maxLength: 100,
     type: String,
   })
-  kataSandi: string;
+  kataSandi!: string;
 
   @ApiProperty({
     description: 'Konfirmasi kata sandi (harus sama dengan kata sandi)',
     example: 'Password123!',
     type: String,
   })
-  konfirmasiKataSandi: string;
+  konfirmasiKataSandi!: string;
 
   @ApiProperty({
     description: 'Nama depan pengguna',
@@ -99,7 +96,7 @@ export class DaftarDtoClass {
     maxLength: 50,
     type: String,
   })
-  namaDepan: string;
+  namaDepan!: string;
 
   @ApiProperty({
     description: 'Nama belakang pengguna',
@@ -125,5 +122,5 @@ export class DaftarDtoClass {
     example: 'penulis',
     type: String,
   })
-  jenisPeran: 'penulis' | 'editor' | 'percetakan';
+  jenisPeran!: 'penulis' | 'editor' | 'percetakan';
 }

@@ -47,7 +47,7 @@ export class UploadFileSwagger {
     description: 'Tujuan upload file',
     example: TipeFile.NASKAH,
   })
-  tujuan: TipeFile;
+  tujuan!: TipeFile;
 
   @ApiProperty({
     description: 'Deskripsi file (opsional)',

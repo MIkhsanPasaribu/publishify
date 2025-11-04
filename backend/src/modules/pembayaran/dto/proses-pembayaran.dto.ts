@@ -39,14 +39,14 @@ export class ProsesPembayaranDtoClass implements ProsesPembayaranDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',
   })
-  idPesanan: string;
+  idPesanan!: string;
 
   @ApiProperty({
     description: 'Metode pembayaran yang dipilih',
     enum: ['transfer_bank', 'kartu_kredit', 'e_wallet', 'virtual_account', 'cod'],
     example: 'transfer_bank',
   })
-  metodePembayaran: 'transfer_bank' | 'kartu_kredit' | 'e_wallet' | 'virtual_account' | 'cod';
+  metodePembayaran!: 'transfer_bank' | 'kartu_kredit' | 'e_wallet' | 'virtual_account' | 'cod';
 
   @ApiProperty({
     description: 'URL bukti transfer (wajib untuk transfer_bank)',

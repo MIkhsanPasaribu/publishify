@@ -64,7 +64,7 @@ export class BuatPesananDtoClass implements BuatPesananDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',
   })
-  idNaskah: string;
+  idNaskah!: string;
 
   @ApiProperty({
     description: 'Jumlah eksemplar yang dicetak',
@@ -72,28 +72,28 @@ export class BuatPesananDtoClass implements BuatPesananDto {
     minimum: 1,
     maximum: 10000,
   })
-  jumlah: number;
+  jumlah!: number;
 
   @ApiProperty({
     description: 'Format/ukuran kertas',
     enum: ['A4', 'A5', 'B5', 'Letter', 'Custom'],
     example: 'A5',
   })
-  formatKertas: 'A4' | 'A5' | 'B5' | 'Letter' | 'Custom';
+  formatKertas!: 'A4' | 'A5' | 'B5' | 'Letter' | 'Custom';
 
   @ApiProperty({
     description: 'Jenis kertas yang digunakan',
     enum: ['HVS 70gr', 'HVS 80gr', 'Art Paper 120gr', 'Art Paper 150gr', 'Bookpaper'],
     example: 'HVS 80gr',
   })
-  jenisKertas: 'HVS 70gr' | 'HVS 80gr' | 'Art Paper 120gr' | 'Art Paper 150gr' | 'Bookpaper';
+  jenisKertas!: 'HVS 70gr' | 'HVS 80gr' | 'Art Paper 120gr' | 'Art Paper 150gr' | 'Bookpaper';
 
   @ApiProperty({
     description: 'Jenis cover/jilid buku',
     enum: ['Soft Cover', 'Hard Cover', 'Board Cover'],
     example: 'Soft Cover',
   })
-  jenisCover: 'Soft Cover' | 'Hard Cover' | 'Board Cover';
+  jenisCover!: 'Soft Cover' | 'Hard Cover' | 'Board Cover';
 
   @ApiProperty({
     description: 'Finishing tambahan untuk cover',
@@ -103,7 +103,7 @@ export class BuatPesananDtoClass implements BuatPesananDto {
     default: [],
     example: ['Laminasi Glossy', 'Spot UV'],
   })
-  finishingTambahan: Array<
+  finishingTambahan!: Array<
     'Laminasi Glossy' | 'Laminasi Doff' | 'Emboss' | 'Deboss' | 'Spot UV' | 'Foil' | 'Tidak Ada'
   >;
 

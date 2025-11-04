@@ -34,14 +34,14 @@ export class TugaskanReviewDtoClass {
     example: '550e8400-e29b-41d4-a716-446655440000',
     type: String,
   })
-  idNaskah: string;
+  idNaskah!: string;
 
   @ApiProperty({
     description: 'ID editor yang ditugaskan',
     example: '550e8400-e29b-41d4-a716-446655440001',
     type: String,
   })
-  idEditor: string;
+  idEditor!: string;
 
   @ApiProperty({
     description: 'Catatan penugasan untuk editor',

@@ -57,5 +57,5 @@ export class TambahFeedbackDtoClass {
     maxLength: 2000,
     type: String,
   })
-  komentar: string;
+  komentar!: string;
 }

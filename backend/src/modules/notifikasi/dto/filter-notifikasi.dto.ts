@@ -72,7 +72,7 @@ export class FilterNotifikasiDtoClass implements FilterNotifikasiDto {
     example: 1,
     default: 1,
   })
-  halaman: number;
+  halaman!: number;
 
   @ApiProperty({
     description: 'Jumlah item per halaman',
@@ -80,7 +80,7 @@ export class FilterNotifikasiDtoClass implements FilterNotifikasiDto {
     default: 20,
     maximum: 100,
   })
-  limit: number;
+  limit!: number;
 
   @ApiProperty({
     description: 'Filter notifikasi berdasarkan status dibaca',
@@ -117,7 +117,7 @@ export class FilterNotifikasiDtoClass implements FilterNotifikasiDto {
     default: 'dibuatPada',
     example: 'dibuatPada',
   })
-  urutkan: 'dibuatPada' | 'dibaca';
+  urutkan!: 'dibuatPada' | 'dibaca';
 
   @ApiProperty({
     description: 'Arah sorting',
@@ -125,5 +125,5 @@ export class FilterNotifikasiDtoClass implements FilterNotifikasiDto {
     default: 'desc',
     example: 'desc',
   })
-  arah: 'asc' | 'desc';
+  arah!: 'asc' | 'desc';
 }

@@ -29,7 +29,7 @@ import { NotifikasiService } from './notifikasi.service';
 })
 export class NotifikasiGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(private readonly notifikasiService: NotifikasiService) {}
 

@@ -45,21 +45,21 @@ export class KirimNotifikasiDtoClass implements KirimNotifikasiDto {
     description: 'ID pengguna penerima notifikasi',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  idPengguna: string;
+  idPengguna!: string;
 
   @ApiProperty({
     description: 'Judul notifikasi',
     example: 'Pembayaran Berhasil',
     maxLength: 200,
   })
-  judul: string;
+  judul!: string;
 
   @ApiProperty({
     description: 'Isi pesan notifikasi',
     example: 'Pembayaran untuk pesanan #TRX-20250129-1234 telah dikonfirmasi',
     maxLength: 1000,
   })
-  pesan: string;
+  pesan!: string;
 
   @ApiProperty({
     description: 'Tipe notifikasi',
@@ -67,7 +67,7 @@ export class KirimNotifikasiDtoClass implements KirimNotifikasiDto {
     default: 'info',
     example: 'sukses',
   })
-  tipe: 'info' | 'sukses' | 'peringatan' | 'error';
+  tipe!: 'info' | 'sukses' | 'peringatan' | 'error';
 
   @ApiProperty({
     description: 'URL untuk redirect ketika notifikasi diklik',

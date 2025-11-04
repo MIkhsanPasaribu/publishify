@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   ConflictException,
@@ -184,7 +185,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: pengguna.id,
       email: pengguna.email,
-      peran: pengguna.peranPengguna.map((p) => p.jenisPeran),
+      peran: pengguna.peranPengguna.map((p: any) => p.jenisPeran),
     };
 
     // Generate access token
@@ -229,7 +230,7 @@ export class AuthService {
       pengguna: {
         id: pengguna.id,
         email: pengguna.email,
-        peran: pengguna.peranPengguna.map((p) => p.jenisPeran),
+        peran: pengguna.peranPengguna.map((p: any) => p.jenisPeran),
         terverifikasi: pengguna.terverifikasi,
         profilPengguna: pengguna.profilPengguna,
       },
