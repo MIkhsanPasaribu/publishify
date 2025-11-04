@@ -310,4 +310,38 @@ export class NaskahController {
   ) {
     return await this.naskahService.hapusNaskah(id, idPengguna, peranPengguna);
   }
+
+  /**
+   * GET /naskah/kategori - Ambil daftar kategori (PUBLIC)
+   */
+  @Get('kategori')
+  @Public()
+  @ApiOperation({
+    summary: 'Ambil daftar kategori',
+    description: 'Mengambil semua kategori aktif untuk dropdown pemilihan kategori naskah',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar kategori berhasil diambil',
+  })
+  async ambilKategori() {
+    return await this.naskahService.ambilKategori();
+  }
+
+  /**
+   * GET /naskah/genre - Ambil daftar genre (PUBLIC)
+   */
+  @Get('genre')
+  @Public()
+  @ApiOperation({
+    summary: 'Ambil daftar genre',
+    description: 'Mengambil semua genre aktif untuk dropdown pemilihan genre naskah',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar genre berhasil diambil',
+  })
+  async ambilGenre() {
+    return await this.naskahService.ambilGenre();
+  }
 }
