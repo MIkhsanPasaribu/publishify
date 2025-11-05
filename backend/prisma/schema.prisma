@@ -107,6 +107,13 @@ enum TipeNotifikasi {
   @@map("tipe_notifikasi")
 }
 
+enum Platform {
+  web
+  mobile
+
+  @@map("platform")
+}
+
 // ============================================
 // CORE USER MANAGEMENT (4 tabel)
 // ============================================
@@ -479,12 +486,14 @@ model TokenRefresh {
   id             String   @id @default(uuid())
   idPengguna     String
   token          String   @unique
+  platform       Platform @default(web)
   kadaluarsaPada DateTime
   dibuatPada     DateTime @default(now())
 
   pengguna Pengguna @relation(fields: [idPengguna], references: [id], onDelete: Cascade)
 
   @@index([token])
+  @@index([idPengguna, platform])
   @@map("token_refresh")
 }
 
