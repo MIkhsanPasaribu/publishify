@@ -15,6 +15,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PenggunaModule } from './modules/pengguna/pengguna.module';
 import { NaskahModule } from './modules/naskah/naskah.module';
+import { KategoriModule } from './modules/kategori/kategori.module';
+import { GenreModule } from './modules/genre/genre.module';
 import { ReviewModule } from './modules/review/review.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { PercetakanModule } from './modules/percetakan/percetakan.module';
@@ -66,6 +68,8 @@ import { AppController } from './app.controller';
     AuthModule,
     PenggunaModule,
     NaskahModule,
+    KategoriModule,
+    GenreModule,
     ReviewModule,
     UploadModule,
     PercetakanModule,
