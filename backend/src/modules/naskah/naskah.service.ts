@@ -702,34 +702,4 @@ export class NaskahService {
       },
     };
   }
-
-  // ============================================
-  // Meta: Kategori & Genre (PUBLIC)
-  // ============================================
-
-  async ambilKategori() {
-    const kategori = await this.prisma.kategori.findMany({
-      where: { aktif: true },
-      orderBy: { nama: 'asc' },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Daftar kategori berhasil diambil',
-      data: kategori,
-    };
-  }
-
-  async ambilGenre() {
-    const genre = await this.prisma.genre.findMany({
-      where: { aktif: true },
-      orderBy: { nama: 'asc' },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Daftar genre berhasil diambil',
-      data: genre,
-    };
-  }
 }
