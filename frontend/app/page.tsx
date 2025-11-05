@@ -2,6 +2,7 @@ import {
   HeaderNavigasi,
   HeroSection,
   FiturSection,
+  BukuUnggulanSection,
   ProsesPenerbitanSection,
   TestimoniSection,
   CTASection,
@@ -15,6 +16,7 @@ export default function Home() {
       <main>
         <HeroSection />
         <FiturSection />
+        <BukuUnggulanSection />
         <ProsesPenerbitanSection />
         <TestimoniSection />
         <CTASection />
