@@ -253,12 +253,12 @@ export class UploadController {
   })
   async downloadTemplateNaskah(@Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
     try {
-      const templatePath = join(process.cwd(), 'template', 'template-naskah-buku.doc');
+      const templatePath = join(process.cwd(), 'template', 'template-buku-publishify.doc');
       const file = createReadStream(templatePath);
 
       res.set({
         'Content-Type': 'application/msword',
-        'Content-Disposition': 'attachment; filename="template-naskah-buku.doc"',
+        'Content-Disposition': 'attachment; filename="template-buku-publishify.doc"',
       });
 
       return new StreamableFile(file);
