@@ -10,10 +10,11 @@ import {
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
-  ParseFilePipe,
-  MaxFileSizeValidator,
   HttpCode,
   HttpStatus,
+  Res,
+  StreamableFile,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -26,12 +27,13 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 import { UploadService } from './upload.service';
 import {
   UploadFileDto,
-  UploadFileSwagger,
   FilterFileDto,
-  FilterFileSwagger,
   ProcessImageDto,
   ProcessImageSwagger,
   UploadResponseDto,
@@ -44,6 +46,7 @@ import { Peran } from '@/modules/auth/decorators/peran.decorator';
 import { PenggunaSaatIni } from '@/modules/auth/decorators/pengguna-saat-ini.decorator';
 import { ValidasiZodPipe } from '@/common/pipes/validasi-zod.pipe';
 import { UploadFileSchema } from './dto/upload-file.dto';
+import { Public } from '@/common/decorators/public.decorator';
 
 @ApiTags('upload')
 @ApiBearerAuth()
@@ -219,6 +222,49 @@ export class UploadController {
   })
   async getFileMetadata(@Param('id') id: string) {
     return this.uploadService.getFileMetadata(id);
+  }
+
+  /**
+   * GET /upload/template/naskah - Download template naskah buku
+   */
+  @Get('template/naskah')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Download template naskah buku',
+    description:
+      'Download file template naskah buku dalam format .doc. Endpoint ini bersifat publik dan tidak memerlukan autentikasi.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Template berhasil diunduh',
+    content: {
+      'application/msword': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'File template tidak ditemukan',
+  })
+  async downloadTemplateNaskah(@Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    try {
+      const templatePath = join(process.cwd(), 'template', 'template-naskah-buku.doc');
+      const file = createReadStream(templatePath);
+
+      res.set({
+        'Content-Type': 'application/msword',
+        'Content-Disposition': 'attachment; filename="template-naskah-buku.doc"',
+      });
+
+      return new StreamableFile(file);
+    } catch (error) {
+      throw new NotFoundException('File template tidak ditemukan');
+    }
   }
 
   /**
