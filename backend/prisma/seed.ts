@@ -253,6 +253,351 @@ async function main() {
   });
   console.log('✅ Sample naskah dibuat:', naskahSample.judul);
 
+  // 10. Buat COMPREHENSIVE WRITER dengan 15+ naskah terpublish
+  console.log('');
+  console.log('📚 Membuat comprehensive writer untuk testing...');
+
+  const writerTest = await prisma.pengguna.upsert({
+    where: { email: 'ahmad.surya@publishify.com' },
+    update: {},
+    create: {
+      email: 'ahmad.surya@publishify.com',
+      kataSandi: hashedPassword,
+      telepon: '081234567899',
+      aktif: true,
+      terverifikasi: true,
+      emailDiverifikasiPada: new Date(),
+      loginTerakhir: new Date(),
+      profilPengguna: {
+        create: {
+          namaDepan: 'Ahmad',
+          namaBelakang: 'Surya Wijaya',
+          namaTampilan: 'Ahmad Surya',
+          bio: 'Penulis produktif dengan lebih dari 15 karya yang telah diterbitkan. Spesialisasi dalam novel fiksi, romance, dan thriller. Pemenang Anugerah Sastra Indonesia 2023.',
+          tanggalLahir: new Date('1985-05-15'),
+          jenisKelamin: 'Laki-laki',
+          alamat: 'Jl. Sastra No. 123, Menteng',
+          kota: 'Jakarta Pusat',
+          provinsi: 'DKI Jakarta',
+          kodePos: '10310',
+        },
+      },
+      peranPengguna: {
+        create: {
+          jenisPeran: 'penulis',
+          aktif: true,
+        },
+      },
+      profilPenulis: {
+        create: {
+          namaPena: 'A.S. Wijaya',
+          biografi:
+            'Ahmad Surya Wijaya, atau dikenal dengan nama pena A.S. Wijaya, adalah penulis Indonesia yang telah menghasilkan lebih dari 15 karya best seller. Lahir di Jakarta pada tahun 1985, ia menyelesaikan pendidikan Sastra Indonesia di Universitas Indonesia. Karya-karyanya telah diterjemahkan ke berbagai bahasa dan beberapa telah diadaptasi menjadi film layar lebar.',
+          spesialisasi: ['Fiksi', 'Romance', 'Thriller', 'Mystery', 'Drama'],
+          totalBuku: 15,
+          totalDibaca: 250000,
+          ratingRataRata: 4.7,
+          namaRekeningBank: 'Ahmad Surya Wijaya',
+          namaBank: 'Bank Mandiri',
+          nomorRekeningBank: '1234567890123',
+          npwp: '12.345.678.9-012.345',
+        },
+      },
+    },
+  });
+  console.log('✅ Comprehensive writer dibuat:', writerTest.email);
+
+  // Ambil semua genre untuk distribusi naskah
+  const allGenres = await prisma.genre.findMany();
+  const genreFantasy = allGenres.find((g) => g.slug === 'fantasy');
+  const genreThriller = allGenres.find((g) => g.slug === 'thriller');
+  const genreComedy = allGenres.find((g) => g.slug === 'comedy');
+  const genreHorror = allGenres.find((g) => g.slug === 'horror');
+  const genreSciFi = allGenres.find((g) => g.slug === 'sci-fi');
+
+  // Data naskah yang realistic untuk writer test
+  const naskahData = [
+    {
+      judul: 'Jejak Sang Pemburu',
+      subJudul: 'Trilogi Detektif Jakarta - Bagian 1',
+      sinopsis:
+        'Detektif Arman menghadapi kasus pembunuhan berantai yang mengguncang Jakarta. Setiap korban meninggalkan jejak misterius yang mengarah pada konspirasi besar di balik kota metropolitan. Dalam pencariannya, Arman harus menghadapi masa lalunya sendiri.',
+      kategori: kategoriNonFiksi,
+      genre: genreThriller || genreDrama,
+      halaman: 320,
+      kata: 95000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-001-0',
+      diterbitkanPada: new Date('2023-01-15'),
+    },
+    {
+      judul: 'Cinta di Ujung Senja',
+      subJudul: 'Novel Romance Terbaik 2023',
+      sinopsis:
+        'Kisah cinta Dina dan Arka yang terpisah oleh keadaan, namun takdir mempertemukan mereka kembali di sebuah kota kecil di Bali. Mereka harus memilih antara mengejar mimpi atau mempertahankan cinta yang telah lama mereka simpan.',
+      kategori: subKategoriRomance,
+      genre: genreDrama,
+      halaman: 280,
+      kata: 82000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-002-7',
+      diterbitkanPada: new Date('2023-03-20'),
+    },
+    {
+      judul: 'Misteri Rumah Tua',
+      subJudul: 'Horor Psikologis',
+      sinopsis:
+        'Keluarga baru pindah ke rumah tua warisan yang ternyata menyimpan rahasia kelam. Suara-suara aneh, bayangan misterius, dan kejadian supernatural mulai mengganggu kehidupan mereka. Mereka harus mengungkap misteri di balik rumah itu sebelum terlambat.',
+      kategori: kategoriFiksi,
+      genre: genreHorror || genreThriller,
+      halaman: 295,
+      kata: 88000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-003-4',
+      diterbitkanPada: new Date('2023-05-10'),
+    },
+    {
+      judul: 'Petualangan di Negeri Fantasi',
+      subJudul: 'Saga Kerajaan Cahaya - Buku 1',
+      sinopsis:
+        'Lima remaja terpilih untuk menyelamatkan Kerajaan Cahaya dari ancaman Penguasa Kegelapan. Mereka harus mengumpulkan lima kristal legendaris yang tersebar di berbagai dimensi. Petualangan epik yang penuh dengan sihir, persahabatan, dan pengorbanan.',
+      kategori: kategoriFiksi,
+      genre: genreFantasy || genreDrama,
+      halaman: 400,
+      kata: 125000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-004-1',
+      diterbitkanPada: new Date('2023-07-01'),
+    },
+    {
+      judul: 'Komedi Keluarga Modern',
+      subJudul: 'Kisah Lucu Sehari-hari',
+      sinopsis:
+        'Kehidupan sehari-hari keluarga Budi yang penuh dengan kejadian kocak dan mengharukan. Dari problem pekerjaan, anak remaja yang rewel, hingga mertua yang cerewet. Sebuah potret keluarga Indonesia modern yang akan membuat Anda tertawa dan terharu.',
+      kategori: kategoriFiksi,
+      genre: genreComedy || genreDrama,
+      halaman: 245,
+      kata: 72000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-005-8',
+      diterbitkanPada: new Date('2023-08-15'),
+    },
+    {
+      judul: 'Masa Depan Bumi 2150',
+      subJudul: 'Fiksi Ilmiah Distopia',
+      sinopsis:
+        'Tahun 2150, Bumi telah berubah drastis akibat perubahan iklim dan perang dunia ketiga. Sekelompok ilmuwan mencoba menyelamatkan umat manusia dengan teknologi time travel. Namun, perjalanan mereka mengungkap rahasia yang lebih berbahaya.',
+      kategori: kategoriFiksi,
+      genre: genreSciFi || genreThriller,
+      halaman: 350,
+      kata: 105000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-006-5',
+      diterbitkanPada: new Date('2023-10-01'),
+    },
+    {
+      judul: 'Pemburu Bayangan',
+      subJudul: 'Trilogi Detektif Jakarta - Bagian 2',
+      sinopsis:
+        'Detektif Arman kembali dengan kasus baru yang lebih rumit. Seorang pembunuh bayaran profesional yang tidak meninggalkan jejak. Setiap target yang dibunuh memiliki koneksi tersembunyi dengan kasus masa lalu Arman.',
+      kategori: subKategoriMystery,
+      genre: genreThriller || genreDrama,
+      halaman: 330,
+      kata: 98000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-007-2',
+      diterbitkanPada: new Date('2023-11-20'),
+    },
+    {
+      judul: 'Rahasia Pulau Terpencil',
+      subJudul: 'Petualangan Tropis',
+      sinopsis:
+        'Sekelompok peneliti terdampar di pulau terpencil yang tidak ada di peta. Mereka menemukan peradaban kuno yang masih bertahan dengan teknologi yang sangat maju. Pulau itu menyimpan rahasia yang dapat mengubah sejarah dunia.',
+      kategori: kategoriFiksi,
+      genre: genreFantasy || genreThriller,
+      halaman: 310,
+      kata: 92000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-008-9',
+      diterbitkanPada: new Date('2024-01-10'),
+    },
+    {
+      judul: 'Cinta Kedua Kalinya',
+      subJudul: 'Romance Drama',
+      sinopsis:
+        'Setelah perceraian yang menyakitkan, Maya bertemu dengan Rio, seorang janda dengan dua anak. Mereka saling jatuh cinta, tetapi harus menghadapi tantangan dari keluarga, mantan pasangan, dan trauma masa lalu.',
+      kategori: subKategoriRomance,
+      genre: genreDrama,
+      halaman: 265,
+      kata: 78000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-009-6',
+      diterbitkanPada: new Date('2024-03-05'),
+    },
+    {
+      judul: 'Hantu Gedung Tua',
+      subJudul: 'Horor Urban',
+      sinopsis:
+        'Gedung perkantoran tua di pusat kota Jakarta yang akan dirobohkan ternyata dihuni oleh arwah-arwah yang tidak tenang. Tim pembongkaran mengalami kejadian supernatural yang mengerikan. Mereka harus mengungkap tragedi masa lalu sebelum menjadi korban berikutnya.',
+      kategori: kategoriFiksi,
+      genre: genreHorror || genreDrama,
+      halaman: 275,
+      kata: 81000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-010-2',
+      diterbitkanPada: new Date('2024-05-15'),
+    },
+    {
+      judul: 'Perang Galaksi Terakhir',
+      subJudul: 'Space Opera Epic',
+      sinopsis:
+        'Perang antara Federasi Galaksi dan Kekaisaran Zorgon mencapai puncaknya. Kapten Rendra dan krunya adalah harapan terakhir untuk menghentikan kehancuran total. Mereka harus menemukan senjata kuno yang dapat mengakhiri perang.',
+      kategori: kategoriFiksi,
+      genre: genreSciFi || genreFantasy,
+      halaman: 420,
+      kata: 130000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-011-9',
+      diterbitkanPada: new Date('2024-07-01'),
+    },
+    {
+      judul: 'Konspirasi Gedung Putih',
+      subJudul: 'Political Thriller',
+      sinopsis:
+        'Seorang jurnalis investigasi menemukan dokumen rahasia yang mengungkap korupsi besar-besaran di pemerintahan. Ia menjadi target pembunuhan dan harus berlari dari pemburu bayaran sambil mengungkap kebenaran kepada publik.',
+      kategori: kategoriNonFiksi,
+      genre: genreThriller || genreDrama,
+      halaman: 340,
+      kata: 102000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-012-6',
+      diterbitkanPada: new Date('2024-08-20'),
+    },
+    {
+      judul: 'Keajaiban di Kampung Halaman',
+      subJudul: 'Drama Keluarga',
+      sinopsis:
+        'Andi pulang ke kampung halaman setelah 20 tahun merantau. Ia menemukan banyak perubahan, tetapi kehangatan keluarga tetap sama. Sebuah cerita tentang kembali ke akar, memaafkan, dan menemukan makna hidup.',
+      kategori: kategoriFiksi,
+      genre: genreDrama,
+      halaman: 290,
+      kata: 85000,
+      status: 'diterbitkan',
+      isbn: '978-602-1234-013-3',
+      diterbitkanPada: new Date('2024-10-10'),
+    },
+    // Naskah dalam proses (bukan published)
+    {
+      judul: 'Misteri Hilangnya Kapal Selam',
+      subJudul: 'Naval Thriller',
+      sinopsis:
+        'Kapal selam nuklir milik Indonesia menghilang di Samudra Hindia. Tim SAR internasional mencari dengan sia-sia. Ternyata ada konspirasi besar yang melibatkan beberapa negara adidaya.',
+      kategori: subKategoriMystery,
+      genre: genreThriller || genreDrama,
+      halaman: 315,
+      kata: 94000,
+      status: 'dalam_review',
+      isbn: null,
+      diterbitkanPada: null,
+    },
+    {
+      judul: 'Perjalanan Waktu ke Masa Lalu',
+      subJudul: 'Time Travel Adventure',
+      sinopsis:
+        'Ilmuwan muda bernama Dika berhasil menciptakan mesin waktu. Ia kembali ke tahun 1945 untuk menyaksikan proklamasi kemerdekaan Indonesia. Namun, kehadirannya mengubah timeline sejarah.',
+      kategori: kategoriFiksi,
+      genre: genreSciFi || genreFantasy,
+      halaman: 0,
+      kata: 0,
+      status: 'draft',
+      isbn: null,
+      diterbitkanPada: null,
+    },
+  ];
+
+  // Buat semua naskah untuk writer test
+  for (const [index, data] of naskahData.entries()) {
+    const naskah = await prisma.naskah.create({
+      data: {
+        idPenulis: writerTest.id,
+        judul: data.judul,
+        subJudul: data.subJudul,
+        sinopsis: data.sinopsis,
+        idKategori: data.kategori.id,
+        idGenre: data.genre?.id || genreDrama?.id || kategoriFiksi.id,
+        bahasaTulis: 'id',
+        jumlahHalaman: data.halaman,
+        jumlahKata: data.kata,
+        status: data.status as any,
+        isbn: data.isbn,
+        publik: data.status === 'diterbitkan',
+        diterbitkanPada: data.diterbitkanPada,
+        urlSampul: data.status === 'diterbitkan' ? `/sampul/${data.isbn}.jpg` : null,
+        urlFile:
+          data.status === 'diterbitkan' || data.status === 'dalam_review'
+            ? `/naskah/${data.judul.toLowerCase().replace(/\s+/g, '-')}.pdf`
+            : null,
+      },
+    });
+
+    // Tambah revisi untuk naskah yang sudah ada filenya
+    if (data.status === 'diterbitkan' || data.status === 'dalam_review') {
+      await prisma.revisiNaskah.create({
+        data: {
+          idNaskah: naskah.id,
+          versi: 1,
+          catatan: 'Versi final yang telah direview dan disetujui',
+          urlFile: `/naskah/${data.judul.toLowerCase().replace(/\s+/g, '-')}-v1.pdf`,
+        },
+      });
+    }
+
+    // Tambah review untuk naskah yang published
+    if (data.status === 'diterbitkan') {
+      const review = await prisma.reviewNaskah.create({
+        data: {
+          idNaskah: naskah.id,
+          idEditor: editor.id,
+          status: 'selesai',
+          rekomendasi: 'setujui',
+          catatan: `Novel yang sangat bagus dengan alur cerita yang menarik. Karakterisasi kuat dan gaya penulisan yang matang. Layak untuk diterbitkan.`,
+          ditugaskanPada: new Date(data.diterbitkanPada!.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 hari sebelum terbit
+          dimulaiPada: new Date(data.diterbitkanPada!.getTime() - 25 * 24 * 60 * 60 * 1000),
+          selesaiPada: new Date(data.diterbitkanPada!.getTime() - 10 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      // Tambah feedback untuk review
+      await prisma.feedbackReview.create({
+        data: {
+          idReview: review.id,
+          bab: 'Keseluruhan',
+          halaman: null,
+          komentar:
+            'Pacing cerita sangat baik, tidak ada bagian yang membosankan. Dialog terasa natural dan sesuai dengan karakter.',
+        },
+      });
+    }
+
+    console.log(`  ✅ Naskah ${index + 1}/15: ${data.judul} (${data.status})`);
+  }
+
+  // Update statistik penulis
+  await prisma.profilPenulis.update({
+    where: { idPengguna: writerTest.id },
+    data: {
+      totalBuku: 13, // 13 naskah published
+    },
+  });
+
+  console.log('');
+  console.log('✅ Comprehensive writer seed completed!');
+  console.log(`   - Total naskah: 15`);
+  console.log(`   - Status diterbitkan: 13 naskah`);
+  console.log(`   - Status dalam_review: 1 naskah`);
+  console.log(`   - Status draft: 1 naskah`);
+  console.log(`   - Semua naskah published memiliki review dan revisi`);
+
   console.log('');
   console.log('🎉 Seeding selesai!');
   console.log('');
@@ -261,6 +606,12 @@ async function main() {
   console.log('Editor    : editor@publishify.com / Password123!');
   console.log('Penulis   : penulis@publishify.com / Password123!');
   console.log('Percetakan: percetakan@publishify.com / Password123!');
+  console.log('');
+  console.log('🌟 COMPREHENSIVE WRITER untuk Testing:');
+  console.log('Email     : ahmad.surya@publishify.com / Password123!');
+  console.log('Nama      : Ahmad Surya Wijaya (A.S. Wijaya)');
+  console.log('Total Buku: 15 naskah (13 published, 1 review, 1 draft)');
+  console.log('Profile   : Complete dengan bio, bank account, NPWP');
   console.log('');
 }
 
