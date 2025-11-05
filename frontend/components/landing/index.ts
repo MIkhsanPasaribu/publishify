@@ -1,0 +1,7 @@
+export { HeaderNavigasi } from "./header-navigasi";
+export { HeroSection } from "./hero-section";
+export { FiturSection } from "./fitur-section";
+export { ProsesPenerbitanSection } from "./proses-penerbitan-section";
+export { TestimoniSection } from "./testimoni-section";
+export { CTASection } from "./cta-section";
+export { Footer } from "./footer";
