@@ -42,5 +42,14 @@ export class LoginDtoClass {
     example: 'Password123!',
     type: String,
   })
-  kataSandi: string;
+  kataSandi!: string;
+
+  @ApiProperty({
+    description: 'Platform yang digunakan (web atau mobile)',
+    example: 'web',
+    enum: Platform,
+    required: false,
+    default: 'web',
+  })
+  platform?: Platform;
 }
