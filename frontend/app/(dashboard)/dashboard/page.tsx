@@ -1,35 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadingChart, setLoadingChart] = useState(true);
+  const [loadingComments, setLoadingComments] = useState(true);
 
   // Data statistik
   const stats = [
-    { label: "Draft", value: 0, color: "bg-blue-500" },
-    { label: "Review", value: 0, color: "bg-yellow-500" },
-    { label: "Cetak", value: 0, color: "bg-purple-500" },
-    { label: "Publish", value: 0, color: "bg-green-500" },
+    { label: "Draft", value: 3, color: "bg-blue-500" },
+    { label: "Review", value: 1, color: "bg-yellow-500" },
+    { label: "Cetak", value: 2, color: "bg-purple-500" },
+    { label: "Publish", value: 7, color: "bg-green-500" },
   ];
 
   // Data penjualan untuk chart (6 bulan terakhir)
   const salesData = [
-    { month: "Januari", value: 0 },
-    { month: "Februari", value: 0 },
-    { month: "Maret", value: 0 },
-    { month: "April", value: 0 },
-    { month: "Mei", value: 0 },
-    { month: "Juni", value: 0 },
+    { month: "Januari", value: 12 },
+    { month: "Februari", value: 8 },
+    { month: "Maret", value: 15 },
+    { month: "April", value: 22 },
+    { month: "Mei", value: 14 },
+    { month: "Juni", value: 26 },
   ];
 
   // Komentar terbaru (kosong untuk sekarang)
   const comments = [
-    // Akan diisi nanti dengan data dari backend
+    {
+      nama: "Rina Amelia",
+      waktu: "2 hari lalu",
+      pesan: "Buku ‘Rahasia Hutan Senja’ sangat menarik, alurnya rapih dan membuat saya betah membaca hingga akhir.",
+    },
+    {
+      nama: "Budi Santoso",
+      waktu: "5 hari lalu",
+      pesan: "Typo kecil di bab 3 sudah diperbaiki, terima kasih respon cepatnya.",
+    },
+    {
+      nama: "Ayu Lestari",
+      waktu: "1 minggu lalu",
+      pesan: "Desain sampulnya keren! Cocok dengan isi bukunya.",
+    },
   ];
 
   // Rating (kosong untuk sekarang)
-  const rating = 0;
+  const rating = 4.3;
+
+  // Simulasi loading kecil untuk chart & komentar (tanpa backend)
+  useEffect(() => {
+    const t1 = setTimeout(() => setLoadingChart(false), 800);
+    const t2 = setTimeout(() => setLoadingComments(false), 1200);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -129,33 +155,49 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {/* Simple Line Chart */}
+              {/* Simple Bar Chart */}
               <div className="relative h-64 bg-gray-50 rounded-xl p-6">
                 <div className="absolute top-4 left-4 right-4">
                   <div className="text-xs font-semibold text-gray-500 mb-2">BUKU 1</div>
                 </div>
-                
+
                 {/* Chart Area */}
-                <div className="h-full flex items-end justify-between px-4 pt-12 pb-8">
-                  {salesData.map((data, index) => (
-                    <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                      {/* Bar */}
-                      <div className="w-full flex items-end justify-center" style={{ height: '150px' }}>
-                        <div
-                          className="w-12 bg-gradient-to-t from-[#14b8a6] to-[#0d9488] rounded-t-lg transition-all hover:opacity-80"
-                          style={{
-                            height: data.value === 0 ? '4px' : `${(data.value / Math.max(...salesData.map(d => d.value), 1)) * 100}%`,
-                            minHeight: '4px'
-                          }}
-                        ></div>
+                {loadingChart ? (
+                  <div className="h-full flex items-end justify-between px-4 pt-12 pb-8 animate-pulse">
+                    {[40, 70, 55, 85, 60, 95].map((h, index) => (
+                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
+                        <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
+                          <div
+                            className="w-12 bg-gray-200 rounded-t-lg"
+                            style={{ height: `${h}%`, minHeight: "6px" }}
+                          ></div>
+                        </div>
+                        <span className="h-3 w-10 bg-gray-200 rounded"></span>
                       </div>
-                      {/* Month Label */}
-                      <span className="text-xs text-gray-600 font-medium">
-                        {data.month.substring(0, 3)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex items-end justify-between px-4 pt-12 pb-8">
+                    {salesData.map((data, index) => (
+                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
+                        {/* Bar */}
+                        <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
+                          <div
+                            className="w-12 bg-gradient-to-t from-[#14b8a6] to-[#0d9488] rounded-t-lg transition-all hover:opacity-80"
+                            style={{
+                              height: data.value === 0 ? "4px" : `${(data.value / Math.max(...salesData.map(d => d.value), 1)) * 100}%`,
+                              minHeight: "4px",
+                            }}
+                          ></div>
+                        </div>
+                        {/* Month Label */}
+                        <span className="text-xs text-gray-600 font-medium">
+                          {data.month.substring(0, 3)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -168,7 +210,20 @@ export default function DashboardPage() {
                 Komentar
               </h3>
               
-              {comments.length === 0 ? (
+              {loadingComments ? (
+                <div className="space-y-4 animate-pulse">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gray-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-2/5" />
+                        <div className="h-3 bg-gray-200 rounded w-4/5" />
+                        <div className="h-3 bg-gray-200 rounded w-3/5" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : comments.length === 0 ? (
                 <div className="text-center py-12">
                   <svg
                     className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -187,7 +242,20 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Comment items will be displayed here */}
+                  {comments.map((c, idx) => (
+                    <div key={idx} className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[#14b8a6] text-white flex items-center justify-center font-semibold">
+                        {c.nama.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-gray-900">{c.nama}</div>
+                          <div className="text-xs text-gray-500">{c.waktu}</div>
+                        </div>
+                        <p className="text-gray-700 mt-1">{c.pesan}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

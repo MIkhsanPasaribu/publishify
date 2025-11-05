@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const menuItems = [
     {
@@ -149,22 +151,35 @@ export function Sidebar() {
           <ul className="space-y-2">
             {bottomMenuItems.map((item, index) => (
               <li key={index}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    item.isLogout
-                      ? "hover:bg-red-500 text-white/80 hover:text-white"
-                      : "hover:bg-white/10 text-white/80 hover:text-white"
-                  } ${isCollapsed ? "justify-center" : ""}`}
-                  title={isCollapsed ? item.label : ""}
-                >
-                  {item.icon}
-                  {!isCollapsed && (
-                    <span className={`font-medium ${item.isLogout ? "text-red-200" : ""}`}>
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
+                {item.isLogout ? (
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-red-500 text-white/80 hover:text-white ${
+                      isCollapsed ? "justify-center" : ""
+                    }`}
+                    title={isCollapsed ? item.label : ""}
+                  >
+                    {item.icon}
+                    {!isCollapsed && (
+                      <span className="font-medium text-red-200">
+                        {item.label}
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 text-white/80 hover:text-white ${
+                      isCollapsed ? "justify-center" : ""
+                    }`}
+                    title={isCollapsed ? item.label : ""}
+                  >
+                    {item.icon}
+                    {!isCollapsed && (
+                      <span className="font-medium">{item.label}</span>
+                    )}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -194,6 +209,46 @@ export function Sidebar() {
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowLogoutModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 transform transition-all">
+            {/* Emoticon */}
+            <div className="text-center mb-6">
+              <div className="text-7xl mb-4 animate-bounce">👋</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Yakin ingin keluar?
+              </h2>
+              <p className="text-gray-600">
+                Kami akan merindukanmu! Pastikan semua pekerjaanmu sudah tersimpan.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-6 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+              >
+                ❌ Batalkan
+              </button>
+              <button
+                onClick={() => {
+                  // Hapus token dari localStorage
+                  localStorage.removeItem("token");
+                  // Redirect ke landing page
+                  router.push("/");
+                }}
+                className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-lg"
+              >
+                ✅ Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

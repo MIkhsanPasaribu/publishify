@@ -5,3 +5,4 @@ export { ProsesPenerbitanSection } from "./proses-penerbitan-section";
 export { TestimoniSection } from "./testimoni-section";
 export { CTASection } from "./cta-section";
 export { Footer } from "./footer";
+export { BukuUnggulanSection } from "./buku-unggulan-section";
