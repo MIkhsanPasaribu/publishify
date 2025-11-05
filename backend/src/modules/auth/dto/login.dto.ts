@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { Platform } from '@prisma/client';
 
 /**
  * Schema Zod untuk validasi login
@@ -16,6 +17,8 @@ export const LoginSchema = z.object({
   kataSandi: z.string({
     required_error: 'Kata sandi wajib diisi',
   }),
+
+  platform: z.enum([Platform.web, Platform.mobile]).optional().default(Platform.web),
 });
 
 /**
@@ -40,4 +43,13 @@ export class LoginDtoClass {
     type: String,
   })
   kataSandi!: string;
+
+  @ApiProperty({
+    description: 'Platform yang digunakan (web atau mobile)',
+    example: 'web',
+    enum: Platform,
+    required: false,
+    default: 'web',
+  })
+  platform?: Platform;
 }

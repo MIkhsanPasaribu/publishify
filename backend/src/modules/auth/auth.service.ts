@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/prisma/prisma.service';
 import { hashPassword, verifyPassword } from '@/utils/hash.util';
+import { detectPlatform } from '@/utils/platform.util';
 import {
   DaftarDto,
   LoginDto,
@@ -18,8 +19,9 @@ import {
   ResetPasswordDto,
   VerifikasiEmailDto,
 } from './dto';
-import { JenisPeran } from '@prisma/client';
+import { JenisPeran, Platform } from '@prisma/client';
 import * as crypto from 'crypto';
+import { Request } from 'express';
 
 /**
  * Interface untuk JWT payload
@@ -180,7 +182,12 @@ export class AuthService {
   /**
    * Login dan generate JWT tokens
    */
-  async login(pengguna: any): Promise<ResponseLogin> {
+  async login(pengguna: any, request?: Request): Promise<ResponseLogin> {
+    // Deteksi platform dari request headers
+    const userAgent = request?.headers['user-agent'];
+    const customPlatform = request?.headers['x-platform'] as string | undefined;
+    const platform = detectPlatform(userAgent, customPlatform);
+
     // Prepare JWT payload
     const payload: JwtPayload = {
       sub: pengguna.id,
@@ -188,23 +195,35 @@ export class AuthService {
       peran: pengguna.peranPengguna.map((p: any) => p.jenisPeran),
     };
 
-    // Generate access token
+    // Get platform-specific expiry configuration
+    const platformConfig = platform === Platform.mobile ? 'jwt.mobile' : 'jwt.web';
+    const accessTokenExpiry = this.configService.get<string>(`${platformConfig}.expiresIn`, '1h');
+    const refreshTokenExpiry = this.configService.get<string>(
+      `${platformConfig}.refreshExpiresIn`,
+      '7d',
+    );
+
+    // Generate access token dengan expiry sesuai platform
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('jwt.expiresIn', '1h'),
+      expiresIn: accessTokenExpiry,
     });
 
-    // Generate refresh token
+    // Generate refresh token dengan expiry sesuai platform
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn', '7d'),
+      expiresIn: refreshTokenExpiry,
     });
 
-    // Simpan refresh token ke database
+    // Hitung kadaluarsa token dalam milliseconds
+    const refreshExpiryMs = this.parseExpiryToMs(refreshTokenExpiry);
+
+    // Simpan refresh token ke database dengan platform info
     await this.prisma.tokenRefresh.create({
       data: {
         idPengguna: pengguna.id,
         token: refreshToken,
-        kadaluarsaPada: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 hari
+        platform,
+        kadaluarsaPada: new Date(Date.now() + refreshExpiryMs),
       },
     });
 
@@ -214,13 +233,13 @@ export class AuthService {
       data: { loginTerakhir: new Date() },
     });
 
-    // Log aktivitas
+    // Log aktivitas dengan info platform
     await this.prisma.logAktivitas.create({
       data: {
         idPengguna: pengguna.id,
         jenis: 'login',
         aksi: 'Login',
-        deskripsi: 'Pengguna berhasil login',
+        deskripsi: `Pengguna berhasil login dari platform ${platform}`,
       },
     });
 
@@ -235,6 +254,26 @@ export class AuthService {
         profilPengguna: pengguna.profilPengguna,
       },
     };
+  }
+
+  /**
+   * Helper: Parse expiry string (1h, 7d, 365d) ke milliseconds
+   */
+  private parseExpiryToMs(expiry: string): number {
+    const match = expiry.match(/^(\d+)([smhd])$/);
+    if (!match) return 7 * 24 * 60 * 60 * 1000; // default 7 hari
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    const multipliers: Record<string, number> = {
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+    };
+
+    return value * (multipliers[unit] || 1000);
   }
 
   /**
@@ -262,6 +301,9 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token tidak valid atau sudah kadaluarsa');
       }
 
+      // Get platform dari token record untuk maintain consistency
+      const platform = tokenRecord.platform;
+
       // Get pengguna terbaru
       const pengguna = await this.prisma.pengguna.findUnique({
         where: { id: payload.sub },
@@ -276,15 +318,18 @@ export class AuthService {
         throw new UnauthorizedException('Pengguna tidak ditemukan atau tidak aktif');
       }
 
-      // Generate access token baru
+      // Generate access token baru dengan expiry sesuai platform
       const newPayload: JwtPayload = {
         sub: pengguna.id,
         email: pengguna.email,
         peran: pengguna.peranPengguna.map((p) => p.jenisPeran),
       };
 
+      const platformConfig = platform === Platform.mobile ? 'jwt.mobile' : 'jwt.web';
+      const accessTokenExpiry = this.configService.get<string>(`${platformConfig}.expiresIn`, '1h');
+
       const accessToken = this.jwtService.sign(newPayload, {
-        expiresIn: this.configService.get<string>('jwt.expiresIn', '1h'),
+        expiresIn: accessTokenExpiry,
       });
 
       return {
@@ -292,6 +337,7 @@ export class AuthService {
         pesan: 'Token berhasil diperbarui',
         data: {
           accessToken,
+          platform, // Return platform info untuk client reference
         },
       };
     } catch (error) {

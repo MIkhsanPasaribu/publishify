@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Post,
@@ -5,6 +6,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
+  Headers,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -12,6 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
@@ -41,6 +45,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PenggunaSaatIni } from './decorators/pengguna-saat-ini.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { Request } from 'express';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -91,6 +96,13 @@ export class AuthController {
     summary: 'Login pengguna',
     description: 'Login dengan email dan password, mendapatkan access token dan refresh token.',
   })
+  @ApiHeader({
+    name: 'X-Platform',
+    description:
+      'Platform yang digunakan (web atau mobile). Jika tidak diisi akan detect dari User-Agent.',
+    required: false,
+    enum: ['web', 'mobile'],
+  })
   @ApiBody({ type: LoginDtoClass })
   @ApiResponse({
     status: 200,
@@ -123,8 +135,9 @@ export class AuthController {
   async login(
     @Body(new ValidasiZodPipe(LoginSchema)) dto: LoginDto,
     @PenggunaSaatIni() pengguna: any,
+    @Req() request: Request,
   ) {
-    const result = await this.authService.login(pengguna);
+    const result = await this.authService.login(pengguna, request);
     return {
       sukses: true,
       pesan: 'Login berhasil',
@@ -160,9 +173,7 @@ export class AuthController {
     status: 401,
     description: 'Refresh token tidak valid',
   })
-  async refreshToken(
-    @Body(new ValidasiZodPipe(RefreshTokenSchema)) dto: RefreshTokenDto,
-  ) {
+  async refreshToken(@Body(new ValidasiZodPipe(RefreshTokenSchema)) dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto);
   }
 
@@ -183,7 +194,8 @@ export class AuthController {
       properties: {
         refreshToken: {
           type: 'string',
-          description: 'Refresh token yang akan di-revoke (optional, jika tidak ada akan logout dari semua device)',
+          description:
+            'Refresh token yang akan di-revoke (optional, jika tidak ada akan logout dari semua device)',
         },
       },
     },
@@ -230,9 +242,7 @@ export class AuthController {
     status: 400,
     description: 'Token tidak valid atau sudah kadaluarsa',
   })
-  async verifikasiEmail(
-    @Body(new ValidasiZodPipe(VerifikasiEmailSchema)) dto: VerifikasiEmailDto,
-  ) {
+  async verifikasiEmail(@Body(new ValidasiZodPipe(VerifikasiEmailSchema)) dto: VerifikasiEmailDto) {
     return this.authService.verifikasiEmail(dto);
   }
 
@@ -257,9 +267,7 @@ export class AuthController {
       },
     },
   })
-  async lupaPassword(
-    @Body(new ValidasiZodPipe(LupaPasswordSchema)) dto: LupaPasswordDto,
-  ) {
+  async lupaPassword(@Body(new ValidasiZodPipe(LupaPasswordSchema)) dto: LupaPasswordDto) {
     return this.authService.lupaPassword(dto);
   }
 
@@ -288,9 +296,7 @@ export class AuthController {
     status: 400,
     description: 'Token tidak valid atau sudah kadaluarsa',
   })
-  async resetPassword(
-    @Body(new ValidasiZodPipe(ResetPasswordSchema)) dto: ResetPasswordDto,
-  ) {
+  async resetPassword(@Body(new ValidasiZodPipe(ResetPasswordSchema)) dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
   }
 
