@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { uploadApi } from "@/lib/api/upload";
-import { naskahApi } from "@/lib/api/naskah";
+import { naskahApi, type Kategori, type Genre } from "@/lib/api/naskah";
 
 type ModeInput = "tulis" | "upload";
 
@@ -29,21 +29,11 @@ export default function AjukanDrafPage() {
   const [progressSampul, setProgressSampul] = useState(0);
   const [progressNaskah, setProgressNaskah] = useState(0);
 
-  // Kategori & Genre statis (UUID sesuai DB)
-  const kategoriList = [
-    { id: "03c0aa00-6d3d-4c7c-9694-9dfcd3c3b42f", nama: "Non-Fiksi" },
-    { id: "cb2147c6-09eb-48a8-b112-b085e3f9cdb7", nama: "Fiksi" },
-    { id: "ef3616a6-1386-4bba-92c0-ed185bfc3c54", nama: "Mystery" },
-    { id: "fd9195e1-3aa3-41cf-bbee-d1923ea958dc", nama: "Romance" },
-  ] as const;
-
-  const genreList = [
-    { id: "1f912990-9b2b-4cc3-8812-24a3047ed462", nama: "Sci-Fi" },
-    { id: "2c99601a-9221-406c-a913-5714d7a4e5ca", nama: "Horror" },
-    { id: "73217ab6-9d3a-4708-97cb-7d77d20c92a0", nama: "Comedy" },
-    { id: "b01e0c30-205f-4143-a443-5b65514d4fec", nama: "Thriller" },
-    { id: "fa24d2e8-f4a2-4667-bbf7-60eae33c8129", nama: "Fantasy" },
-  ] as const;
+    // State untuk kategori dan genre dari API
+    const [kategoriList, setKategoriList] = useState<Array<Pick<Kategori, "id" | "nama">>>([]);
+    const [genreList, setGenreList] = useState<Array<Pick<Genre, "id" | "nama">>>([]);
+    const [statusKategori, setStatusKategori] = useState<"idle" | "loading" | "sukses" | "gagal">("idle");
+    const [statusGenre, setStatusGenre] = useState<"idle" | "loading" | "sukses" | "gagal">("idle");
 
   const bahasaList = [
     { kode: "id", nama: "Bahasa Indonesia" },
@@ -80,7 +70,39 @@ export default function AjukanDrafPage() {
     }
   };
 
-  // Tidak fetch dari backend; gunakan daftar statis di atas
+    // Fetch kategori dan genre dari backend
+    const fetchMeta = useCallback(async () => {
+      setStatusKategori("loading");
+      setStatusGenre("loading");
+      try {
+        const [katRes, genRes] = await Promise.all([
+          naskahApi.ambilKategori({ aktif: true, limit: 100 }).catch(() => null),
+          naskahApi.ambilGenre({ aktif: true, limit: 100 }).catch(() => null),
+        ]);
+      
+        if (katRes?.data?.length) {
+          setKategoriList(katRes.data.map((k) => ({ id: k.id, nama: k.nama })));
+          setStatusKategori("sukses");
+        } else {
+          setStatusKategori("gagal");
+        }
+      
+        if (genRes?.data?.length) {
+          setGenreList(genRes.data.map((g) => ({ id: g.id, nama: g.nama })));
+          setStatusGenre("sukses");
+        } else {
+          setStatusGenre("gagal");
+        }
+      } catch (error) {
+        console.error("Error fetching kategori/genre:", error);
+        setStatusKategori("gagal");
+        setStatusGenre("gagal");
+      }
+    }, []);
+
+    useEffect(() => {
+      fetchMeta();
+    }, [fetchMeta]);
 
   const minimalKataSinopsisTerpenuhi = useMemo(() => {
     const kata = formData.sinopsis.trim().split(/\s+/).filter(Boolean).length;
@@ -167,7 +189,15 @@ export default function AjukanDrafPage() {
       // Validasi UUID untuk idKategori & idGenre (hindari kirim dummy)
       const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!uuidRe.test(formData.idKategori) || !uuidRe.test(formData.idGenre)) {
-        toast.error("Kategori/Genre tidak valid. Mohon pilih opsi yang tersedia.");
+          const metaSiap = statusKategori === "sukses" && statusGenre === "sukses";
+          if (!metaSiap) {
+            toast.error(
+              "Gagal mengajukan: daftar kategori/genre belum dimuat dari server. Klik 'Muat Ulang Daftar' lalu pilih kategori & genre."
+            );
+          } else {
+            toast.error("Kategori/Genre belum dipilih dengan benar. Silakan pilih ulang dari daftar.");
+          }
+          setLoading(false);
         return;
       }
 
@@ -348,16 +378,33 @@ export default function AjukanDrafPage() {
                       name="idKategori"
                       value={formData.idKategori}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent"
+                        disabled={statusKategori === "loading"}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent ${
+                          statusKategori === "loading" ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed" : "border-gray-300"
+                        }`}
                       required
                     >
-                      <option value="">Pilih Kategori</option>
+                        <option value="">
+                          {statusKategori === "loading" ? "Memuat kategori..." : "Pilih Kategori"}
+                        </option>
                       {kategoriList.map((kat) => (
                         <option key={kat.id} value={kat.id}>
                           {kat.nama}
                         </option>
                       ))}
                     </select>
+                      {statusKategori === "gagal" && (
+                        <div className="mt-1 text-xs text-red-600">
+                          Gagal memuat kategori dari server.
+                          <button
+                            type="button"
+                            onClick={fetchMeta}
+                            className="ml-2 underline text-[#0d9488] hover:text-[#14b8a6]"
+                          >
+                            Muat Ulang Daftar
+                          </button>
+                        </div>
+                      )}
                   </div>
 
                   <div>
@@ -368,16 +415,33 @@ export default function AjukanDrafPage() {
                       name="idGenre"
                       value={formData.idGenre}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent"
+                        disabled={statusGenre === "loading"}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent ${
+                          statusGenre === "loading" ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed" : "border-gray-300"
+                        }`}
                       required
                     >
-                      <option value="">Pilih Genre</option>
+                        <option value="">
+                          {statusGenre === "loading" ? "Memuat genre..." : "Pilih Genre"}
+                        </option>
                       {genreList.map((gen) => (
                         <option key={gen.id} value={gen.id}>
                           {gen.nama}
                         </option>
                       ))}
                     </select>
+                      {statusGenre === "gagal" && (
+                        <div className="mt-1 text-xs text-red-600">
+                          Gagal memuat genre dari server.
+                          <button
+                            type="button"
+                            onClick={fetchMeta}
+                            className="ml-2 underline text-[#0d9488] hover:text-[#14b8a6]"
+                          >
+                            Muat Ulang Daftar
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
 
