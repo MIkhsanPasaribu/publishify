@@ -6,19 +6,23 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 import { PrismaModule } from '@/prisma/prisma.module';
+import googleOAuthConfig from '@/config/google-oauth.config';
 
 /**
  * Authentication Module
- * 
+ *
  * Module untuk handle semua fitur authentication:
  * - Registrasi pengguna baru
- * - Login dengan JWT
+ * - Login dengan JWT (local strategy)
+ * - Login dengan Google OAuth 2.0
  * - Refresh token
  * - Verifikasi email
  * - Lupa password & reset password
  * - Logout
- * 
+ * - Link/unlink Google account
+ *
  * @module AuthModule
  */
 @Module({
@@ -28,6 +32,9 @@ import { PrismaModule } from '@/prisma/prisma.module';
 
     // Import Config untuk environment variables
     ConfigModule,
+
+    // Import Google OAuth config
+    ConfigModule.forFeature(googleOAuthConfig),
 
     // Import Passport untuk authentication strategies
     PassportModule.register({
@@ -55,6 +62,7 @@ import { PrismaModule } from '@/prisma/prisma.module';
     // Strategies
     LocalStrategy,
     JwtStrategy,
+    GoogleStrategy, // ✅ Add Google OAuth Strategy
   ],
   exports: [
     // Export AuthService agar bisa digunakan module lain
