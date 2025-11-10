@@ -12,6 +12,8 @@ import emailConfig from './config/email.config';
 
 // Modules
 import { PrismaModule } from './prisma/prisma.module';
+import { CacheModule } from './common/cache/cache.module';
+import { LoggerModule } from './common/logger/logger.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PenggunaModule } from './modules/pengguna/pengguna.module';
 import { NaskahModule } from './modules/naskah/naskah.module';
@@ -63,6 +65,12 @@ import { AppController } from './app.controller';
 
     // Prisma
     PrismaModule,
+
+    // Cache Module (Redis)
+    CacheModule,
+
+    // Logger Module (Async Logging)
+    LoggerModule,
 
     // Feature Modules
     AuthModule,
