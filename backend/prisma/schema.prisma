@@ -240,6 +240,11 @@ model Naskah {
   @@index([status])
   @@index([idKategori])
   @@index([idGenre])
+  @@index([idPenulis, status]) // Dashboard queries: penulis filter by status
+  @@index([status, dibuatPada]) // List queries: filter by status + sort by date
+  @@index([idKategori, status]) // Category page: kategori + status filter
+  @@index([publik, diterbitkanPada]) // Public listing: public naskah sorted by publish date
+  @@index([dibuatPada]) // Cursor pagination: sort by creation date
   @@map("naskah")
 }
 
@@ -335,6 +340,8 @@ model ReviewNaskah {
 
   @@index([idNaskah])
   @@index([idEditor])
+  @@index([idEditor, status]) // Editor dashboard: filter by editor + status
+  @@index([status, ditugaskanPada]) // Review queue: filter by status + sort by assigned date
   @@map("review_naskah")
 }
 
@@ -382,6 +389,9 @@ model PesananCetak {
 
   @@index([nomorPesanan])
   @@index([status])
+  @@index([idPemesan, status]) // User orders: filter by user + status
+  @@index([status, tanggalPesan]) // Production queue: filter by status + sort by date
+  @@index([tanggalPesan]) // Order history: sort by order date
   @@map("pesanan_cetak")
 }
 
@@ -455,6 +465,8 @@ model Pembayaran {
 
   @@index([nomorTransaksi])
   @@index([status])
+  @@index([idPengguna, status]) // User payments: filter by user + status
+  @@index([status, dibuatPada]) // Payment queue: filter by status + sort by date
   @@map("pembayaran")
 }
 
