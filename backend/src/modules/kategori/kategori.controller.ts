@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -35,9 +36,11 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@/common/cache';
 
 @ApiTags('Kategori')
 @Controller('kategori')
+@UseInterceptors(CacheInterceptor)
 export class KategoriController {
   constructor(private readonly kategoriService: KategoriService) {}
 
@@ -123,6 +126,8 @@ export class KategoriController {
   @Public()
   @Get('aktif')
   @HttpCode(HttpStatus.OK)
+  @CacheKey('kategori:aktif')
+  @CacheTTL(3600) // Cache 1 jam untuk data dropdown yang jarang berubah
   @ApiOperation({
     summary: 'Ambil kategori aktif',
     description: 'Mendapatkan semua kategori dengan status aktif (untuk dropdown/select)',
