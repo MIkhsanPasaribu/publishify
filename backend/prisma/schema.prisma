@@ -121,8 +121,17 @@ enum Platform {
 model Pengguna {
   id                    String    @id @default(uuid())
   email                 String    @unique
-  kataSandi             String
+  kataSandi             String?   // ⚠️ Optional untuk OAuth users
   telepon               String?
+  
+  // ✅ OAuth Fields
+  googleId              String?   @unique @map("google_id")
+  facebookId            String?   @unique @map("facebook_id")
+  appleId               String?   @unique @map("apple_id")
+  provider              String?              // "google", "facebook", "apple", "local"
+  avatarUrl             String?   @map("avatar_url")
+  emailVerifiedByProvider Boolean @default(false) @map("email_verified_by_provider")
+  
   aktif                 Boolean   @default(true)
   terverifikasi         Boolean   @default(false)
   emailDiverifikasiPada DateTime?
@@ -143,6 +152,8 @@ model Pengguna {
   tokenRefresh     TokenRefresh[]
   file             File[]
 
+  @@index([googleId], map: "idx_pengguna_google_id")
+  @@index([provider], map: "idx_pengguna_provider")
   @@map("pengguna")
 }
 
@@ -526,6 +537,23 @@ model LogAktivitas {
   @@index([idPengguna])
   @@index([dibuatPada])
   @@map("log_aktivitas")
+}
+
+// ============================================
+// OAUTH AUTHENTICATION (1 tabel)
+// ============================================
+
+model OAuthState {
+  id             String   @id @default(uuid())
+  state          String   @unique
+  provider       String              // "google", "facebook", "apple"
+  redirectUrl    String?
+  kadaluarsaPada DateTime
+  dibuatPada     DateTime @default(now())
+  
+  @@index([state], map: "idx_oauth_state_state")
+  @@index([kadaluarsaPada], map: "idx_oauth_state_expiry")
+  @@map("oauth_state")
 }
 
 // ============================================
