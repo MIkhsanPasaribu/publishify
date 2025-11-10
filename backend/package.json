@@ -18,6 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:redis": "bun run test-redis.ts",
     "prisma:generate": "bun prisma generate",
     "prisma:push": "bun prisma db push",
     "prisma:migrate": "bun prisma migrate dev",
@@ -25,6 +26,7 @@
     "prisma:seed": "bun prisma db seed"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.3.0",
@@ -42,6 +44,8 @@
     "axios": "^1.6.5",
     "bcryptjs": "^3.0.3",
     "bull": "^4.12.0",
+    "cache-manager": "^7.2.4",
+    "cache-manager-redis-yet": "^5.1.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "compression": "^1.7.4",
@@ -55,27 +59,9 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-<<<<<<< HEAD
-    "zod": "^3.22.4",
-    "axios": "^1.6.5",
-    "nodemailer": "^6.9.8",
-    "bcryptjs": "^2.4.3",
-    "socket.io": "^4.6.1",
-    "bull": "^4.12.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
-    "compression": "^1.7.4",
-    "cors": "^2.8.5",
-    "date-fns": "^3.2.0",
-    "dotenv": "^16.4.0",
-    "helmet": "^7.1.0",
-    "ioredis": "^5.3.2",
-    "multer": "^1.4.5-lts.1",
-=======
     "prisma": "^6.18.0",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
->>>>>>> e6c912a910bc0295ce1e27facd32aff88a1c74e9
     "sharp": "^0.33.2",
     "socket.io": "^4.6.1",
     "uuid": "^9.0.1",
@@ -86,12 +72,8 @@
     "@nestjs/cli": "^10.3.0",
     "@nestjs/schematics": "^10.1.0",
     "@nestjs/testing": "^10.3.0",
-<<<<<<< HEAD
-    "@types/node": "^20.11.5",
-=======
     "@types/bcryptjs": "^3.0.0",
     "@types/compression": "^1.7.5",
->>>>>>> e6c912a910bc0295ce1e27facd32aff88a1c74e9
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11",
     "@types/multer": "^1.4.11",
