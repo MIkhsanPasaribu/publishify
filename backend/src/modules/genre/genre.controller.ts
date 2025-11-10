@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -35,9 +36,11 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
 import { Public } from '@/common/decorators/public.decorator';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@/common/cache';
 
 @ApiTags('Genre')
 @Controller('genre')
+@UseInterceptors(CacheInterceptor)
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
@@ -119,6 +122,8 @@ export class GenreController {
   @Public()
   @Get('aktif')
   @HttpCode(HttpStatus.OK)
+  @CacheKey('genre:aktif')
+  @CacheTTL(3600) // Cache 1 jam untuk data dropdown yang jarang berubah
   @ApiOperation({
     summary: 'Ambil genre aktif',
     description: 'Mendapatkan semua genre dengan status aktif (untuk dropdown/select)',
