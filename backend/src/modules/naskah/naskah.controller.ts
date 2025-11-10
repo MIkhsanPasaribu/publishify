@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -8,6 +9,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
@@ -37,10 +39,12 @@ import {
   AjukanNaskahSchema,
   TerbitkanNaskahSchema,
 } from './dto';
+import { CacheInterceptor, CacheTTL } from '@/common/cache';
 
 @ApiTags('naskah')
 @Controller('naskah')
 @UseGuards(JwtAuthGuard, PeranGuard)
+@UseInterceptors(CacheInterceptor)
 export class NaskahController {
   constructor(private readonly naskahService: NaskahService) {}
 
@@ -49,6 +53,7 @@ export class NaskahController {
    */
   @Get()
   @Public()
+  @CacheTTL(300) // Cache 5 menit untuk list naskah
   @ApiOperation({
     summary: 'Ambil daftar naskah',
     description:
@@ -64,6 +69,65 @@ export class NaskahController {
     @PenggunaSaatIni('id') idPengguna?: string,
   ) {
     return await this.naskahService.ambilSemuaNaskah(filter, idPengguna);
+  }
+
+  /**
+   * GET /naskah/cursor - Ambil daftar naskah dengan cursor pagination
+   * Lebih efisien untuk dataset besar dan deep pagination
+   */
+  @Get('cursor')
+  @Public()
+  @CacheTTL(180) // Cache 3 menit untuk cursor pagination
+  @ApiOperation({
+    summary: 'Ambil daftar naskah dengan cursor pagination',
+    description:
+      'Cursor-based pagination lebih efisien untuk dataset besar. Gunakan nextCursor dari response sebelumnya untuk page berikutnya.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar naskah berhasil diambil dengan cursor pagination',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    type: String,
+    description: 'Cursor dari item terakhir (ID)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Jumlah items (max 100)',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: [
+      'draft',
+      'diajukan',
+      'dalam_review',
+      'perlu_revisi',
+      'disetujui',
+      'ditolak',
+      'diterbitkan',
+    ],
+  })
+  @ApiQuery({ name: 'idKategori', required: false, type: String })
+  async ambilNaskahDenganCursor(
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: number,
+    @Query('status') status?: any,
+    @Query('idKategori') idKategori?: string,
+    @PenggunaSaatIni('id') idPengguna?: string,
+  ) {
+    return await this.naskahService.ambilNaskahDenganCursor(
+      cursor,
+      limit ? Number(limit) : 20,
+      status,
+      idKategori,
+      idPengguna,
+    );
   }
 
   /**
@@ -120,6 +184,7 @@ export class NaskahController {
    */
   @Get(':id')
   @Public()
+  @CacheTTL(600) // Cache 10 menit untuk detail naskah
   @ApiOperation({
     summary: 'Ambil detail naskah',
     description:
