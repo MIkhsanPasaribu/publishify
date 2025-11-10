@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -161,6 +162,13 @@ export class AuthService {
 
     if (!pengguna) {
       return null;
+    }
+
+    // Check apakah user punya password (user OAuth-only tidak punya password)
+    if (!pengguna.kataSandi) {
+      throw new UnauthorizedException(
+        'Akun ini terdaftar melalui OAuth. Silakan login dengan provider OAuth Anda.',
+      );
     }
 
     // Verify password
@@ -526,6 +534,389 @@ export class AuthService {
     return {
       sukses: true,
       pesan: 'Password berhasil direset. Silakan login dengan password baru.',
+    };
+  }
+
+  // ============================================
+  // OAUTH GOOGLE METHODS
+  // ============================================
+
+  /**
+   * Generate OAuth state token untuk CSRF protection
+   *
+   * State token disimpan di database dengan expiry 5 menit.
+   * Divalidasi saat callback dari OAuth provider.
+   *
+   * @param provider - OAuth provider ("google", "facebook", dll)
+   * @param redirectUrl - Frontend callback URL (optional)
+   * @returns state token
+   */
+  async generateOAuthState(provider: string, redirectUrl?: string): Promise<string> {
+    // Generate secure random state (64 characters)
+    const state = crypto.randomBytes(32).toString('hex');
+
+    // Calculate expiry (5 minutes from now)
+    const stateExpiry = this.configService.get<number>('googleOAuth.stateExpiry', 300);
+    const kadaluarsaPada = new Date(Date.now() + stateExpiry * 1000);
+
+    // Store in database
+    await this.prisma.oAuthState.create({
+      data: {
+        state,
+        provider,
+        redirectUrl,
+        kadaluarsaPada,
+      },
+    });
+
+    return state;
+  }
+
+  /**
+   * Validate OAuth state token (CSRF protection)
+   *
+   * Validasi:
+   * 1. State exists di database
+   * 2. Provider match
+   * 3. Not expired
+   * 4. Delete after use (one-time token)
+   *
+   * @param state - State token dari OAuth callback
+   * @param provider - OAuth provider
+   * @throws UnauthorizedException jika state invalid
+   */
+  async validateOAuthState(state: string, provider: string): Promise<void> {
+    if (!state) {
+      throw new UnauthorizedException('State parameter tidak ada');
+    }
+
+    // Find state in database
+    const oauthState = await this.prisma.oAuthState.findUnique({
+      where: { state },
+    });
+
+    if (!oauthState) {
+      throw new UnauthorizedException('State tidak valid atau sudah digunakan');
+    }
+
+    // Check provider
+    if (oauthState.provider !== provider) {
+      throw new UnauthorizedException(
+        `Provider tidak sesuai. Expected: ${provider}, Got: ${oauthState.provider}`,
+      );
+    }
+
+    // Check expiry
+    if (oauthState.kadaluarsaPada < new Date()) {
+      // Delete expired state
+      await this.prisma.oAuthState.delete({ where: { state } });
+      throw new UnauthorizedException('State sudah kadaluarsa. Silakan coba lagi.');
+    }
+
+    // Delete state (one-time use)
+    await this.prisma.oAuthState.delete({ where: { state } });
+  }
+
+  /**
+   * Handle Google OAuth login/registration
+   *
+   * Strategi:
+   * 1. Cari user by email OR googleId
+   * 2. Jika ada:
+   *    a. Jika belum ada googleId → Link account
+   *    b. Jika sudah ada googleId → Just login
+   * 3. Jika tidak ada → Create new user
+   *
+   * Features:
+   * - Auto email verification untuk OAuth users
+   * - Account linking untuk existing users
+   * - Avatar sync dari Google
+   * - Comprehensive logging
+   *
+   * @param googleData - Data dari Google OAuth
+   * @returns User object untuk JWT generation
+   */
+  async handleGoogleOAuth(googleData: {
+    googleId: string;
+    email: string;
+    emailVerified: boolean;
+    namaDepan: string;
+    namaBelakang: string;
+    namaTampilan: string;
+    avatarUrl: string | null;
+    accessToken?: string;
+    refreshToken?: string;
+  }): Promise<any> {
+    const { googleId, email, emailVerified, namaDepan, namaBelakang, namaTampilan, avatarUrl } =
+      googleData;
+
+    // ============================================
+    // 1. Check if user exists (by email OR googleId)
+    // ============================================
+    let pengguna = await this.prisma.pengguna.findFirst({
+      where: {
+        OR: [{ email }, { googleId }],
+      },
+      include: {
+        profilPengguna: true,
+        peranPengguna: {
+          where: { aktif: true },
+        },
+      },
+    });
+
+    if (pengguna) {
+      // ===== EXISTING USER =====
+
+      if (!pengguna.googleId) {
+        // ============================================
+        // 2a. Link Google account to existing user
+        // ============================================
+        pengguna = await this.prisma.pengguna.update({
+          where: { id: pengguna.id },
+          data: {
+            googleId,
+            provider: 'google',
+            avatarUrl: avatarUrl || pengguna.avatarUrl,
+            emailVerifiedByProvider: emailVerified,
+            terverifikasi: emailVerified ? true : pengguna.terverifikasi,
+            emailDiverifikasiPada:
+              emailVerified && !pengguna.emailDiverifikasiPada
+                ? new Date()
+                : pengguna.emailDiverifikasiPada,
+            loginTerakhir: new Date(),
+          },
+          include: {
+            profilPengguna: true,
+            peranPengguna: {
+              where: { aktif: true },
+            },
+          },
+        });
+
+        // Update profile avatar if not set
+        if (avatarUrl && !pengguna.profilPengguna?.urlAvatar) {
+          await this.prisma.profilPengguna.update({
+            where: { idPengguna: pengguna.id },
+            data: { urlAvatar: avatarUrl },
+          });
+        }
+
+        // Log activity: Account linked
+        await this.prisma.logAktivitas.create({
+          data: {
+            idPengguna: pengguna.id,
+            jenis: 'oauth_link',
+            aksi: 'Link Google Account',
+            deskripsi: `Akun Google berhasil di-link: ${email}`,
+          },
+        });
+      } else {
+        // ============================================
+        // 2b. User already linked, just login
+        // ============================================
+        pengguna = await this.prisma.pengguna.update({
+          where: { id: pengguna.id },
+          data: {
+            loginTerakhir: new Date(),
+            avatarUrl: avatarUrl || pengguna.avatarUrl, // Update avatar if changed
+          },
+          include: {
+            profilPengguna: true,
+            peranPengguna: {
+              where: { aktif: true },
+            },
+          },
+        });
+
+        // Log activity: Login
+        await this.prisma.logAktivitas.create({
+          data: {
+            idPengguna: pengguna.id,
+            jenis: 'login',
+            aksi: 'Login via Google',
+            deskripsi: `User login menggunakan Google OAuth: ${email}`,
+          },
+        });
+      }
+    } else {
+      // ===== NEW USER =====
+      // ============================================
+      // 3. Create new user account
+      // ============================================
+      pengguna = await this.prisma.$transaction(async (prisma) => {
+        // 3a. Create user
+        const newPengguna = await prisma.pengguna.create({
+          data: {
+            email,
+            googleId,
+            provider: 'google',
+            avatarUrl,
+            aktif: true,
+            terverifikasi: emailVerified, // Auto-verify if Google verified
+            emailVerifiedByProvider: emailVerified,
+            emailDiverifikasiPada: emailVerified ? new Date() : null,
+            loginTerakhir: new Date(),
+          },
+        });
+
+        // 3b. Create profile
+        await prisma.profilPengguna.create({
+          data: {
+            idPengguna: newPengguna.id,
+            namaDepan,
+            namaBelakang,
+            namaTampilan,
+            urlAvatar: avatarUrl,
+          },
+        });
+
+        // 3c. Assign default role (penulis)
+        await prisma.peranPengguna.create({
+          data: {
+            idPengguna: newPengguna.id,
+            jenisPeran: JenisPeran.penulis,
+            aktif: true,
+          },
+        });
+
+        // 3d. Create profil penulis
+        await prisma.profilPenulis.create({
+          data: {
+            idPengguna: newPengguna.id,
+            namaPena: namaTampilan,
+          },
+        });
+
+        // 3e. Log activity: Registration
+        await prisma.logAktivitas.create({
+          data: {
+            idPengguna: newPengguna.id,
+            jenis: 'register',
+            aksi: 'Register via Google',
+            deskripsi: `User baru terdaftar melalui Google OAuth: ${email}`,
+          },
+        });
+
+        // Return with relations
+        return await prisma.pengguna.findUnique({
+          where: { id: newPengguna.id },
+          include: {
+            profilPengguna: true,
+            peranPengguna: {
+              where: { aktif: true },
+            },
+          },
+        });
+      });
+
+      // Validasi transaction result
+      if (!pengguna) {
+        throw new InternalServerErrorException('Gagal membuat user baru');
+      }
+    }
+
+    // ============================================
+    // 4. Return user data untuk JWT generation
+    // ============================================
+    return {
+      id: pengguna.id,
+      email: pengguna.email,
+      peran: pengguna.peranPengguna.map((p: any) => p.jenisPeran),
+      terverifikasi: pengguna.terverifikasi,
+      profilPengguna: pengguna.profilPengguna,
+    };
+  }
+
+  /**
+   * Link Google account ke existing logged-in user
+   *
+   * Use case: User yang sudah punya account local
+   * ingin link Google account untuk future login.
+   *
+   * @param userId - ID user yang sedang login
+   * @param googleId - Google ID untuk di-link
+   */
+  async linkGoogleAccount(userId: string, googleId: string): Promise<any> {
+    // Check if Google ID already used
+    const existingGoogle = await this.prisma.pengguna.findUnique({
+      where: { googleId },
+    });
+
+    if (existingGoogle && existingGoogle.id !== userId) {
+      throw new ConflictException('Google account ini sudah digunakan oleh user lain');
+    }
+
+    // Link Google account
+    const pengguna = await this.prisma.pengguna.update({
+      where: { id: userId },
+      data: {
+        googleId,
+        provider: 'google',
+      },
+    });
+
+    // Log activity
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna: userId,
+        jenis: 'oauth_link',
+        aksi: 'Link Google Account',
+        deskripsi: 'Google account berhasil di-link ke akun existing',
+      },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Google account berhasil di-link',
+    };
+  }
+
+  /**
+   * Unlink Google account dari user
+   *
+   * Syarat: User harus punya password (tidak boleh OAuth-only account)
+   *
+   * @param userId - ID user yang akan unlink
+   */
+  async unlinkGoogleAccount(userId: string): Promise<any> {
+    const pengguna = await this.prisma.pengguna.findUnique({
+      where: { id: userId },
+    });
+
+    if (!pengguna) {
+      throw new NotFoundException('User tidak ditemukan');
+    }
+
+    // Check if user has password
+    if (!pengguna.kataSandi) {
+      throw new BadRequestException(
+        'Tidak bisa unlink Google account. Silakan set password terlebih dahulu.',
+      );
+    }
+
+    // Unlink Google
+    await this.prisma.pengguna.update({
+      where: { id: userId },
+      data: {
+        googleId: null,
+        provider: 'local',
+      },
+    });
+
+    // Log activity
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna: userId,
+        jenis: 'oauth_unlink',
+        aksi: 'Unlink Google Account',
+        deskripsi: 'Google account berhasil di-unlink',
+      },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Google account berhasil di-unlink',
     };
   }
 }
