@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   NotFoundException,
@@ -13,6 +14,10 @@ import {
   TerbitkanNaskahDto,
 } from './dto';
 import { StatusNaskah } from '@prisma/client';
+import {
+  CursorPaginationDto,
+  buildCursorPaginationResponse,
+} from '@/common/dto/cursor-pagination.dto';
 
 @Injectable()
 export class NaskahService {
@@ -241,6 +246,112 @@ export class NaskahService {
         totalHalaman: Math.ceil(total / limit),
       },
     };
+  }
+
+  /**
+   * Ambil naskah dengan cursor-based pagination
+   * Lebih efisien untuk dataset besar dan deep pagination
+   * Role: public (untuk publik=true), authenticated (semua)
+   */
+  async ambilNaskahDenganCursor(
+    cursor: string | undefined,
+    limit: number = 20,
+    status?: StatusNaskah,
+    idKategori?: string,
+    idPengguna?: string,
+  ) {
+    const take = Math.min(limit, 100); // Max 100 items
+
+    // Build where clause
+    const where: any = {};
+
+    // Jika tidak ada idPengguna (public), hanya tampilkan yang publik dan diterbitkan
+    if (!idPengguna) {
+      where.publik = true;
+      where.status = StatusNaskah.diterbitkan;
+    } else {
+      // Authenticated user bisa filter status
+      if (status) {
+        where.status = status;
+      }
+    }
+
+    // Filter by kategori
+    if (idKategori) {
+      where.idKategori = idKategori;
+    }
+
+    // Fetch items (take + 1 untuk detect hasMore)
+    const items = await this.prisma.naskah.findMany({
+      where,
+      take: take + 1, // Fetch satu lebih untuk detect hasMore
+      ...(cursor && {
+        cursor: {
+          id: cursor, // Gunakan ID sebagai cursor (unique field)
+        },
+        skip: 1, // Skip cursor item
+      }),
+      orderBy: {
+        dibuatPada: 'desc', // Sort by creation date
+      },
+      select: {
+        id: true,
+        judul: true,
+        subJudul: true,
+        sinopsis: true,
+        isbn: true,
+        status: true,
+        urlSampul: true,
+        jumlahHalaman: true,
+        jumlahKata: true,
+        publik: true,
+        dibuatPada: true,
+        diperbaruiPada: true,
+        penulis: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+                urlAvatar: true,
+              },
+            },
+            profilPenulis: {
+              select: {
+                namaPena: true,
+                ratingRataRata: true,
+              },
+            },
+          },
+        },
+        kategori: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        genre: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        _count: {
+          select: {
+            revisi: true,
+            review: true,
+          },
+        },
+      },
+    });
+
+    // Build response dengan helper function
+    return buildCursorPaginationResponse(items, take, (item) => item.id);
   }
 
   /**
