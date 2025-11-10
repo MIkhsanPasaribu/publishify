@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   NotFoundException,
@@ -288,6 +289,13 @@ export class PenggunaService {
 
     if (!pengguna) {
       throw new NotFoundException('Pengguna tidak ditemukan');
+    }
+
+    // Check apakah user punya password (user OAuth-only tidak punya password)
+    if (!pengguna.kataSandi) {
+      throw new BadRequestException(
+        'Akun ini terdaftar melalui OAuth. Tidak bisa mengubah password.',
+      );
     }
 
     // Verify old password
