@@ -27,6 +27,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const res = await authApi.login({ email, kataSandi });
           const { accessToken, refreshToken, pengguna } = res.data;
+          
+          console.log("Login response:", { pengguna, peran: pengguna.peran });
+          
           // Persist tokens ke localStorage untuk interceptor
           if (typeof window !== "undefined") {
             localStorage.setItem("accessToken", accessToken);

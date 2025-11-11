@@ -4,14 +4,38 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/use-auth-store";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+  // Ambil data pengguna untuk cek role
+  const { pengguna } = useAuthStore();
+  
+  // Helper untuk cek apakah user memiliki role tertentu
+  const hasRole = (role: "penulis" | "editor" | "percetakan" | "admin") => {
+    if (!pengguna) return false;
+    
+    // Cek dari peran (format array string dari backend login)
+    if (pengguna.peran && pengguna.peran.includes(role)) {
+      return true;
+    }
+    
+    // Cek dari peranPengguna (format lengkap)
+    if (pengguna.peranPengguna) {
+      return pengguna.peranPengguna.some(
+        (peran) => peran.jenisPeran === role && peran.aktif
+      );
+    }
+    
+    return false;
+  };
 
-  const menuItems = [
+  // Menu untuk Penulis
+  const menuPenulis = [
     {
       label: "Beranda",
       icon: (
@@ -57,6 +81,34 @@ export function Sidebar() {
       ),
       href: "/dashboard/pesanan-cetak",
     },
+  ];
+
+  // Menu untuk Editor
+  const menuEditor = [
+    {
+      label: "Dashboard Editor",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+      href: "/dashboard/editor",
+    },
+    {
+      label: "Daftar Review",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: "/dashboard/editor/review",
+    },
+  ];
+
+  // Gabungkan menu berdasarkan role
+  const menuItems = [
+    ...(hasRole("penulis") ? menuPenulis : []),
+    ...(hasRole("editor") ? menuEditor : []),
   ];
 
   const bottomMenuItems = [

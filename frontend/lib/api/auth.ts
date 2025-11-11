@@ -27,6 +27,9 @@ export interface Pengguna {
     provinsi?: string;
     kodePos?: string;
   };
+  // Backend mengirim 'peran' sebagai array string
+  peran?: ("penulis" | "editor" | "percetakan" | "admin")[];
+  // Format lengkap (opsional untuk kompatibilitas)
   peranPengguna?: Array<{
     id: string;
     jenisPeran: "penulis" | "editor" | "percetakan" | "admin";

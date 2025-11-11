@@ -1,48 +1,99 @@
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosError } from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+/**
+ * Base API URL dari environment variable
+ */
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-// Instance axios utama
-export const api = axios.create({
-  baseURL,
-  timeout: 20000,
-  withCredentials: false,
+/**
+ * Axios instance dengan konfigurasi default
+ */
+const api: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
-    Accept: "application/json",
   },
 });
 
-// Inject Authorization token jika ada
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-    if (token) {
-      config.headers = config.headers || {};
-      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+/**
+ * Request interceptor untuk menambahkan token ke header
+ */
+api.interceptors.request.use(
+  (config) => {
+    // Ambil token dari localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-  } catch (err) {
-    // ignore
-  }
-  return config;
-});
-
-// Global error handler (opsional)
-api.interceptors.response.use(
-  (res: AxiosResponse) => res,
-  (error: AxiosError<any>) => {
-    const pesanDefault = "Terjadi kesalahan pada koneksi. Mohon coba lagi.";
-    if (error.response) {
-      // Respons dari server dengan status error
-      const data = error.response.data;
-      const pesan = data?.pesan || data?.message || pesanDefault;
-      return Promise.reject(new Error(pesan));
-    }
-    if (error.request) {
-      return Promise.reject(new Error("Server tidak merespon. Periksa koneksi Anda."));
-    }
-    return Promise.reject(new Error(pesanDefault));
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
 );
+
+/**
+ * Response interceptor untuk handle error dan refresh token
+ */
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
+    // Jika error 401 dan belum retry
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Coba refresh token
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken) {
+          const response = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { accessToken } = response.data.data;
+
+          // Simpan token baru
+          localStorage.setItem("accessToken", accessToken);
+
+          // Retry request dengan token baru
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Jika refresh token gagal, redirect ke login
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Standard response interface
+ */
+export interface Response<T = any> {
+  sukses: boolean;
+  pesan: string;
+  data: T;
+  metadata?: {
+    total?: number;
+    halaman?: number;
+    limit?: number;
+    totalHalaman?: number;
+  };
+}
 
 export default api;

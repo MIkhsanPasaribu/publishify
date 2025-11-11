@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { naskahApi } from "@/lib/api/naskah";
+import { useAuthStore } from "@/stores/use-auth-store";
 
 interface StatistikNaskah {
   totalNaskah: number;
@@ -26,14 +28,63 @@ interface StatistikNaskah {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { pengguna } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingComments, setLoadingComments] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statistik, setStatistik] = useState<StatistikNaskah | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Simulasi loading kecil untuk chart & komentar
+  useEffect(() => {
+    const t1 = setTimeout(() => setLoadingChart(false), 800);
+    const t2 = setTimeout(() => setLoadingComments(false), 1200);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  // Redirect editor ke dashboard editor mereka
+  useEffect(() => {
+    if (pengguna) {
+      // Support kedua format: peran (array string) dan peranPengguna (array object)
+      let isPenulis = false;
+      let isEditor = false;
+
+      // Cek dari peran (format array string dari backend login)
+      if (pengguna.peran) {
+        isPenulis = pengguna.peran.includes("penulis");
+        isEditor = pengguna.peran.includes("editor");
+      }
+      
+      // Cek dari peranPengguna (format lengkap)
+      if (pengguna.peranPengguna) {
+        isPenulis = isPenulis || pengguna.peranPengguna.some(
+          (peran) => peran.jenisPeran === "penulis" && peran.aktif
+        );
+        isEditor = isEditor || pengguna.peranPengguna.some(
+          (peran) => peran.jenisPeran === "editor" && peran.aktif
+        );
+      }
+      
+      // Jika hanya editor (bukan penulis), redirect ke dashboard editor
+      if (isEditor && !isPenulis) {
+        console.log("Redirecting editor to /dashboard/editor");
+        setIsRedirecting(true);
+        router.replace("/dashboard/editor");
+        return;
+      }
+    }
+  }, [pengguna, router]);
 
   // Fetch statistik dari API
   useEffect(() => {
+    // Jangan fetch jika sedang redirect
+    if (isRedirecting) return;
+    
     const fetchStatistik = async () => {
       setLoadingStats(true);
       try {
@@ -48,7 +99,7 @@ export default function DashboardPage() {
     };
 
     fetchStatistik();
-  }, []);
+  }, [isRedirecting]);
 
   // Data statistik berdasarkan API response
   const stats = statistik
@@ -67,12 +118,12 @@ export default function DashboardPage() {
 
   // Data penjualan untuk chart (placeholder - bisa diganti dengan API nanti)
   const salesData = [
-    { month: "Januari", value: 12 },
-    { month: "Februari", value: 8 },
-    { month: "Maret", value: 15 },
-    { month: "April", value: 22 },
-    { month: "Mei", value: 14 },
-    { month: "Juni", value: 26 },
+    { month: "Jan", value: 290 },
+    { month: "Feb", value: 402 },
+    { month: "Mar", value: 514 },
+    { month: "Apr", value: 625 },
+    { month: "Mei", value: 738 },
+    { month: "Jun", value: 848 },
   ];
 
   // Komentar terbaru (placeholder - bisa diganti dengan API nanti)
@@ -81,15 +132,17 @@ export default function DashboardPage() {
   // Rating (placeholder - bisa diganti dengan API nanti)
   const rating = 0;
 
-  // Simulasi loading kecil untuk chart & komentar
-  useEffect(() => {
-    const t1 = setTimeout(() => setLoadingChart(false), 800);
-    const t2 = setTimeout(() => setLoadingComments(false), 1200);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
+  // Loading state saat redirect - HARUS SETELAH SEMUA HOOKS
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#14b8a6] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Mengarahkan ke Dashboard Editor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
