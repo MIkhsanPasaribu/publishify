@@ -142,18 +142,18 @@ export const naskahApi = {
   },
 
   /**
-   * GET /kategori - Ambil daftar kategori (public endpoint)
+   * GET /kategori/aktif - Ambil daftar kategori aktif (public endpoint, untuk dropdown)
    */
-  async ambilKategori(params?: { halaman?: number; limit?: number; aktif?: boolean }): Promise<ResponseSukses<Kategori[]>> {
-    const { data } = await api.get<ResponseSukses<Kategori[]>>("/kategori", { params });
+  async ambilKategori(): Promise<ResponseSukses<Kategori[]>> {
+    const { data } = await api.get<ResponseSukses<Kategori[]>>("/kategori/aktif");
     return data;
   },
 
   /**
-   * GET /genre - Ambil daftar genre (public endpoint)
+   * GET /genre/aktif - Ambil daftar genre aktif (public endpoint, untuk dropdown)
    */
-  async ambilGenre(params?: { halaman?: number; limit?: number; aktif?: boolean }): Promise<ResponseSukses<Genre[]>> {
-    const { data } = await api.get<ResponseSukses<Genre[]>>("/genre", { params });
+  async ambilGenre(): Promise<ResponseSukses<Genre[]>> {
+    const { data } = await api.get<ResponseSukses<Genre[]>>("/genre/aktif");
     return data;
   },
 };

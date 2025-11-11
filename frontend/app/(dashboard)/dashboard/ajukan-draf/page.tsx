@@ -63,10 +63,16 @@ export default function AjukanDrafPage() {
 
   const handleNaskahChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
+    // Accept Word documents (.doc, .docx) - manuscripts need to be editable
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/msword", // .doc
+    ];
+    
+    if (file && allowedTypes.includes(file.type)) {
       setFileNaskah(file);
     } else {
-      toast.error("Hanya file PDF yang diperbolehkan");
+      toast.error("Hanya file Word (DOC/DOCX) yang diperbolehkan. Naskah harus dalam format yang dapat diedit.");
     }
   };
 
@@ -76,14 +82,24 @@ export default function AjukanDrafPage() {
       setStatusGenre("loading");
       try {
         const [katRes, genRes] = await Promise.all([
-          naskahApi.ambilKategori({ aktif: true, limit: 100 }).catch(() => null),
-          naskahApi.ambilGenre({ aktif: true, limit: 100 }).catch(() => null),
+          naskahApi.ambilKategori().catch((err) => {
+            console.error("Error fetching kategori:", err);
+            return null;
+          }),
+          naskahApi.ambilGenre().catch((err) => {
+            console.error("Error fetching genre:", err);
+            return null;
+          }),
         ]);
+      
+        console.log("Kategori Response:", katRes);
+        console.log("Genre Response:", genRes);
       
         if (katRes?.data?.length) {
           setKategoriList(katRes.data.map((k) => ({ id: k.id, nama: k.nama })));
           setStatusKategori("sukses");
         } else {
+          console.warn("Kategori data kosong atau tidak ada");
           setStatusKategori("gagal");
         }
       
@@ -91,6 +107,7 @@ export default function AjukanDrafPage() {
           setGenreList(genRes.data.map((g) => ({ id: g.id, nama: g.nama })));
           setStatusGenre("sukses");
         } else {
+          console.warn("Genre data kosong atau tidak ada");
           setStatusGenre("gagal");
         }
       } catch (error) {
@@ -133,7 +150,7 @@ export default function AjukanDrafPage() {
     }
 
     if (modeInput === "upload" && !fileNaskah) {
-      toast.error("Mohon upload file naskah PDF");
+      toast.error("Mohon upload file naskah Word (DOC/DOCX)");
       return;
     }
 
@@ -167,7 +184,7 @@ export default function AjukanDrafPage() {
         const res = await uploadApi.uploadFile(
           fileNaskah,
           "naskah",
-          "File naskah (PDF)",
+          "File naskah (Word DOC/DOCX)",
           undefined,
           (p) => setProgressNaskah(p)
         );
@@ -317,10 +334,10 @@ export default function AjukanDrafPage() {
                   </svg>
                   <div className="text-center">
                     <h3 className="font-semibold text-gray-900 mb-1">
-                      Upload File PDF
+                      Upload File Word
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Upload naskah dalam format PDF
+                      Upload naskah dalam format Word (DOC/DOCX)
                     </p>
                   </div>
                 </div>
@@ -577,7 +594,7 @@ export default function AjukanDrafPage() {
             ) : (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload File Naskah (PDF) <span className="text-red-500">*</span>
+                  Upload File Naskah (Word) <span className="text-red-500">*</span>
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#14b8a6] transition-colors">
                   {fileNaskah ? (
@@ -627,14 +644,14 @@ export default function AjukanDrafPage() {
                         />
                       </svg>
                       <p className="text-sm text-gray-600 mb-2">
-                        Klik untuk upload file PDF
+                        Klik untuk upload file Word (DOC/DOCX)
                       </p>
                       <p className="text-xs text-gray-400 mb-4">
-                        PDF (Max. 10MB)
+                        DOC, DOCX (Max. 50MB)
                       </p>
                       <input
                         type="file"
-                        accept="application/pdf"
+                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                         onChange={handleNaskahChange}
                         className="hidden"
                       />
@@ -645,7 +662,7 @@ export default function AjukanDrafPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  * File PDF akan disimpan dengan lebih efisien di server
+                  * Upload naskah dalam format Word agar dapat diedit oleh editor. File akan dikonversi dan disimpan dengan aman di server.
                 </p>
                 {fileNaskah && progressNaskah > 0 && progressNaskah < 100 && (
                   <div className="mt-2 text-xs text-gray-600">Upload naskah: {progressNaskah}%</div>
