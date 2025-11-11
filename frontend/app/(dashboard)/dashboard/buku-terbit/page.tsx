@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Printer, Settings, ExternalLink } from "lucide-react";
+import { naskahApi, type Naskah } from "@/lib/api/naskah";
 import { percetakanApi, type BuatPesananCetakPayload } from "@/lib/api/percetakan";
 
 // ----------------------------------------------
-// Dummy data untuk tampilan awal (galeri buku terbit)
+// Type untuk buku terbit
 // ----------------------------------------------
 interface BukuTerbit {
   id: string;
@@ -19,57 +20,6 @@ interface BukuTerbit {
   kategori?: string;
   genre?: string;
 }
-
-const bukuTerbitDummy: BukuTerbit[] = [
-  {
-    id: "b1",
-    judul: "Rahasia Hutan Senja",
-    urlSampul: "https://images.unsplash.com/photo-1544937950-fa07a98d237f?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-11-05T08:00:00.000Z",
-    kategori: "Fiksi",
-    genre: "Fantasi",
-  },
-  {
-    id: "b2",
-    judul: "Memoar di Balik Kota",
-    urlSampul: "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-10-21T08:00:00.000Z",
-    kategori: "Non-Fiksi",
-    genre: "Biografi",
-  },
-  {
-    id: "b3",
-    judul: "Garis Waktu Asa",
-    urlSampul: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-09-12T08:00:00.000Z",
-    kategori: "Fiksi",
-    genre: "Romansa",
-  },
-  {
-    id: "b4",
-    judul: "Teorema Rasa Kopi",
-    urlSampul: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-07-18T08:00:00.000Z",
-    kategori: "Fiksi",
-    genre: "Slice of Life",
-  },
-  {
-    id: "b5",
-    judul: "Berkebun di Balkon",
-    urlSampul: "https://images.unsplash.com/photo-1455587734955-081b22074882?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-05-08T08:00:00.000Z",
-    kategori: "Non-Fiksi",
-    genre: "Hobi",
-  },
-  {
-    id: "b6",
-    judul: "Langkah Kecil Maraton",
-    urlSampul: "https://images.unsplash.com/photo-1546549039-49e05b8b56d5?q=80&w=800&auto=format&fit=crop",
-    terbitPada: "2025-01-15T08:00:00.000Z",
-    kategori: "Non-Fiksi",
-    genre: "Kesehatan",
-  },
-];
 
 function formatTanggalIndo(iso: string) {
   const d = new Date(iso);
@@ -95,6 +45,38 @@ const FormPesanCetakSchema = z.object({
 export default function BukuTerbitPage() {
   const [bukuTerpilih, setBukuTerpilih] = useState<BukuTerbit | null>(null);
   const [proses, setProses] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [bukuTerbit, setBukuTerbit] = useState<BukuTerbit[]>([]);
+
+  // Fetch buku terbit dari API
+  useEffect(() => {
+    const fetchBukuTerbit = async () => {
+      setLoading(true);
+      try {
+        // Ambil naskah dengan status "diterbitkan"
+        const res = await naskahApi.ambilNaskahSaya({ status: "diterbitkan" });
+        
+        // Transform Naskah ke BukuTerbit
+        const buku: BukuTerbit[] = (res.data || []).map((naskah: Naskah) => ({
+          id: naskah.id,
+          judul: naskah.judul,
+          urlSampul: naskah.urlSampul,
+          terbitPada: naskah.diperbaruiPada, // Gunakan diperbaruiPada sebagai tanggal terbit
+          kategori: (naskah as any).kategori?.nama,
+          genre: (naskah as any).genre?.nama,
+        }));
+
+        setBukuTerbit(buku);
+      } catch (e: any) {
+        console.error("Gagal memuat buku terbit:", e);
+        toast.error("Gagal memuat buku terbit");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBukuTerbit();
+  }, []);
 
   const {
     register,
@@ -169,8 +151,39 @@ export default function BukuTerbitPage() {
         </div>
 
         {/* Galeri Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {bukuTerbitDummy.map((buku) => (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="aspect-[3/4] bg-gray-200"></div>
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : bukuTerbit.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+            <svg
+              className="w-16 h-16 text-gray-300 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+            <p className="text-gray-500 text-lg font-medium">Belum ada buku terbit</p>
+            <p className="text-gray-400 text-sm mt-2">Naskah yang disetujui akan muncul di sini</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {bukuTerbit.map((buku) => (
             <div key={buku.id} className="group bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow">
               <div className="relative aspect-[3/4] bg-gray-100">
                 {buku.urlSampul ? (
@@ -212,7 +225,8 @@ export default function BukuTerbitPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Modal Form Pesan Cetak */}
         {bukuTerpilih && (

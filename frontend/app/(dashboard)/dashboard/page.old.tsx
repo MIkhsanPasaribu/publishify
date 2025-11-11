@@ -1,71 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { naskahApi } from "@/lib/api/naskah";
-
-interface StatistikNaskah {
-  totalNaskah: number;
-  perStatus: {
-    draft?: number;
-    diajukan?: number;
-    dalam_review?: number;
-    perlu_revisi?: number;
-    disetujui?: number;
-    ditolak?: number;
-    diterbitkan?: number;
-  };
-  perKategori: Array<{ kategori: string; total: number }>;
-  naskahTerbaru: Array<{
-    id: string;
-    judul: string;
-    status: string;
-    dibuatPada: string;
-    urlSampul?: string;
-  }>;
-}
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingComments, setLoadingComments] = useState(true);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [statistik, setStatistik] = useState<StatistikNaskah | null>(null);
 
-  // Fetch statistik dari API
-  useEffect(() => {
-    const fetchStatistik = async () => {
-      setLoadingStats(true);
-      try {
-        const res = await naskahApi.ambilStatistik();
-        setStatistik(res.data);
-      } catch (e: any) {
-        console.error("Gagal memuat statistik:", e);
-        toast.error("Gagal memuat statistik");
-      } finally {
-        setLoadingStats(false);
-      }
-    };
+  // Data statistik
+  const stats = [
+    { label: "Draft", value: 3, color: "bg-blue-500" },
+    { label: "Review", value: 1, color: "bg-yellow-500" },
+    { label: "Cetak", value: 2, color: "bg-purple-500" },
+    { label: "Publish", value: 7, color: "bg-green-500" },
+  ];
 
-    fetchStatistik();
-  }, []);
-
-  // Data statistik berdasarkan API response
-  const stats = statistik
-    ? [
-        { label: "Draft", value: statistik.perStatus.draft || 0, color: "bg-blue-500" },
-        { label: "Review", value: statistik.perStatus.dalam_review || 0, color: "bg-yellow-500" },
-        { label: "Disetujui", value: statistik.perStatus.disetujui || 0, color: "bg-purple-500" },
-        { label: "Diterbitkan", value: statistik.perStatus.diterbitkan || 0, color: "bg-green-500" },
-      ]
-    : [
-        { label: "Draft", value: 0, color: "bg-blue-500" },
-        { label: "Review", value: 0, color: "bg-yellow-500" },
-        { label: "Disetujui", value: 0, color: "bg-purple-500" },
-        { label: "Diterbitkan", value: 0, color: "bg-green-500" },
-      ];
-
-  // Data penjualan untuk chart (placeholder - bisa diganti dengan API nanti)
+  // Data penjualan untuk chart (6 bulan terakhir)
   const salesData = [
     { month: "Januari", value: 12 },
     { month: "Februari", value: 8 },
@@ -75,13 +25,29 @@ export default function DashboardPage() {
     { month: "Juni", value: 26 },
   ];
 
-  // Komentar terbaru (placeholder - bisa diganti dengan API nanti)
-  const comments: Array<{nama: string; waktu: string; pesan: string}> = [];
+  // Komentar terbaru (kosong untuk sekarang)
+  const comments = [
+    {
+      nama: "Rina Amelia",
+      waktu: "2 hari lalu",
+      pesan: "Buku ‘Rahasia Hutan Senja’ sangat menarik, alurnya rapih dan membuat saya betah membaca hingga akhir.",
+    },
+    {
+      nama: "Budi Santoso",
+      waktu: "5 hari lalu",
+      pesan: "Typo kecil di bab 3 sudah diperbaiki, terima kasih respon cepatnya.",
+    },
+    {
+      nama: "Ayu Lestari",
+      waktu: "1 minggu lalu",
+      pesan: "Desain sampulnya keren! Cocok dengan isi bukunya.",
+    },
+  ];
 
-  // Rating (placeholder - bisa diganti dengan API nanti)
-  const rating = 0;
+  // Rating (kosong untuk sekarang)
+  const rating = 4.3;
 
-  // Simulasi loading kecil untuk chart & komentar
+  // Simulasi loading kecil untuk chart & komentar (tanpa backend)
   useEffect(() => {
     const t1 = setTimeout(() => setLoadingChart(false), 800);
     const t2 = setTimeout(() => setLoadingComments(false), 1200);
@@ -157,32 +123,21 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-700 mb-6 text-center">
             Kamu telah menulis
           </h2>
-          {loadingStats ? (
-            <div className="grid grid-cols-4 gap-6 animate-pulse">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="text-center p-6 bg-gray-50 rounded-xl">
-                  <div className="h-10 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+          <div className="grid grid-cols-4 gap-6">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow"
+              >
+                <div className="text-4xl font-bold text-gray-900 mb-2">
+                  {stat.value}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow"
-                >
-                  <div className="text-4xl font-bold text-gray-900 mb-2">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-medium text-gray-600">
-                    {stat.label}
-                  </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {stat.label}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Two Column Layout */}
