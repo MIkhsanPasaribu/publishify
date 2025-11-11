@@ -11,6 +11,7 @@ interface AuthState {
   login: (email: string, kataSandi: string) => Promise<void>;
   logout: () => void;
   setPengguna: (p: Pengguna | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -46,6 +47,14 @@ export const useAuthStore = create<AuthState>()(
       },
       setPengguna(p) {
         set({ pengguna: p });
+      },
+      setTokens(accessToken: string, refreshToken: string) {
+        // Simpan tokens ke state dan localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+        }
+        set({ accessToken, refreshToken });
       },
     }),
     {
