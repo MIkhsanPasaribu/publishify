@@ -14,6 +14,7 @@ export default function DetailReviewPage() {
   const [review, setReview] = useState<Review | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showBatalModal, setShowBatalModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Form feedback
@@ -24,6 +25,9 @@ export default function DetailReviewPage() {
   // Form submit review
   const [rekomendasi, setRekomendasi] = useState<Rekomendasi>("revisi");
   const [catatanUmum, setCatatanUmum] = useState("");
+
+  // Form batal review
+  const [alasanBatal, setAlasanBatal] = useState("");
 
   useEffect(() => {
     fetchReview();
@@ -91,6 +95,25 @@ export default function DetailReviewPage() {
       router.push("/dashboard/editor/review");
     } catch (error: any) {
       toast.error(error.message || "Gagal submit review");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBatalReview = async () => {
+    if (!alasanBatal.trim()) {
+      toast.error("Alasan pembatalan harus diisi");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await reviewApi.batalkanReview(idReview, alasanBatal.trim());
+      toast.success("Review berhasil dibatalkan");
+      setShowBatalModal(false);
+      router.push("/dashboard/editor/review");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal membatalkan review");
     } finally {
       setSubmitting(false);
     }
@@ -390,12 +413,20 @@ export default function DetailReviewPage() {
 
             {/* Action Buttons */}
             {canSubmit && (
-              <button
-                onClick={() => setShowSubmitModal(true)}
-                className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
-              >
-                Submit Review & Keputusan
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowSubmitModal(true)}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
+                >
+                  Submit Review & Keputusan
+                </button>
+                <button
+                  onClick={() => setShowBatalModal(true)}
+                  className="w-full px-6 py-3 border-2 border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-all font-medium"
+                >
+                  Batalkan Review
+                </button>
+              </div>
             )}
 
             {review.status === "selesai" && (
@@ -405,6 +436,16 @@ export default function DetailReviewPage() {
                 </svg>
                 <p className="font-semibold text-green-900 mb-1">Review Selesai</p>
                 <p className="text-sm text-green-700">Keputusan telah diberikan</p>
+              </div>
+            )}
+
+            {review.status === "dibatalkan" && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                <svg className="w-12 h-12 text-gray-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <p className="font-semibold text-gray-900 mb-1">Review Dibatalkan</p>
+                <p className="text-sm text-gray-700">Review ini telah dibatalkan</p>
               </div>
             )}
           </div>
@@ -592,6 +633,65 @@ export default function DetailReviewPage() {
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium disabled:opacity-50"
                   >
                     {submitting ? "Mengirim..." : "Submit Review"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Batal Review */}
+        {showBatalModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Batalkan Review</h2>
+                <button
+                  onClick={() => setShowBatalModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-red-800">
+                  <strong>Perhatian:</strong> Review akan dibatalkan dan status naskah akan dikembalikan ke "Diajukan". Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alasan Pembatalan <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={alasanBatal}
+                    onChange={(e) => setAlasanBatal(e.target.value)}
+                    placeholder="Jelaskan alasan pembatalan review ini..."
+                    rows={5}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Alasan ini akan dicatat dalam sistem
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowBatalModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleBatalReview}
+                    disabled={submitting || !alasanBatal.trim()}
+                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+                  >
+                    {submitting ? "Membatalkan..." : "Ya, Batalkan Review"}
                   </button>
                 </div>
               </div>
