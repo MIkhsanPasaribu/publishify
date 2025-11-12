@@ -31,12 +31,8 @@ export default function LoginPage() {
         router.replace("/dashboard/admin");
       } else if (pengguna?.peran?.includes("editor")) {
         router.replace("/dashboard/editor");
-      } else if (pengguna?.peran?.includes("percetakan")) {
-        router.replace("/dashboard/percetakan");
-      } else if (pengguna?.peran?.includes("penulis")) {
-        router.replace("/dashboard/penulis");
       } else {
-        // Default fallback
+        // Penulis & Percetakan redirect ke dashboard umum
         router.replace("/dashboard");
       }
     } catch (err: any) {
