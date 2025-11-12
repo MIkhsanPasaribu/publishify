@@ -21,21 +21,35 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(formData.email, formData.kataSandi);
-      toast.success("Login berhasil. Selamat datang kembali!");
       
       // Get user data from store after login
       const pengguna = useAuthStore.getState().pengguna;
+      const accessToken = useAuthStore.getState().accessToken;
+      
+      // Debug logging
+      console.log("🔐 Login berhasil:", {
+        email: pengguna?.email,
+        peran: pengguna?.peran,
+        tokenTersimpan: accessToken ? "✅ Ya" : "❌ Tidak",
+        localStorageToken: localStorage.getItem("accessToken") ? "✅ Ya" : "❌ Tidak",
+      });
+      
+      toast.success("Login berhasil. Selamat datang kembali!");
       
       // Redirect based on user role
       if (pengguna?.peran?.includes("admin")) {
+        console.log("↪️ Redirect ke: /dashboard/admin");
         router.replace("/dashboard/admin");
       } else if (pengguna?.peran?.includes("editor")) {
+        console.log("↪️ Redirect ke: /dashboard/editor");
         router.replace("/dashboard/editor");
       } else {
         // Penulis & Percetakan redirect ke dashboard umum
+        console.log("↪️ Redirect ke: /dashboard");
         router.replace("/dashboard");
       }
     } catch (err: any) {
+      console.error("❌ Login error:", err);
       toast.error(err?.message || "Email atau kata sandi salah");
     } finally {
       setLoading(false);

@@ -50,19 +50,38 @@ export default function AdminDashboardPage() {
   const fetchStatistik = async () => {
     setLoading(true);
     try {
+      // Debug: Cek token tersimpan
+      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      console.log("🔑 Token tersimpan:", token ? "✅ Ada" : "❌ Tidak ada");
+      
       // Fetch statistik dari berbagai endpoint dengan error handling individual
       const results = await Promise.allSettled([
         // PENTING: Gunakan endpoint admin khusus untuk mengambil SEMUA naskah
         api.get("/naskah/admin/semua", { params: { limit: 100 } }).catch((err) => {
-          console.error("Error fetching naskah:", err.response?.data || err.message);
+          console.error("❌ Error fetching naskah:", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+            message: err.message,
+          });
           return { data: { data: [] } };
         }),
         api.get("/pengguna").catch((err) => {
-          console.error("Error fetching pengguna:", err.response?.data || err.message);
+          console.error("❌ Error fetching pengguna:", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+            message: err.message,
+          });
           return { data: { data: [] } };
         }),
         api.get("/review").catch((err) => {
-          console.error("Error fetching review:", err.response?.data || err.message);
+          console.error("❌ Error fetching review:", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+            message: err.message,
+          });
           return { data: { data: [] } };
         }),
       ]);
