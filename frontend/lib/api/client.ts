@@ -96,4 +96,27 @@ export interface Response<T = any> {
   };
 }
 
+/**
+ * Helper function: Sanitize query params untuk memastikan tipe data yang benar
+ * Prisma strict dengan tipe data, jadi halaman & limit harus number, bukan string
+ */
+export function sanitizeParams(params?: Record<string, any>): Record<string, any> {
+  if (!params) return {};
+  
+  const cleaned: Record<string, any> = {};
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    
+    // Convert numeric fields to number
+    if (key === 'halaman' || key === 'limit' || key === 'page' || key === 'take' || key === 'skip') {
+      cleaned[key] = Number(value);
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  
+  return cleaned;
+}
+
 export default api;

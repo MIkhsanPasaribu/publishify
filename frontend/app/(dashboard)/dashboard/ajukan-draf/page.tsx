@@ -134,7 +134,7 @@ export default function AjukanDrafPage() {
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
 
-  const handleSubmit = async (e: React.FormEvent, langsungAjukan: boolean = true) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
@@ -241,10 +241,9 @@ export default function AjukanDrafPage() {
         urlFile: urlFileAbsolut,
         urlSampul: urlSampulAbsolut,
         modeInput,
-        langsungAjukan,
       });
 
-      // Submit naskah
+      // LANGKAH 1: Buat naskah baru (status: DRAFT)
       const responseNaskah = await naskahApi.buatNaskah({
         judul: formData.judul,
         subJudul: formData.subJudul || undefined,
@@ -258,24 +257,22 @@ export default function AjukanDrafPage() {
         publik: false,
       });
 
-      console.log("✅ Naskah berhasil disimpan:", responseNaskah.data);
+      console.log("✅ Langkah 1: Naskah berhasil disimpan dengan status DRAFT:", responseNaskah.data);
       const naskahId = responseNaskah.data.id;
 
-      // Jika langsung ajukan, ubah status jadi diajukan
-      if (langsungAjukan && naskahId) {
-        // VALIDASI: Pastikan naskah punya file sebelum diajukan
-        if (!urlFileAbsolut) {
-          toast.error("Naskah harus memiliki file sebelum dapat diajukan untuk review");
-          setLoading(false);
-          return;
-        }
-
-        console.log("📤 Mengajukan naskah dengan urlFile:", urlFileAbsolut);
-        await naskahApi.ajukanNaskah(naskahId);
-        toast.success("Naskah berhasil diajukan untuk review. Admin akan menugaskan editor untuk mereview naskah Anda.");
-      } else {
-        toast.success("Naskah berhasil disimpan sebagai draft");
+      // VALIDASI: Pastikan naskah punya file sebelum diajukan
+      if (!urlFileAbsolut) {
+        toast.error("Naskah berhasil disimpan sebagai draft, tapi tidak bisa diajukan karena tidak ada file");
+        router.replace("/dashboard");
+        return;
       }
+
+      // LANGKAH 2: Ajukan naskah untuk review (status: DRAFT → IN_REVIEW)
+      console.log("📤 Langkah 2: Mengajukan naskah untuk review...");
+      await naskahApi.ajukanNaskah(naskahId, "Versi awal naskah diajukan untuk review");
+      
+      console.log("✅ Langkah 2: Status berhasil diubah ke IN_REVIEW");
+      toast.success("Naskah berhasil dibuat dan diajukan untuk review! Admin akan menugaskan editor untuk mereview naskah Anda.");
 
       router.replace("/dashboard");
     } catch (err: any) {
@@ -720,32 +717,17 @@ export default function AjukanDrafPage() {
               Batal
             </button>
 
-            <div className="flex gap-4">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={(e) => handleSubmit(e, false)}
-                className={`px-6 py-3 rounded-lg transition-colors ${
-                  loading
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                Simpan Draft
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                onClick={(e) => handleSubmit(e, true)}
-                className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
-                  loading
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white hover:from-[#0d9488] hover:to-[#0a7a73]"
-                }`}
-              >
-                {loading ? "Mengirim..." : "Ajukan untuk Review"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
+                loading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white hover:from-[#0d9488] hover:to-[#0a7a73]"
+              }`}
+            >
+              {loading ? "Mengirim..." : "Ajukan untuk Review"}
+            </button>
           </div>
         </form>
       </div>

@@ -126,7 +126,10 @@ export class NaskahService {
       arah = 'desc',
     } = filter;
 
-    const skip = (halaman - 1) * limit;
+    // Convert to number untuk memastikan tipe data yang benar untuk Prisma
+    const halamanNumber = Number(halaman);
+    const limitNumber = Number(limit);
+    const skip = (halamanNumber - 1) * limitNumber;
 
     // Build where clause
     const where: any = {};
@@ -175,7 +178,7 @@ export class NaskahService {
       this.prisma.naskah.findMany({
         where,
         skip,
-        take: limit,
+        take: limitNumber,
         orderBy: { [urutkan]: arah },
         select: {
           id: true,
@@ -241,9 +244,9 @@ export class NaskahService {
       data,
       metadata: {
         total,
-        halaman,
-        limit,
-        totalHalaman: Math.ceil(total / limit),
+        halaman: halamanNumber,
+        limit: limitNumber,
+        totalHalaman: Math.ceil(total / limitNumber),
       },
     };
   }

@@ -1,4 +1,4 @@
-import api from "./client";
+import api, { sanitizeParams } from "./client";
 
 // ================================
 // TIPE DATA
@@ -125,7 +125,7 @@ export const reviewApi = {
     status?: StatusReview;
   }): Promise<ResponseSukses<Review[]>> {
     const { data } = await api.get<ResponseSukses<Review[]>>("/review/editor/saya", {
-      params,
+      params: sanitizeParams(params),
     });
     return data;
   },

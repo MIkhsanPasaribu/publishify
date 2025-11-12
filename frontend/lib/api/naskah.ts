@@ -1,4 +1,4 @@
-import api from "./client";
+import api, { sanitizeParams } from "./client";
 
 // ============================================
 // TYPES
@@ -97,7 +97,9 @@ export const naskahApi = {
    * GET /naskah - Ambil semua naskah dengan filter
    */
   async ambilSemuaNaskah(params?: FilterNaskahParams): Promise<ResponseSukses<Naskah[]>> {
-    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah", { params });
+    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah", { 
+      params: sanitizeParams(params) 
+    });
     return data;
   },
 
@@ -105,7 +107,9 @@ export const naskahApi = {
    * GET /naskah/penulis/saya - Ambil naskah penulis yang sedang login
    */
   async ambilNaskahSaya(params?: FilterNaskahParams): Promise<ResponseSukses<Naskah[]>> {
-    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/saya", { params });
+    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/saya", { 
+      params: sanitizeParams(params) 
+    });
     return data;
   },
 
