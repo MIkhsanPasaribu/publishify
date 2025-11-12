@@ -76,6 +76,19 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12 space-y-6">
+        {/* Development Mode: Test Credentials Info */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-blue-900 mb-2">🧪 Test Credentials:</p>
+            <div className="text-xs text-blue-800 space-y-1">
+              <p><strong>Penulis:</strong> penulis@publishify.com</p>
+              <p><strong>Editor:</strong> editor@publishify.com</p>
+              <p><strong>Admin:</strong> admin@publishify.com</p>
+              <p><strong>Password:</strong> Password123!</p>
+            </div>
+          </div>
+        )}
+
         {/* User Avatar Icon */}
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 bg-[#14b8a6] rounded-full flex items-center justify-center">

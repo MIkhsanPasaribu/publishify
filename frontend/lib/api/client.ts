@@ -63,8 +63,13 @@ api.interceptors.response.use(
     if (process.env.NODE_ENV === "development") {
       console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
         message: error.message,
+        headers: error.response?.headers,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        fullURL: `${error.config?.baseURL}${error.config?.url}`,
       });
     }
     
