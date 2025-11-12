@@ -126,6 +126,15 @@ export const naskahApi = {
   },
 
   /**
+   * PUT /naskah/:id/ajukan - Ajukan naskah untuk review
+   */
+  async ajukanNaskah(id: string, catatan?: string): Promise<ResponseSukses<Naskah>> {
+    const payload = catatan ? { catatan } : {};
+    const { data } = await api.put<ResponseSukses<Naskah>>(`/naskah/${id}/ajukan`, payload);
+    return data;
+  },
+
+  /**
    * DELETE /naskah/:id - Hapus naskah
    */
   async hapusNaskah(id: string): Promise<ResponseSukses<void>> {

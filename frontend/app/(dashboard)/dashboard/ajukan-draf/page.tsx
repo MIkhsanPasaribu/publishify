@@ -134,7 +134,7 @@ export default function AjukanDrafPage() {
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, langsungAjukan: boolean = true) => {
     e.preventDefault();
     if (loading) return;
 
@@ -169,6 +169,7 @@ export default function AjukanDrafPage() {
 
       // Upload sampul jika ada
       if (fileSampul) {
+        console.log("🖼️ Mengupload sampul:", fileSampul.name);
         const res = await uploadApi.uploadFile(
           fileSampul,
           "sampul",
@@ -177,10 +178,12 @@ export default function AjukanDrafPage() {
           (p) => setProgressSampul(p)
         );
         urlSampul = res.urlPublik || res.url;
+        console.log("✅ Upload sampul berhasil, urlSampul:", urlSampul);
       }
 
       // Siapkan file naskah
       if (modeInput === "upload" && fileNaskah) {
+        console.log("📁 Mengupload file Word:", fileNaskah.name);
         const res = await uploadApi.uploadFile(
           fileNaskah,
           "naskah",
@@ -188,8 +191,11 @@ export default function AjukanDrafPage() {
           undefined,
           (p) => setProgressNaskah(p)
         );
+        console.log("📦 Response upload:", res);
         urlFile = res.urlPublik || res.url;
+        console.log("✅ Upload Word berhasil, urlFile:", urlFile);
       } else if (modeInput === "tulis") {
+        console.log("📝 Membuat file .txt dari konten...");
         const blob = new Blob([formData.kontenTeks], { type: "text/plain;charset=utf-8" });
         const nama = `${slugify(formData.judul) || "naskah"}.txt`;
         const fileTxt = new File([blob], nama, { type: "text/plain" });
@@ -200,7 +206,9 @@ export default function AjukanDrafPage() {
           undefined,
           (p) => setProgressNaskah(p)
         );
+        console.log("📦 Response upload:", res);
         urlFile = res.urlPublik || res.url;
+        console.log("✅ Upload .txt berhasil, urlFile:", urlFile);
       }
 
       // Validasi UUID untuk idKategori & idGenre (hindari kirim dummy)
@@ -223,8 +231,15 @@ export default function AjukanDrafPage() {
         : undefined;
       const jumlahKata = hitungJumlahKata && hitungJumlahKata >= 100 ? hitungJumlahKata : undefined;
 
+      console.log("📋 Menyimpan naskah dengan data:", {
+        judul: formData.judul,
+        urlFile,
+        modeInput,
+        langsungAjukan,
+      });
+
       // Submit naskah
-      await naskahApi.buatNaskah({
+      const responseNaskah = await naskahApi.buatNaskah({
         judul: formData.judul,
         subJudul: formData.subJudul || undefined,
         sinopsis: formData.sinopsis,
@@ -237,7 +252,25 @@ export default function AjukanDrafPage() {
         publik: false,
       });
 
-      toast.success("Naskah berhasil diajukan sebagai draft");
+      console.log("✅ Naskah berhasil disimpan:", responseNaskah.data);
+      const naskahId = responseNaskah.data.id;
+
+      // Jika langsung ajukan, ubah status jadi diajukan
+      if (langsungAjukan && naskahId) {
+        // VALIDASI: Pastikan naskah punya file sebelum diajukan
+        if (!urlFile) {
+          toast.error("Naskah harus memiliki file sebelum dapat diajukan untuk review");
+          setLoading(false);
+          return;
+        }
+
+        console.log("📤 Mengajukan naskah dengan urlFile:", urlFile);
+        await naskahApi.ajukanNaskah(naskahId);
+        toast.success("Naskah berhasil diajukan untuk review. Admin akan menugaskan editor untuk mereview naskah Anda.");
+      } else {
+        toast.success("Naskah berhasil disimpan sebagai draft");
+      }
+
       router.replace("/dashboard");
     } catch (err: any) {
       const msg = err?.response?.data?.pesan || err?.message || "Gagal mengajukan naskah";
@@ -685,7 +718,7 @@ export default function AjukanDrafPage() {
               <button
                 type="button"
                 disabled={loading}
-                onClick={handleSubmit as any}
+                onClick={(e) => handleSubmit(e, false)}
                 className={`px-6 py-3 rounded-lg transition-colors ${
                   loading
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -697,6 +730,7 @@ export default function AjukanDrafPage() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={(e) => handleSubmit(e, true)}
                 className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
                   loading
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"

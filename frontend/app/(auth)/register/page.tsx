@@ -126,8 +126,13 @@ export default function RegisterPage() {
 
   const handleGoogleSignIn = () => {
     // Redirect ke backend OAuth endpoint
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const redirectUrl = `${backendUrl}/api/auth/google`;
+    // Gunakan NEXT_PUBLIC_BACKEND_URL (tanpa /api) untuk menghindari double /api
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+    // Pastikan tidak ada double slash
+    const cleanBackendUrl = backendUrl.replace(/\/+$/, '');
+    const redirectUrl = `${cleanBackendUrl}/api/auth/google`;
+    
+    console.log('🔐 Google OAuth Redirect:', redirectUrl);
     window.location.href = redirectUrl;
   };
 
