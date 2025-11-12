@@ -28,6 +28,15 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    
+    // Log request untuk debugging (hanya di development)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+        params: config.params,
+        data: config.data,
+      });
+    }
+    
     return config;
   },
   (error) => {
@@ -40,9 +49,25 @@ api.interceptors.request.use(
  */
 api.interceptors.response.use(
   (response) => {
+    // Log response untuk debugging (hanya di development)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        data: response.data,
+      });
+    }
     return response;
   },
   async (error: AxiosError) => {
+    // Log error untuk debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+    }
+    
     const originalRequest = error.config as any;
 
     // Jika error 401 dan belum retry

@@ -47,17 +47,21 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Redirect editor ke dashboard editor mereka
+  // Redirect berdasarkan role
   useEffect(() => {
     if (pengguna) {
       // Support kedua format: peran (array string) dan peranPengguna (array object)
       let isPenulis = false;
       let isEditor = false;
+      let isAdmin = false;
+      let isPercetakan = false;
 
       // Cek dari peran (format array string dari backend login)
       if (pengguna.peran) {
         isPenulis = pengguna.peran.includes("penulis");
         isEditor = pengguna.peran.includes("editor");
+        isAdmin = pengguna.peran.includes("admin");
+        isPercetakan = pengguna.peran.includes("percetakan");
       }
       
       // Cek dari peranPengguna (format lengkap)
@@ -68,6 +72,20 @@ export default function DashboardPage() {
         isEditor = isEditor || pengguna.peranPengguna.some(
           (peran) => peran.jenisPeran === "editor" && peran.aktif
         );
+        isAdmin = isAdmin || pengguna.peranPengguna.some(
+          (peran) => peran.jenisPeran === "admin" && peran.aktif
+        );
+        isPercetakan = isPercetakan || pengguna.peranPengguna.some(
+          (peran) => peran.jenisPeran === "percetakan" && peran.aktif
+        );
+      }
+      
+      // Priority redirect: Admin > Editor > Percetakan > Penulis
+      if (isAdmin) {
+        console.log("Redirecting admin to /dashboard/admin");
+        setIsRedirecting(true);
+        router.replace("/dashboard/admin");
+        return;
       }
       
       // Jika hanya editor (bukan penulis), redirect ke dashboard editor
@@ -75,6 +93,14 @@ export default function DashboardPage() {
         console.log("Redirecting editor to /dashboard/editor");
         setIsRedirecting(true);
         router.replace("/dashboard/editor");
+        return;
+      }
+
+      // Jika hanya percetakan
+      if (isPercetakan && !isPenulis) {
+        console.log("Redirecting percetakan to /dashboard/percetakan");
+        setIsRedirecting(true);
+        router.replace("/dashboard/percetakan");
         return;
       }
     }

@@ -102,6 +102,12 @@ export interface SubmitReviewDto {
   catatanUmum: string;
 }
 
+export interface TugaskanReviewDto {
+  idNaskah: string;
+  idEditor: string;
+  catatan?: string;
+}
+
 export interface ResponseSukses<T> {
   sukses: true;
   pesan: string;
@@ -118,6 +124,12 @@ export interface ResponseSukses<T> {
 // API CLIENT
 // ================================
 export const reviewApi = {
+  // Tugaskan review (self-assign atau admin assign)
+  async tugaskanReview(payload: TugaskanReviewDto): Promise<ResponseSukses<Review>> {
+    const { data } = await api.post<ResponseSukses<Review>>("/review/tugaskan", payload);
+    return data;
+  },
+
   // Ambil review milik editor yang login
   async ambilReviewSaya(params?: {
     halaman?: number;
@@ -125,6 +137,18 @@ export const reviewApi = {
     status?: StatusReview;
   }): Promise<ResponseSukses<Review[]>> {
     const { data } = await api.get<ResponseSukses<Review[]>>("/review/editor/saya", {
+      params: sanitizeParams(params),
+    });
+    return data;
+  },
+
+  // Ambil semua review (untuk admin)
+  async ambilSemuaReview(params?: {
+    halaman?: number;
+    limit?: number;
+    status?: StatusReview;
+  }): Promise<ResponseSukses<Review[]>> {
+    const { data } = await api.get<ResponseSukses<Review[]>>("/review", {
       params: sanitizeParams(params),
     });
     return data;

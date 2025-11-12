@@ -22,7 +22,23 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.kataSandi);
       toast.success("Login berhasil. Selamat datang kembali!");
-      router.replace("/dashboard");
+      
+      // Get user data from store after login
+      const pengguna = useAuthStore.getState().pengguna;
+      
+      // Redirect based on user role
+      if (pengguna?.peran?.includes("admin")) {
+        router.replace("/dashboard/admin");
+      } else if (pengguna?.peran?.includes("editor")) {
+        router.replace("/dashboard/editor");
+      } else if (pengguna?.peran?.includes("percetakan")) {
+        router.replace("/dashboard/percetakan");
+      } else if (pengguna?.peran?.includes("penulis")) {
+        router.replace("/dashboard/penulis");
+      } else {
+        // Default fallback
+        router.replace("/dashboard");
+      }
     } catch (err: any) {
       toast.error(err?.message || "Email atau kata sandi salah");
     } finally {

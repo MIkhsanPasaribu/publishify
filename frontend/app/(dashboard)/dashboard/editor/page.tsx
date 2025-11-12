@@ -141,7 +141,27 @@ export default function EditorDashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <button
+            onClick={() => router.push("/dashboard/editor/naskah")}
+            className="bg-white rounded-xl p-6 shadow-sm border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                📥
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                  Naskah Masuk
+                </h3>
+                <p className="text-sm text-gray-600">Lihat naskah siap review</p>
+              </div>
+              <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
           <button
             onClick={() => router.push("/dashboard/editor/review")}
             className="bg-white rounded-xl p-6 shadow-sm border-2 border-purple-200 hover:border-purple-400 hover:shadow-lg transition-all group"
