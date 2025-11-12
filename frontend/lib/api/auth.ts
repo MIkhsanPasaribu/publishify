@@ -94,7 +94,7 @@ export const authApi = {
    * Register pengguna baru
    */
   async register(data: RegisterDto): Promise<RegisterResponse> {
-    const response = await api.post<RegisterResponse>("/auth/register", data);
+    const response = await api.post<RegisterResponse>("/auth/daftar", data);
     return response.data;
   },
 
