@@ -63,10 +63,18 @@ interface NaskahDiajukan {
 interface Editor {
   id: string;
   email: string;
+  telepon?: string;
+  aktif: boolean;
+  terverifikasi: boolean;
   profilPengguna?: {
     namaDepan?: string;
     namaBelakang?: string;
+    namaTampilan?: string;
+    urlAvatar?: string;
   };
+  peranPengguna: Array<{
+    jenisPeran: "penulis" | "editor" | "percetakan" | "admin";
+  }>;
 }
 
 // ================================
@@ -100,24 +108,20 @@ export default function AntrianReviewPage() {
       const naskahDiajukan = allNaskah.filter((n: any) => n.status === "diajukan");
       
       console.log("📚 Total naskah diajukan:", naskahDiajukan.length);
-      setNaskahList(naskahDiajukan);
+      setNaskahList(naskahDiajukan as NaskahDiajukan[]);
 
-      // Fetch daftar editor
+      // Fetch daftar editor menggunakan filter peran
       const editorResponse = await api.get("/pengguna", {
         params: {
           limit: 100,
+          peran: "editor", // Filter langsung dari backend berdasarkan tabel peran_pengguna
         },
       });
       
-      // Filter user yang memiliki role editor
-      const allUsers = editorResponse.data?.data || [];
-      const editors = allUsers.filter((user: any) => 
-        user.peranPengguna?.some((peran: any) => 
-          peran.jenisPeran === "editor" && peran.aktif
-        )
-      );
+      const editors = editorResponse.data?.data || [];
       
-      console.log("👤 Total editor:", editors.length);
+      console.log("👤 Total editor tersedia:", editors.length);
+      console.log("� Data editor:", editors);
       setEditorList(editors);
     } catch (error: any) {
       console.error("Error fetching data:", error);
