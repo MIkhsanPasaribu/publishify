@@ -52,7 +52,8 @@ export default function AdminDashboardPage() {
     try {
       // Fetch statistik dari berbagai endpoint dengan error handling individual
       const results = await Promise.allSettled([
-        api.get("/naskah").catch((err) => {
+        // PENTING: Gunakan endpoint admin khusus untuk mengambil SEMUA naskah
+        api.get("/naskah/admin/semua", { params: { limit: 100 } }).catch((err) => {
           console.error("Error fetching naskah:", err.response?.data || err.message);
           return { data: { data: [] } };
         }),
@@ -78,6 +79,9 @@ export default function AdminDashboardPage() {
       const reviewList = results[2].status === "fulfilled" && results[2].value?.data?.data 
         ? results[2].value.data.data 
         : [];
+
+      console.log("📊 Statistik Admin - Total Naskah:", naskahList.length);
+      console.log("📋 Status Naskah:", naskahList.map((n: any) => n.status));
 
       // Hitung statistik
       setStatistik({
@@ -218,26 +222,26 @@ export default function AdminDashboardPage() {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                  Kelola Review
+                  Semua Naskah
                 </p>
-                <p className="text-sm text-gray-600">{statistik.reviewAktif} review aktif</p>
+                <p className="text-sm text-gray-600">{statistik.totalNaskah} total naskah</p>
               </div>
             </button>
 
             <button
-              onClick={() => router.push("/dashboard/admin/naskah")}
+              onClick={() => router.push("/dashboard/admin/monitoring")}
               className="flex items-center gap-4 p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all group"
             >
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="text-left">
                 <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  Kelola Naskah
+                  Monitoring Review
                 </p>
-                <p className="text-sm text-gray-600">{statistik.totalNaskah} total naskah</p>
+                <p className="text-sm text-gray-600">{statistik.reviewAktif} review aktif</p>
               </div>
             </button>
 

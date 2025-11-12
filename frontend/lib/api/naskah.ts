@@ -104,6 +104,17 @@ export const naskahApi = {
   },
 
   /**
+   * GET /naskah/admin/semua - Ambil SEMUA naskah untuk admin (tanpa filter publik)
+   * Role: admin only
+   */
+  async ambilSemuaNaskahAdmin(params?: FilterNaskahParams): Promise<ResponseSukses<Naskah[]>> {
+    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/admin/semua", { 
+      params: sanitizeParams(params) 
+    });
+    return data;
+  },
+
+  /**
    * GET /naskah/penulis/saya - Ambil naskah penulis yang sedang login
    */
   async ambilNaskahSaya(params?: FilterNaskahParams): Promise<ResponseSukses<Naskah[]>> {
