@@ -231,9 +231,15 @@ export default function AjukanDrafPage() {
         : undefined;
       const jumlahKata = hitungJumlahKata && hitungJumlahKata >= 100 ? hitungJumlahKata : undefined;
 
+      // Konversi path relatif menjadi URL lengkap untuk validasi backend
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+      const urlFileAbsolut = urlFile ? `${backendUrl}${urlFile}` : undefined;
+      const urlSampulAbsolut = urlSampul ? `${backendUrl}${urlSampul}` : undefined;
+
       console.log("📋 Menyimpan naskah dengan data:", {
         judul: formData.judul,
-        urlFile,
+        urlFile: urlFileAbsolut,
+        urlSampul: urlSampulAbsolut,
         modeInput,
         langsungAjukan,
       });
@@ -247,8 +253,8 @@ export default function AjukanDrafPage() {
         idGenre: formData.idGenre,
         bahasaTulis: formData.bahasaTulis,
         jumlahKata,
-        urlSampul,
-        urlFile,
+        urlSampul: urlSampulAbsolut,
+        urlFile: urlFileAbsolut,
         publik: false,
       });
 
@@ -258,13 +264,13 @@ export default function AjukanDrafPage() {
       // Jika langsung ajukan, ubah status jadi diajukan
       if (langsungAjukan && naskahId) {
         // VALIDASI: Pastikan naskah punya file sebelum diajukan
-        if (!urlFile) {
+        if (!urlFileAbsolut) {
           toast.error("Naskah harus memiliki file sebelum dapat diajukan untuk review");
           setLoading(false);
           return;
         }
 
-        console.log("📤 Mengajukan naskah dengan urlFile:", urlFile);
+        console.log("📤 Mengajukan naskah dengan urlFile:", urlFileAbsolut);
         await naskahApi.ajukanNaskah(naskahId);
         toast.success("Naskah berhasil diajukan untuk review. Admin akan menugaskan editor untuk mereview naskah Anda.");
       } else {
