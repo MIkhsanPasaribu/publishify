@@ -198,11 +198,12 @@ export const reviewApi = {
     return data;
   },
 
-  // Perbarui review (status, catatan)
+  // Perbarui review (status, catatan, rekomendasi)
   async perbaruiReview(
     idReview: string,
     payload: {
       status?: StatusReview;
+      rekomendasi?: Rekomendasi;
       catatanUmum?: string;
     }
   ): Promise<ResponseSukses<Review>> {

@@ -129,9 +129,10 @@ export default function DetailReviewPage() {
 
       // Logic berbeda untuk setiap rekomendasi:
       if (rekomendasi === "revisi") {
-        // REVISI: Update status tetap 'dalam_proses', tidak selesaikan review
-        // Karena menunggu penulis melakukan revisi
+        // REVISI: Update rekomendasi + status tetap 'dalam_proses'
+        // Backend akan update: rekomendasi='revisi', status='dalam_proses', naskah.status='perlu_revisi'
         await reviewApi.perbaruiReview(idReview, {
+          rekomendasi: "revisi",
           status: "dalam_proses",
           catatanUmum: catatanRekomendasi.trim(),
         });
