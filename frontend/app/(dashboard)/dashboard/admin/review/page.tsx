@@ -80,6 +80,26 @@ export default function AdminReviewPage() {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  const getLabelRekomendasi = (rekomendasi?: string) => {
+    if (!rekomendasi) return null;
+    const labels: Record<string, string> = {
+      setujui: "Disetujui",
+      revisi: "Perlu Revisi",
+      tolak: "Ditolak",
+    };
+    return labels[rekomendasi] || rekomendasi;
+  };
+
+  const getWarnaBadgeRekomendasi = (rekomendasi?: string) => {
+    if (!rekomendasi) return "";
+    const colors: Record<string, string> = {
+      setujui: "bg-green-100 text-green-800 border border-green-200",
+      revisi: "bg-amber-100 text-amber-800 border border-amber-200",
+      tolak: "bg-red-100 text-red-800 border border-red-200",
+    };
+    return colors[rekomendasi] || "bg-gray-100 text-gray-800";
+  };
+
   const formatTanggal = (tanggal: string) => {
     if (!tanggal) return "-";
     try {
@@ -166,6 +186,15 @@ export default function AdminReviewPage() {
               </p>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+            <div className="text-center">
+              <p className="text-xs text-gray-600 mb-1">Ditolak</p>
+              <p className="text-2xl font-bold text-red-600">
+                {statistik.ditolak}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Filter & Search */}
@@ -211,6 +240,16 @@ export default function AdminReviewPage() {
             >
               Disetujui ({statistik.disetujui})
             </button>
+            <button
+              onClick={() => setFilter("ditolak")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                filter === "ditolak"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Ditolak ({statistik.ditolak})
+            </button>
           </div>
 
           {/* Search Bar */}
@@ -247,6 +286,9 @@ export default function AdminReviewPage() {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Rekomendasi
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
                     Tanggal Dibuat
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -257,7 +299,7 @@ export default function AdminReviewPage() {
               <tbody>
                 {sedangMemuat ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={8} className="px-6 py-12 text-center">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-6 h-6 border-3 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
                         <span className="text-gray-600">Memuat data...</span>
@@ -266,7 +308,7 @@ export default function AdminReviewPage() {
                   </tr>
                 ) : naskahTerfilter.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={8} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <span className="text-6xl">📭</span>
                         <p className="text-gray-600 text-lg">
@@ -319,6 +361,21 @@ export default function AdminReviewPage() {
                         >
                           {getLabelStatus(naskah.status)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {naskah.review && naskah.review.length > 0 && naskah.review[0].rekomendasi ? (
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${getWarnaBadgeRekomendasi(
+                              naskah.review[0].rekomendasi
+                            )}`}
+                          >
+                            {getLabelRekomendasi(naskah.review[0].rekomendasi)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">
+                            Belum ada
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {formatTanggal(naskah.dibuatPada)}
