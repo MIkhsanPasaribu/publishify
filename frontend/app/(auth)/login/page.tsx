@@ -16,6 +16,35 @@ export default function LoginPage() {
     kataSandi: "",
   });
 
+  // Mode Development
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Auto-fill functions untuk mode development
+  const autoFillAdmin = () => {
+    setFormData({ email: "admin@publishify.com", kataSandi: "Password123!" });
+    toast.success("Form diisi: Admin");
+  };
+
+  const autoFillEditor = () => {
+    setFormData({ email: "editor@publishify.com", kataSandi: "Password123!" });
+    toast.success("Form diisi: Editor");
+  };
+
+  const autoFillPenulis = () => {
+    setFormData({ email: "penulis@publishify.com", kataSandi: "Password123!" });
+    toast.success("Form diisi: Penulis Basic");
+  };
+
+  const autoFillPercetakan = () => {
+    setFormData({ email: "percetakan@publishify.com", kataSandi: "Password123!" });
+    toast.success("Form diisi: Percetakan");
+  };
+
+  const autoFillWriter = () => {
+    setFormData({ email: "ahmad.surya@publishify.com", kataSandi: "Password123!" });
+    toast.success("Form diisi: Writer Full Data");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -86,16 +115,57 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12 space-y-6">
-        {/* Development Mode: Test Credentials Info */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-sm font-semibold text-blue-900 mb-2">🧪 Test Credentials:</p>
-            <div className="text-xs text-blue-800 space-y-1">
-              <p><strong>Penulis:</strong> penulis@publishify.com</p>
-              <p><strong>Editor:</strong> editor@publishify.com</p>
-              <p><strong>Admin:</strong> admin@publishify.com</p>
-              <p><strong>Password:</strong> Password123!</p>
+        {/* Mode Development Banner */}
+        {isDevelopment && (
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold text-purple-900">
+                Mode Development - Auto Fill (Seed Account):
+              </span>
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={autoFillAdmin}
+                className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={autoFillEditor}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+              >
+                Editor
+              </button>
+              <button
+                type="button"
+                onClick={autoFillPenulis}
+                className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+              >
+                Penulis
+              </button>
+              <button
+                type="button"
+                onClick={autoFillPercetakan}
+                className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+              >
+                Percetakan
+              </button>
+              <button
+                type="button"
+                onClick={autoFillWriter}
+                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm col-span-2 sm:col-span-1"
+              >
+                Writer Full
+              </button>
+            </div>
+            <p className="text-xs text-purple-700 mt-2">
+              Klik untuk mengisi form otomatis, lalu klik Login
+            </p>
           </div>
         )}
 
