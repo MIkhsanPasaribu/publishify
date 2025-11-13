@@ -145,7 +145,7 @@ export default function DetailReviewPage() {
         // - "setujui" → status review 'selesai' + status naskah 'disetujui'
         await reviewApi.submitReview(idReview, {
           rekomendasi: rekomendasi,
-          catatanUmum: catatanRekomendasi.trim(),
+          catatan: catatanRekomendasi.trim(),
         });
 
         const successMessages = {
