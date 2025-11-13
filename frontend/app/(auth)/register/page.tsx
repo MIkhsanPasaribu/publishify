@@ -13,6 +13,9 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
+  // Mode Development
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
   const [formData, setFormData] = useState({
     // Step 1 - Login Info
     email: "",
@@ -34,7 +37,71 @@ export default function RegisterPage() {
     kota: "",
     provinsi: "",
     kodePos: "",
-  });  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  });
+
+  // Auto-fill functions untuk mode development
+  const autoFillAdmin = () => {
+    setFormData({
+      email: "admin@publishify.com",
+      kataSandi: "Admin123",
+      konfirmasiKataSandi: "Admin123",
+      telepon: "081234567890",
+      jenisPeran: "penulis",
+      namaDepan: "Admin",
+      namaBelakang: "Publishify",
+      namaTampilan: "Admin",
+      bio: "Administrator Publishify",
+      tanggalLahir: "1990-01-01",
+      jenisKelamin: "laki-laki",
+      alamat: "Jl. Admin No. 1",
+      kota: "Jakarta",
+      provinsi: "DKI Jakarta",
+      kodePos: "12345",
+    });
+    toast.success("Form diisi otomatis dengan akun Admin");
+  };
+
+  const autoFillUser = () => {
+    setFormData({
+      email: "user@example.com",
+      kataSandi: "User1234",
+      konfirmasiKataSandi: "User1234",
+      telepon: "082345678901",
+      jenisPeran: "penulis",
+      namaDepan: "John",
+      namaBelakang: "Doe",
+      namaTampilan: "JohnD",
+      bio: "Penulis profesional",
+      tanggalLahir: "1995-05-15",
+      jenisKelamin: "laki-laki",
+      alamat: "Jl. Penulis No. 10",
+      kota: "Bandung",
+      provinsi: "Jawa Barat",
+      kodePos: "40123",
+    });
+    toast.success("Form diisi otomatis dengan akun User");
+  };
+
+  const autoFillCS = () => {
+    setFormData({
+      email: "editor@publishify.com",
+      kataSandi: "Editor123",
+      konfirmasiKataSandi: "Editor123",
+      telepon: "083456789012",
+      jenisPeran: "editor",
+      namaDepan: "Editor",
+      namaBelakang: "Publishify",
+      namaTampilan: "EditorCS",
+      bio: "Editor profesional Publishify",
+      tanggalLahir: "1992-08-20",
+      jenisKelamin: "perempuan",
+      alamat: "Jl. Editor No. 5",
+      kota: "Surabaya",
+      provinsi: "Jawa Timur",
+      kodePos: "60123",
+    });
+    toast.success("Form diisi otomatis dengan akun Editor");
+  };  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -189,6 +256,46 @@ export default function RegisterPage() {
 
       {/* Right Side - Registration Form */}
       <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12 space-y-6">
+        {/* Mode Development Banner */}
+        {isDevelopment && (
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold text-purple-900">
+                Mode Development - Auto Fill (Seed Account):
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={autoFillAdmin}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={autoFillUser}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              >
+                User
+              </button>
+              <button
+                type="button"
+                onClick={autoFillCS}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              >
+                CS
+              </button>
+            </div>
+            <p className="text-xs text-purple-700 mt-2">
+              Klik untuk mengisi form otomatis, lalu klik Login
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
