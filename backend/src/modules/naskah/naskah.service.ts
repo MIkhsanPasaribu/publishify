@@ -227,6 +227,18 @@ export class NaskahService {
               slug: true,
             },
           },
+          review: {
+            select: {
+              id: true,
+              status: true,
+              rekomendasi: true,
+              catatan: true,
+              ditugaskanPada: true,
+              selesaiPada: true,
+            },
+            orderBy: { ditugaskanPada: 'desc' },
+            take: 1, // Ambil review terbaru saja
+          },
           _count: {
             select: {
               revisi: true,

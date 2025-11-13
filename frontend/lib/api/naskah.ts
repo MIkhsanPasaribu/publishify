@@ -43,6 +43,14 @@ export interface Naskah {
   publik: boolean;
   dibuatPada: string;
   diperbaruiPada: string;
+  review?: Array<{
+    id: string;
+    status: string;
+    rekomendasi?: "setujui" | "revisi" | "tolak";
+    catatan?: string;
+    ditugaskanPada: string;
+    selesaiPada?: string;
+  }>;
 }
 
 export interface BuatNaskahPayload {
