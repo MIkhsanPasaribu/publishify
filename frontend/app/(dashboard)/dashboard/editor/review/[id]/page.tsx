@@ -127,23 +127,32 @@ export default function DetailReviewPage() {
         komentar: catatanRekomendasi.trim(),
       });
 
-      // Submit review dengan rekomendasi (termasuk "tolak")
-      // Backend akan handle:
-      // - rekomendasi "tolak" → status review 'dibatalkan' + status naskah 'ditolak'
-      // - rekomendasi "setujui" → status review 'selesai' + status naskah 'disetujui'
-      // - rekomendasi "revisi" → status review 'selesai' + status naskah tetap atau 'perlu_revisi'
-      await reviewApi.submitReview(idReview, {
-        rekomendasi: rekomendasi,
-        catatanUmum: catatanRekomendasi.trim(),
-      });
+      // Logic berbeda untuk setiap rekomendasi:
+      if (rekomendasi === "revisi") {
+        // REVISI: Update status tetap 'dalam_proses', tidak selesaikan review
+        // Karena menunggu penulis melakukan revisi
+        await reviewApi.perbaruiReview(idReview, {
+          status: "dalam_proses",
+          catatanUmum: catatanRekomendasi.trim(),
+        });
+        
+        toast.success("✏️ Revisi diperlukan! Catatan telah dikirim ke penulis (Review masih dalam proses)");
+      } else {
+        // SETUJUI/TOLAK: Submit review untuk menyelesaikan
+        // Backend akan handle:
+        // - "tolak" → status review 'dibatalkan' + status naskah 'ditolak'
+        // - "setujui" → status review 'selesai' + status naskah 'disetujui'
+        await reviewApi.submitReview(idReview, {
+          rekomendasi: rekomendasi,
+          catatanUmum: catatanRekomendasi.trim(),
+        });
 
-      // Pesan sukses berbeda per rekomendasi
-      const successMessages = {
-        setujui: "✅ Naskah disetujui! Review selesai (Status Naskah: Disetujui)",
-        revisi: "✏️ Revisi diperlukan! Review selesai (Status Naskah: Perlu Revisi)",
-        tolak: "❌ Naskah ditolak! Review dibatalkan (Status Naskah: Ditolak)",
-      };
-      toast.success(successMessages[rekomendasi]);
+        const successMessages = {
+          setujui: "✅ Naskah disetujui! Review selesai (Status Naskah: Disetujui)",
+          tolak: "❌ Naskah ditolak! Review dibatalkan (Status Naskah: Ditolak)",
+        };
+        toast.success(successMessages[rekomendasi] || "Rekomendasi berhasil ditetapkan");
+      }
 
       setShowRekomendasiModal(false);
       setCatatanRekomendasi("");
@@ -626,8 +635,12 @@ export default function DetailReviewPage() {
               {/* Info Status */}
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>⚠️ Perhatian:</strong> Setelah menetapkan rekomendasi, review akan otomatis diselesaikan dan tidak dapat diubah lagi.
+                  <strong>⚠️ Perhatian:</strong> Pilih rekomendasi sesuai hasil review Anda.
                 </p>
+                <ul className="text-xs text-blue-700 mt-2 space-y-1 ml-4">
+                  <li>• <strong>Setujui/Tolak:</strong> Review akan diselesaikan dan tidak dapat diubah</li>
+                  <li>• <strong>Revisi:</strong> Review tetap aktif, menunggu penulis melakukan revisi</li>
+                </ul>
               </div>
 
               {/* Pilih Rekomendasi */}
@@ -667,7 +680,7 @@ export default function DetailReviewPage() {
                       Perlu perbaikan
                     </div>
                     <div className="text-xs text-amber-600 font-medium mt-2">
-                      → Status Naskah: <strong>Perlu Revisi</strong>
+                      → Review: <strong>Dalam Proses</strong>
                     </div>
                   </button>
                   <button
