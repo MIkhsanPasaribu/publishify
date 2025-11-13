@@ -127,23 +127,23 @@ export default function DetailReviewPage() {
         komentar: catatanRekomendasi.trim(),
       });
 
-      // Logika berbeda berdasarkan rekomendasi:
-      // - tolak → batalkan review (status='dibatalkan')
-      // - setujui/revisi → submit review (status='selesai')
-      if (rekomendasi === "tolak") {
-        await reviewApi.batalkanReview(idReview, catatanRekomendasi.trim());
-        toast.success("❌ Naskah ditolak! Review dibatalkan (Status: Dibatalkan)");
-      } else {
-        await reviewApi.submitReview(idReview, {
-          rekomendasi: rekomendasi,
-          catatanUmum: catatanRekomendasi.trim(),
-        });
-        
-        const successMessage = rekomendasi === "setujui" 
-          ? "✅ Naskah disetujui! Review selesai (Status: Selesai)"
-          : "✏️ Revisi diperlukan! Review selesai (Status: Selesai)";
-        toast.success(successMessage);
-      }
+      // Submit review dengan rekomendasi (termasuk "tolak")
+      // Backend akan handle:
+      // - rekomendasi "tolak" → status review 'dibatalkan' + status naskah 'ditolak'
+      // - rekomendasi "setujui" → status review 'selesai' + status naskah 'disetujui'
+      // - rekomendasi "revisi" → status review 'selesai' + status naskah tetap atau 'perlu_revisi'
+      await reviewApi.submitReview(idReview, {
+        rekomendasi: rekomendasi,
+        catatanUmum: catatanRekomendasi.trim(),
+      });
+
+      // Pesan sukses berbeda per rekomendasi
+      const successMessages = {
+        setujui: "✅ Naskah disetujui! Review selesai (Status Naskah: Disetujui)",
+        revisi: "✏️ Revisi diperlukan! Review selesai (Status Naskah: Perlu Revisi)",
+        tolak: "❌ Naskah ditolak! Review dibatalkan (Status Naskah: Ditolak)",
+      };
+      toast.success(successMessages[rekomendasi]);
 
       setShowRekomendasiModal(false);
       setCatatanRekomendasi("");
@@ -650,7 +650,7 @@ export default function DetailReviewPage() {
                       Naskah layak terbit
                     </div>
                     <div className="text-xs text-green-600 font-medium mt-2">
-                      Status: Selesai
+                      → Status Naskah: <strong>Disetujui</strong>
                     </div>
                   </button>
                   <button
@@ -667,7 +667,7 @@ export default function DetailReviewPage() {
                       Perlu perbaikan
                     </div>
                     <div className="text-xs text-amber-600 font-medium mt-2">
-                      Status: Selesai
+                      → Status Naskah: <strong>Perlu Revisi</strong>
                     </div>
                   </button>
                   <button
@@ -684,7 +684,7 @@ export default function DetailReviewPage() {
                       Tidak layak terbit
                     </div>
                     <div className="text-xs text-red-600 font-medium mt-2">
-                      Status: Dibatalkan
+                      → Status Naskah: <strong>Ditolak</strong>
                     </div>
                   </button>
                 </div>
