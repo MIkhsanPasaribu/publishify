@@ -108,7 +108,7 @@ export default function AntrianReviewPage() {
       const naskahDiajukan = allNaskah.filter((n: any) => n.status === "diajukan");
       
       console.log("📚 Total naskah diajukan:", naskahDiajukan.length);
-      setNaskahList(naskahDiajukan as NaskahDiajukan[]);
+      setNaskahList(naskahDiajukan as unknown as NaskahDiajukan[]);
 
       // Fetch daftar editor menggunakan filter peran
       const editorResponse = await api.get("/pengguna", {

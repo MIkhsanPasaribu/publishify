@@ -67,9 +67,9 @@ export interface Review {
 export interface FeedbackReview {
   id: string;
   idReview: string;
-  aspek: string; // Alur, Karakter, Gaya Bahasa, dll
+  bab?: string; // Bagian/Bab naskah
+  halaman?: number; // Nomor halaman
   komentar: string;
-  skor?: number; // 1-5
   dibuatPada: string;
 }
 
@@ -92,9 +92,9 @@ export interface StatistikReview {
 }
 
 export interface TambahFeedbackDto {
-  aspek: string;
+  bab?: string;
+  halaman?: number;
   komentar: string;
-  skor?: number;
 }
 
 export interface SubmitReviewDto {
