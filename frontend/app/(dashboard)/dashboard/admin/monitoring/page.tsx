@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { reviewApi, type Review, type StatusReview, type StatistikReview } from "@/lib/api/review";
-import { format } from "date-fns";
-import { id as localeId } from "date-fns/locale";
 
 // ================================
 // INTERFACES
@@ -30,6 +28,16 @@ export default function MonitoringReviewPage() {
     status: "semua",
     pencarian: "",
   });
+
+  // Format tanggal ke format Indonesia
+  const formatTanggal = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   useEffect(() => {
     fetchData();
@@ -76,10 +84,10 @@ export default function MonitoringReviewPage() {
       const search = filter.pencarian.toLowerCase();
       filtered = filtered.filter(
         (r) =>
-          r.naskah.judul.toLowerCase().includes(search) ||
-          r.editor.email.toLowerCase().includes(search) ||
-          r.editor.profilPengguna?.namaDepan?.toLowerCase().includes(search) ||
-          r.editor.profilPengguna?.namaBelakang?.toLowerCase().includes(search)
+          r.naskah?.judul?.toLowerCase().includes(search) ||
+          r.editor?.email?.toLowerCase().includes(search) ||
+          r.editor?.profilPengguna?.namaDepan?.toLowerCase().includes(search) ||
+          r.editor?.profilPengguna?.namaBelakang?.toLowerCase().includes(search)
       );
     }
 
@@ -127,10 +135,11 @@ export default function MonitoringReviewPage() {
   };
 
   const formatNamaEditor = (editor: Review["editor"]) => {
+    if (!editor) return "Editor tidak ditemukan";
     if (editor.profilPengguna?.namaDepan || editor.profilPengguna?.namaBelakang) {
       return `${editor.profilPengguna.namaDepan || ""} ${editor.profilPengguna.namaBelakang || ""}`.trim();
     }
-    return editor.email;
+    return editor.email || "Email tidak tersedia";
   };
 
   const hitungDurasi = (review: Review) => {
@@ -323,10 +332,10 @@ export default function MonitoringReviewPage() {
                       <td className="px-6 py-4">
                         <div className="max-w-xs">
                           <p className="font-medium text-gray-900 truncate">
-                            {review.naskah.judul}
+                            {review.naskah?.judul || "Judul tidak tersedia"}
                           </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {review.naskah.penulis.profilPengguna?.namaDepan || review.naskah.penulis.email}
+                            {review.naskah?.penulis?.profilPengguna?.namaDepan || review.naskah?.penulis?.email || "Penulis tidak diketahui"}
                           </p>
                         </div>
                       </td>
@@ -335,7 +344,7 @@ export default function MonitoringReviewPage() {
                           <p className="text-sm font-medium text-gray-900">
                             {formatNamaEditor(review.editor)}
                           </p>
-                          <p className="text-xs text-gray-500">{review.editor.email}</p>
+                          <p className="text-xs text-gray-500">{review.editor?.email || "-"}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -359,9 +368,7 @@ export default function MonitoringReviewPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-600">
-                          {format(new Date(review.ditugaskanPada), "dd MMM yyyy", {
-                            locale: localeId,
-                          })}
+                          {formatTanggal(review.ditugaskanPada)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
