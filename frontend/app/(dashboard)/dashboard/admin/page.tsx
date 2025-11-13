@@ -214,7 +214,7 @@ export default function AdminDashboardPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-6">⚡ Aksi Cepat</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
-              onClick={() => router.push("/dashboard/admin/antrian")}
+              onClick={() => router.push("/dashboard/admin/antrian-review")}
               className="flex items-center gap-4 p-4 border-2 border-orange-200 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all group"
             >
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
