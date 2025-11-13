@@ -134,7 +134,7 @@ export default function DetailReviewPage() {
         await reviewApi.perbaruiReview(idReview, {
           rekomendasi: "revisi",
           status: "dalam_proses",
-          catatanUmum: catatanRekomendasi.trim(),
+          catatan: catatanRekomendasi.trim(), // ✅ Ubah dari catatanUmum ke catatan
         });
         
         toast.success("✏️ Revisi diperlukan! Catatan telah dikirim ke penulis (Review masih dalam proses)");

@@ -13,7 +13,7 @@ export interface Review {
   idEditor: string;
   status: StatusReview;
   rekomendasi?: Rekomendasi;
-  catatanUmum?: string;
+  catatan?: string; // ✅ Ubah dari catatanUmum ke catatan (sesuai DB schema)
   ditugaskanPada: string;
   dimulaiPada?: string;
   selesaiPada?: string;
@@ -99,7 +99,7 @@ export interface TambahFeedbackDto {
 
 export interface SubmitReviewDto {
   rekomendasi: Rekomendasi;
-  catatanUmum: string;
+  catatan: string; // ✅ Ubah dari catatanUmum ke catatan (sesuai DB schema)
 }
 
 export interface TugaskanReviewDto {
@@ -204,7 +204,7 @@ export const reviewApi = {
     payload: {
       status?: StatusReview;
       rekomendasi?: Rekomendasi;
-      catatanUmum?: string;
+      catatan?: string; // ✅ Ubah dari catatanUmum ke catatan (sesuai DB schema)
     }
   ): Promise<ResponseSukses<Review>> {
     const { data } = await api.put<ResponseSukses<Review>>(`/review/${idReview}`, payload);
