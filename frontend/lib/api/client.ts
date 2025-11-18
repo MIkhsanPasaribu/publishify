@@ -1,48 +1,152 @@
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosError } from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+/**
+ * Base API URL dari environment variable
+ */
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-// Instance axios utama
-export const api = axios.create({
-  baseURL,
-  timeout: 20000,
-  withCredentials: false,
+/**
+ * Axios instance dengan konfigurasi default
+ */
+const api: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
-    Accept: "application/json",
   },
 });
 
-// Inject Authorization token jika ada
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-    if (token) {
-      config.headers = config.headers || {};
-      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+/**
+ * Request interceptor untuk menambahkan token ke header
+ */
+api.interceptors.request.use(
+  (config) => {
+    // Ambil token dari localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-  } catch (err) {
-    // ignore
-  }
-  return config;
-});
-
-// Global error handler (opsional)
-api.interceptors.response.use(
-  (res: AxiosResponse) => res,
-  (error: AxiosError<any>) => {
-    const pesanDefault = "Terjadi kesalahan pada koneksi. Mohon coba lagi.";
-    if (error.response) {
-      // Respons dari server dengan status error
-      const data = error.response.data;
-      const pesan = data?.pesan || data?.message || pesanDefault;
-      return Promise.reject(new Error(pesan));
+    
+    // Log request untuk debugging (hanya di development)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+        params: config.params,
+        data: config.data,
+      });
     }
-    if (error.request) {
-      return Promise.reject(new Error("Server tidak merespon. Periksa koneksi Anda."));
-    }
-    return Promise.reject(new Error(pesanDefault));
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
 );
+
+/**
+ * Response interceptor untuk handle error dan refresh token
+ */
+api.interceptors.response.use(
+  (response) => {
+    // Log response untuk debugging (hanya di development)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        data: response.data,
+      });
+    }
+    return response;
+  },
+  async (error: AxiosError) => {
+    // Log error untuk debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        headers: error.response?.headers,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        fullURL: `${error.config?.baseURL}${error.config?.url}`,
+      });
+    }
+    
+    const originalRequest = error.config as any;
+
+    // Jika error 401 dan belum retry
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Coba refresh token
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken) {
+          const response = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { accessToken } = response.data.data;
+
+          // Simpan token baru
+          localStorage.setItem("accessToken", accessToken);
+
+          // Retry request dengan token baru
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Jika refresh token gagal, redirect ke login
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Standard response interface
+ */
+export interface Response<T = any> {
+  sukses: boolean;
+  pesan: string;
+  data: T;
+  metadata?: {
+    total?: number;
+    halaman?: number;
+    limit?: number;
+    totalHalaman?: number;
+  };
+}
+
+/**
+ * Helper function: Sanitize query params untuk memastikan tipe data yang benar
+ * Prisma strict dengan tipe data, jadi halaman & limit harus number, bukan string
+ */
+export function sanitizeParams(params?: Record<string, any>): Record<string, any> {
+  if (!params) return {};
+  
+  const cleaned: Record<string, any> = {};
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    
+    // Convert numeric fields to number
+    if (key === 'halaman' || key === 'limit' || key === 'page' || key === 'take' || key === 'skip') {
+      cleaned[key] = Number(value);
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  
+  return cleaned;
+}
 
 export default api;

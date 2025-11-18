@@ -4,14 +4,38 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/use-auth-store";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+  // Ambil data pengguna untuk cek role
+  const { pengguna } = useAuthStore();
+  
+  // Helper untuk cek apakah user memiliki role tertentu
+  const hasRole = (role: "penulis" | "editor" | "percetakan" | "admin") => {
+    if (!pengguna) return false;
+    
+    // Cek dari peran (format array string dari backend login)
+    if (pengguna.peran && pengguna.peran.includes(role)) {
+      return true;
+    }
+    
+    // Cek dari peranPengguna (format lengkap)
+    if (pengguna.peranPengguna) {
+      return pengguna.peranPengguna.some(
+        (peran) => peran.jenisPeran === role && peran.aktif
+      );
+    }
+    
+    return false;
+  };
 
-  const menuItems = [
+  // Menu untuk Penulis
+  const menuPenulis = [
     {
       label: "Beranda",
       icon: (
@@ -57,6 +81,84 @@ export function Sidebar() {
       ),
       href: "/dashboard/pesanan-cetak",
     },
+  ];
+
+  // Menu untuk Editor
+  const menuEditor = [
+    {
+      label: "Dashboard Editor",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+      href: "/dashboard/editor",
+    },
+    {
+      label: "Daftar Review",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: "/dashboard/editor/review",
+    },
+  ];
+
+  // Menu untuk Admin
+  const menuAdmin = [
+    {
+      label: "Dashboard Admin",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
+      href: "/dashboard/admin",
+    },
+    {
+      label: "Semua Naskah",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      href: "/dashboard/admin/review",
+    },
+    {
+      label: "Antrian Review",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: "/dashboard/admin/antrian-review",
+    },
+    {
+      label: "Kelola Pengguna",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+      href: "/dashboard/admin/pengguna",
+    },
+    {
+      label: "Monitoring Review",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      href: "/dashboard/admin/monitoring",
+    },
+  ];
+
+  // Gabungkan menu berdasarkan role
+  const menuItems = [
+    ...(hasRole("penulis") ? menuPenulis : []),
+    ...(hasRole("editor") ? menuEditor : []),
+    ...(hasRole("admin") ? menuAdmin : []),
   ];
 
   const bottomMenuItems = [

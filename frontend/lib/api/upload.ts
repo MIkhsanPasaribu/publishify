@@ -45,7 +45,11 @@ export const uploadApi = {
     if (deskripsi) formData.append("deskripsi", deskripsi);
     if (idReferensi) formData.append("idReferensi", idReferensi);
 
-    const { data } = await api.post<UploadFileResponse>(
+    const response = await api.post<{
+      sukses: boolean;
+      pesan: string;
+      data: UploadFileResponse;
+    }>(
       "/upload/single",
       formData,
       {
@@ -60,7 +64,9 @@ export const uploadApi = {
         },
       }
     );
-    return data;
+    
+    // Extract data dari wrapper response
+    return response.data.data;
   },
 
   /**
@@ -79,7 +85,11 @@ export const uploadApi = {
     formData.append("tujuan", tujuan);
     if (deskripsi) formData.append("deskripsi", deskripsi);
 
-    const { data } = await api.post<UploadFileResponse[]>(
+    const response = await api.post<{
+      sukses: boolean;
+      pesan: string;
+      data: UploadFileResponse[];
+    }>(
       "/upload/multiple",
       formData,
       {
@@ -94,7 +104,9 @@ export const uploadApi = {
         },
       }
     );
-    return data;
+    
+    // Extract data dari wrapper response
+    return response.data.data;
   },
 
   /**

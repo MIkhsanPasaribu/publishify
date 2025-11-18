@@ -62,7 +62,27 @@ import googleOAuthConfig from '@/config/google-oauth.config';
     // Strategies
     LocalStrategy,
     JwtStrategy,
-    GoogleStrategy, // ✅ Add Google OAuth Strategy
+    // GoogleStrategy: register only if credentials exist to avoid startup crash
+    {
+      provide: GoogleStrategy,
+      useFactory: (configService: ConfigService, authService: AuthService) => {
+        const clientID = configService.get<string>('googleOAuth.clientID');
+        const clientSecret = configService.get<string>('googleOAuth.clientSecret');
+
+        if (!clientID || !clientSecret) {
+          // Jika credential belum diset, jangan inisialisasi strategy (development safe)
+          // Kembalikan objek noop agar DI tetap terpenuhi
+          console.warn('[AuthModule] Google OAuth disabled - GOOGLE_CLIENT_ID/SECRET tidak diset');
+          // Minimal class agar Nest tidak error saat mencoba resolve provider
+          class DisabledGoogleStrategy {}
+          return new DisabledGoogleStrategy();
+        }
+
+        // Jika credential ada, inisialisasi strategy seperti biasa
+        return new GoogleStrategy(configService, authService);
+      },
+      inject: [ConfigService, AuthService],
+    },
   ],
   exports: [
     // Export AuthService agar bisa digunakan module lain

@@ -63,10 +63,16 @@ export default function AjukanDrafPage() {
 
   const handleNaskahChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
+    // Accept Word documents (.doc, .docx) - manuscripts need to be editable
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/msword", // .doc
+    ];
+    
+    if (file && allowedTypes.includes(file.type)) {
       setFileNaskah(file);
     } else {
-      toast.error("Hanya file PDF yang diperbolehkan");
+      toast.error("Hanya file Word (DOC/DOCX) yang diperbolehkan. Naskah harus dalam format yang dapat diedit.");
     }
   };
 
@@ -76,14 +82,24 @@ export default function AjukanDrafPage() {
       setStatusGenre("loading");
       try {
         const [katRes, genRes] = await Promise.all([
-          naskahApi.ambilKategori({ aktif: true, limit: 100 }).catch(() => null),
-          naskahApi.ambilGenre({ aktif: true, limit: 100 }).catch(() => null),
+          naskahApi.ambilKategori().catch((err) => {
+            console.error("Error fetching kategori:", err);
+            return null;
+          }),
+          naskahApi.ambilGenre().catch((err) => {
+            console.error("Error fetching genre:", err);
+            return null;
+          }),
         ]);
+      
+        console.log("Kategori Response:", katRes);
+        console.log("Genre Response:", genRes);
       
         if (katRes?.data?.length) {
           setKategoriList(katRes.data.map((k) => ({ id: k.id, nama: k.nama })));
           setStatusKategori("sukses");
         } else {
+          console.warn("Kategori data kosong atau tidak ada");
           setStatusKategori("gagal");
         }
       
@@ -91,6 +107,7 @@ export default function AjukanDrafPage() {
           setGenreList(genRes.data.map((g) => ({ id: g.id, nama: g.nama })));
           setStatusGenre("sukses");
         } else {
+          console.warn("Genre data kosong atau tidak ada");
           setStatusGenre("gagal");
         }
       } catch (error) {
@@ -133,7 +150,7 @@ export default function AjukanDrafPage() {
     }
 
     if (modeInput === "upload" && !fileNaskah) {
-      toast.error("Mohon upload file naskah PDF");
+      toast.error("Mohon upload file naskah Word (DOC/DOCX)");
       return;
     }
 
@@ -152,6 +169,7 @@ export default function AjukanDrafPage() {
 
       // Upload sampul jika ada
       if (fileSampul) {
+        console.log("🖼️ Mengupload sampul:", fileSampul.name);
         const res = await uploadApi.uploadFile(
           fileSampul,
           "sampul",
@@ -160,19 +178,24 @@ export default function AjukanDrafPage() {
           (p) => setProgressSampul(p)
         );
         urlSampul = res.urlPublik || res.url;
+        console.log("✅ Upload sampul berhasil, urlSampul:", urlSampul);
       }
 
       // Siapkan file naskah
       if (modeInput === "upload" && fileNaskah) {
+        console.log("📁 Mengupload file Word:", fileNaskah.name);
         const res = await uploadApi.uploadFile(
           fileNaskah,
           "naskah",
-          "File naskah (PDF)",
+          "File naskah (Word DOC/DOCX)",
           undefined,
           (p) => setProgressNaskah(p)
         );
+        console.log("📦 Response upload:", res);
         urlFile = res.urlPublik || res.url;
+        console.log("✅ Upload Word berhasil, urlFile:", urlFile);
       } else if (modeInput === "tulis") {
+        console.log("📝 Membuat file .txt dari konten...");
         const blob = new Blob([formData.kontenTeks], { type: "text/plain;charset=utf-8" });
         const nama = `${slugify(formData.judul) || "naskah"}.txt`;
         const fileTxt = new File([blob], nama, { type: "text/plain" });
@@ -183,7 +206,9 @@ export default function AjukanDrafPage() {
           undefined,
           (p) => setProgressNaskah(p)
         );
+        console.log("📦 Response upload:", res);
         urlFile = res.urlPublik || res.url;
+        console.log("✅ Upload .txt berhasil, urlFile:", urlFile);
       }
 
       // Validasi UUID untuk idKategori & idGenre (hindari kirim dummy)
@@ -206,8 +231,20 @@ export default function AjukanDrafPage() {
         : undefined;
       const jumlahKata = hitungJumlahKata && hitungJumlahKata >= 100 ? hitungJumlahKata : undefined;
 
-      // Submit naskah
-      await naskahApi.buatNaskah({
+      // Konversi path relatif menjadi URL lengkap untuk validasi backend
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+      const urlFileAbsolut = urlFile ? `${backendUrl}${urlFile}` : undefined;
+      const urlSampulAbsolut = urlSampul ? `${backendUrl}${urlSampul}` : undefined;
+
+      console.log("📋 Menyimpan naskah dengan data:", {
+        judul: formData.judul,
+        urlFile: urlFileAbsolut,
+        urlSampul: urlSampulAbsolut,
+        modeInput,
+      });
+
+      // LANGKAH 1: Buat naskah baru (status: DRAFT)
+      const responseNaskah = await naskahApi.buatNaskah({
         judul: formData.judul,
         subJudul: formData.subJudul || undefined,
         sinopsis: formData.sinopsis,
@@ -215,12 +252,28 @@ export default function AjukanDrafPage() {
         idGenre: formData.idGenre,
         bahasaTulis: formData.bahasaTulis,
         jumlahKata,
-        urlSampul,
-        urlFile,
+        urlSampul: urlSampulAbsolut,
+        urlFile: urlFileAbsolut,
         publik: false,
       });
 
-      toast.success("Naskah berhasil diajukan sebagai draft");
+      console.log("✅ Langkah 1: Naskah berhasil disimpan dengan status DRAFT:", responseNaskah.data);
+      const naskahId = responseNaskah.data.id;
+
+      // VALIDASI: Pastikan naskah punya file sebelum diajukan
+      if (!urlFileAbsolut) {
+        toast.error("Naskah berhasil disimpan sebagai draft, tapi tidak bisa diajukan karena tidak ada file");
+        router.replace("/dashboard");
+        return;
+      }
+
+      // LANGKAH 2: Ajukan naskah untuk review (status: DRAFT → IN_REVIEW)
+      console.log("📤 Langkah 2: Mengajukan naskah untuk review...");
+      await naskahApi.ajukanNaskah(naskahId, "Versi awal naskah diajukan untuk review");
+      
+      console.log("✅ Langkah 2: Status berhasil diubah ke IN_REVIEW");
+      toast.success("Naskah berhasil dibuat dan diajukan untuk review! Admin akan menugaskan editor untuk mereview naskah Anda.");
+
       router.replace("/dashboard");
     } catch (err: any) {
       const msg = err?.response?.data?.pesan || err?.message || "Gagal mengajukan naskah";
@@ -317,10 +370,10 @@ export default function AjukanDrafPage() {
                   </svg>
                   <div className="text-center">
                     <h3 className="font-semibold text-gray-900 mb-1">
-                      Upload File PDF
+                      Upload File Word
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Upload naskah dalam format PDF
+                      Upload naskah dalam format Word (DOC/DOCX)
                     </p>
                   </div>
                 </div>
@@ -577,7 +630,7 @@ export default function AjukanDrafPage() {
             ) : (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload File Naskah (PDF) <span className="text-red-500">*</span>
+                  Upload File Naskah (Word) <span className="text-red-500">*</span>
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#14b8a6] transition-colors">
                   {fileNaskah ? (
@@ -627,14 +680,14 @@ export default function AjukanDrafPage() {
                         />
                       </svg>
                       <p className="text-sm text-gray-600 mb-2">
-                        Klik untuk upload file PDF
+                        Klik untuk upload file Word (DOC/DOCX)
                       </p>
                       <p className="text-xs text-gray-400 mb-4">
-                        PDF (Max. 10MB)
+                        DOC, DOCX (Max. 50MB)
                       </p>
                       <input
                         type="file"
-                        accept="application/pdf"
+                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                         onChange={handleNaskahChange}
                         className="hidden"
                       />
@@ -645,7 +698,7 @@ export default function AjukanDrafPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  * File PDF akan disimpan dengan lebih efisien di server
+                  * Upload naskah dalam format Word agar dapat diedit oleh editor. File akan dikonversi dan disimpan dengan aman di server.
                 </p>
                 {fileNaskah && progressNaskah > 0 && progressNaskah < 100 && (
                   <div className="mt-2 text-xs text-gray-600">Upload naskah: {progressNaskah}%</div>
@@ -664,31 +717,17 @@ export default function AjukanDrafPage() {
               Batal
             </button>
 
-            <div className="flex gap-4">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={handleSubmit as any}
-                className={`px-6 py-3 rounded-lg transition-colors ${
-                  loading
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                Simpan Draft
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
-                  loading
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white hover:from-[#0d9488] hover:to-[#0a7a73]"
-                }`}
-              >
-                {loading ? "Mengirim..." : "Ajukan untuk Review"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl ${
+                loading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white hover:from-[#0d9488] hover:to-[#0a7a73]"
+              }`}
+            >
+              {loading ? "Mengirim..." : "Ajukan untuk Review"}
+            </button>
           </div>
         </form>
       </div>

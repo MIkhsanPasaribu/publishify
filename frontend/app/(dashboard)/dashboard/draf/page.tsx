@@ -59,6 +59,16 @@ export default function DrafPage() {
 
   const filteredDrafts = useMemo(() => {
     if (activeTab === "semua") return allDrafts;
+    
+    // Filter khusus untuk "revision_needed" - cek rekomendasi dari review
+    if (activeTab === "revision_needed") {
+      return allDrafts.filter((n) => {
+        // Cek apakah ada review dengan rekomendasi 'revisi'
+        const hasRevisionRecommendation = n.review?.some((r) => r.rekomendasi === "revisi");
+        return hasRevisionRecommendation || normalisasiStatus(n.status) === "revision_needed";
+      });
+    }
+    
     return allDrafts.filter((n) => normalisasiStatus(n.status) === activeTab);
   }, [allDrafts, activeTab]);
 

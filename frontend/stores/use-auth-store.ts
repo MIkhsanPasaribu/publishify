@@ -11,6 +11,7 @@ interface AuthState {
   login: (email: string, kataSandi: string) => Promise<void>;
   logout: () => void;
   setPengguna: (p: Pengguna | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,13 +27,24 @@ export const useAuthStore = create<AuthState>()(
         try {
           const res = await authApi.login({ email, kataSandi });
           const { accessToken, refreshToken, pengguna } = res.data;
+          
+          console.log("✅ Login response:", {
+            email: pengguna.email,
+            peran: pengguna.peran,
+            accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : "null",
+          });
+          
           // Persist tokens ke localStorage untuk interceptor
           if (typeof window !== "undefined") {
             localStorage.setItem("accessToken", accessToken);
             localStorage.setItem("refreshToken", refreshToken);
+            console.log("💾 Token disimpan ke localStorage");
           }
+          
           set({ accessToken, refreshToken, pengguna, loading: false });
+          console.log("📝 State updated di Zustand");
         } catch (err: any) {
+          console.error("❌ Login error di store:", err);
           set({ error: err?.message || "Gagal login", loading: false });
           throw err;
         }
@@ -46,6 +58,14 @@ export const useAuthStore = create<AuthState>()(
       },
       setPengguna(p) {
         set({ pengguna: p });
+      },
+      setTokens(accessToken: string, refreshToken: string) {
+        // Simpan tokens ke state dan localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+        }
+        set({ accessToken, refreshToken });
       },
     }),
     {

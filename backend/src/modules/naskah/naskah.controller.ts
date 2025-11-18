@@ -157,6 +157,31 @@ export class NaskahController {
   }
 
   /**
+   * GET /naskah/admin/semua - Ambil SEMUA naskah untuk admin (tanpa filter publik)
+   * Role: admin
+   */
+  @Get('admin/semua')
+  @ApiBearerAuth()
+  @Peran('admin')
+  @ApiOperation({
+    summary: 'Ambil semua naskah untuk admin',
+    description:
+      'Mengambil SEMUA naskah dari semua penulis dengan semua status (draft, diajukan, dalam_review, dll). Hanya untuk admin.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar semua naskah berhasil diambil',
+  })
+  @ApiQuery({ type: FilterNaskahDtoClass })
+  async ambilSemuaNaskahUntukAdmin(
+    @Query(new ValidasiZodPipe(FilterNaskahSchema)) filter: FilterNaskahDto,
+    @PenggunaSaatIni('id') idPengguna: string,
+  ) {
+    // Admin bisa lihat semua naskah apapun statusnya
+    return await this.naskahService.ambilSemuaNaskah(filter, idPengguna);
+  }
+
+  /**
    * GET /naskah/penulis/saya - Ambil naskah penulis sendiri
    * Role: penulis
    */

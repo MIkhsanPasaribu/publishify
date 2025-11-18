@@ -383,6 +383,16 @@ export class AuthController {
       const clientID = this.configService.get<string>('googleOAuth.clientID');
       const callbackURL = this.configService.get<string>('googleOAuth.callbackURL');
 
+      // Jika Google OAuth belum dikonfigurasi, redirect ke frontend dengan error
+      if (!clientID || !callbackURL) {
+        const frontendCallback = this.configService.get<string>('googleOAuth.frontendCallback');
+        const errorUrl = `${frontendCallback}?${new URLSearchParams({
+          error: 'oauth_not_configured',
+          message: 'Google OAuth belum dikonfigurasi pada server',
+        })}`;
+        return response.redirect(errorUrl);
+      }
+
       // Build Google OAuth URL
       const params = {
         client_id: clientID!,
@@ -451,6 +461,18 @@ export class AuthController {
   })
   async googleAuthCallback(@Req() request: Request & { user: any }, @Res() response: Response) {
     try {
+      // Jika Google OAuth belum dikonfigurasi, redirect ke frontend dengan error
+      const clientID = this.configService.get<string>('googleOAuth.clientID');
+      const callbackURL = this.configService.get<string>('googleOAuth.callbackURL');
+
+      if (!clientID || !callbackURL) {
+        const frontendCallback = this.configService.get<string>('googleOAuth.frontendCallback');
+        const errorUrl = `${frontendCallback}?${new URLSearchParams({
+          error: 'oauth_not_configured',
+          message: 'Google OAuth belum dikonfigurasi pada server',
+        })}`;
+        return response.redirect(errorUrl);
+      }
       // User sudah di-validate oleh GoogleStrategy
       const user = request.user;
 

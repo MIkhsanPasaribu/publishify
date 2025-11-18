@@ -817,15 +817,11 @@ export class AuthService {
     }
 
     // ============================================
-    // 4. Return user data untuk JWT generation
+    // 4. Return full user object (consistent dengan validateUser)
     // ============================================
-    return {
-      id: pengguna.id,
-      email: pengguna.email,
-      peran: pengguna.peranPengguna.map((p: any) => p.jenisPeran),
-      terverifikasi: pengguna.terverifikasi,
-      profilPengguna: pengguna.profilPengguna,
-    };
+    // Exclude password jika ada (untuk safety)
+    const { kataSandi, ...penggunaWithoutPassword } = pengguna as any;
+    return penggunaWithoutPassword;
   }
 
   /**
