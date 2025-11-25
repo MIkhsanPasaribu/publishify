@@ -13,13 +13,34 @@ import type {
   UpdateStatusPesananDto,
   KonfirmasiPesananDto,
   BuatPengirimanDto,
+  BuatPesananCetakDto,
   Pembayaran,
   KonfirmasiPembayaranDto,
   LogProduksi,
   TambahLogProduksiDto,
 } from "@/types/percetakan";
 
+// Re-export types untuk backward compatibility
+export type { 
+  PesananCetak,
+  Pembayaran,
+  LogProduksi,
+} from "@/types/percetakan";
+
+// Alias untuk backward compatibility
+export type BuatPesananCetakPayload = BuatPesananCetakDto;
+
 // ============= PESANAN CETAK =============
+
+/**
+ * Buat pesanan cetak baru
+ */
+export async function buatPesananCetak(
+  dto: BuatPesananCetakDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.post("/percetakan", dto);
+  return response.data;
+}
 
 /**
  * Ambil statistik dashboard percetakan
@@ -35,7 +56,12 @@ export async function ambilStatistikPercetakan(): Promise<ResponseStatistikPerce
 export async function ambilDaftarPesanan(
   filter?: FilterPesanan
 ): Promise<ResponsePesananList> {
-  const response = await client.get("/percetakan", { params: filter });
+  // Bersihkan filter dari undefined values
+  const cleanFilter = filter ? Object.fromEntries(
+    Object.entries(filter).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+  ) : {};
+  
+  const response = await client.get("/percetakan", { params: cleanFilter });
   return response.data;
 }
 
@@ -161,4 +187,36 @@ export async function batalkanPembayaran(
   const response = await client.put(`/pembayaran/${id}/batal`, { alasan });
   return response.data;
 }
+
+// ============= DEFAULT EXPORT =============
+// Export sebagai object untuk backward compatibility
+
+const percetakanApi = {
+  // Statistik
+  ambilStatistikPercetakan,
+  
+  // Pesanan
+  buatPesananCetak,
+  ambilDaftarPesanan,
+  ambilDetailPesanan,
+  updateStatusPesanan,
+  konfirmasiPesanan,
+  batalkanPesanan,
+  
+  // Log Produksi
+  ambilLogProduksi,
+  tambahLogProduksi,
+  
+  // Pengiriman
+  buatPengiriman,
+  
+  // Pembayaran
+  ambilDaftarPembayaran,
+  ambilDetailPembayaran,
+  konfirmasiPembayaran,
+  batalkanPembayaran,
+};
+
+export default percetakanApi;
+export { percetakanApi };
 
