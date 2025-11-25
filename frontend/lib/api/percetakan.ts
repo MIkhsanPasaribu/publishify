@@ -25,7 +25,7 @@ import type {
 export async function ambilStatistikDashboard(): Promise<
   ApiResponse<StatistikDashboard>
 > {
-  const response = await client.get("/percetakan/statistik");
+  const response = await client.get("/api/percetakan/statistik");
   return response.data;
 }
 
@@ -35,7 +35,7 @@ export async function ambilStatistikDashboard(): Promise<
 export async function ambilDaftarPesanan(
   params?: PaginationParams
 ): Promise<ApiResponse<PesananCetak[]>> {
-  const response = await client.get("/percetakan/pesanan", { params });
+  const response = await client.get("/api/percetakan", { params });
   return response.data;
 }
 
@@ -45,7 +45,7 @@ export async function ambilDaftarPesanan(
 export async function ambilDetailPesanan(
   id: string
 ): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.get(`/percetakan/pesanan/${id}`);
+  const response = await client.get(`/api/percetakan/${id}`);
   return response.data;
 }
 
@@ -56,7 +56,7 @@ export async function terimaPesanan(
   id: string,
   catatan?: string
 ): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.patch(`/percetakan/pesanan/${id}/terima`, {
+  const response = await client.post(`/api/percetakan/${id}/konfirmasi`, {
     catatan,
   });
   return response.data;
@@ -69,7 +69,7 @@ export async function tolakPesanan(
   id: string,
   alasan: string
 ): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.patch(`/percetakan/pesanan/${id}/tolak`, {
+  const response = await client.put(`/api/percetakan/${id}/batal`, {
     alasan,
   });
   return response.data;
@@ -82,7 +82,7 @@ export async function updateStatusPesanan(
   id: string,
   dto: UpdateStatusPesananDto
 ): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.patch(`/percetakan/pesanan/${id}/status`, dto);
+  const response = await client.patch(`/api/percetakan/${id}/status`, dto);
   return response.data;
 }
 
@@ -93,7 +93,7 @@ export async function ambilLogProduksi(
   idPesanan: string
 ): Promise<ApiResponse<LogProduksi[]>> {
   const response = await client.get(
-    `/percetakan/pesanan/${idPesanan}/log-produksi`
+    `/api/percetakan/${idPesanan}/log-produksi`
   );
   return response.data;
 }
@@ -106,7 +106,7 @@ export async function tambahLogProduksi(
   dto: TambahLogProduksiDto
 ): Promise<ApiResponse<LogProduksi>> {
   const response = await client.post(
-    `/percetakan/pesanan/${idPesanan}/log-produksi`,
+    `/api/percetakan/${idPesanan}/log-produksi`,
     dto
   );
   return response.data;
@@ -118,7 +118,7 @@ export async function tambahLogProduksi(
 export async function ambilPengiriman(
   idPesanan: string
 ): Promise<ApiResponse<Pengiriman>> {
-  const response = await client.get(`/percetakan/pesanan/${idPesanan}/pengiriman`);
+  const response = await client.get(`/api/percetakan/${idPesanan}/pengiriman`);
   return response.data;
 }
 
@@ -130,7 +130,7 @@ export async function inputPengiriman(
   dto: InputPengirimanDto
 ): Promise<ApiResponse<Pengiriman>> {
   const response = await client.post(
-    `/percetakan/pesanan/${idPesanan}/pengiriman`,
+    `/api/percetakan/${idPesanan}/pengiriman`,
     dto
   );
   return response.data;
@@ -144,7 +144,7 @@ export async function updatePengiriman(
   dto: Partial<InputPengirimanDto>
 ): Promise<ApiResponse<Pengiriman>> {
   const response = await client.patch(
-    `/percetakan/pengiriman/${idPengiriman}`,
+    `/api/percetakan/pengiriman/${idPengiriman}`,
     dto
   );
   return response.data;
@@ -157,7 +157,7 @@ export async function ambilTrackingLog(
   idPengiriman: string
 ): Promise<ApiResponse<TrackingLog[]>> {
   const response = await client.get(
-    `/percetakan/pengiriman/${idPengiriman}/tracking`
+    `/api/percetakan/pengiriman/${idPengiriman}/tracking`
   );
   return response.data;
 }
@@ -170,7 +170,7 @@ export async function tambahTrackingLog(
   data: Omit<TrackingLog, "id" | "idPengiriman" | "waktu">
 ): Promise<ApiResponse<TrackingLog>> {
   const response = await client.post(
-    `/percetakan/pengiriman/${idPengiriman}/tracking`,
+    `/api/percetakan/pengiriman/${idPengiriman}/tracking`,
     data
   );
   return response.data;
@@ -182,7 +182,7 @@ export async function tambahTrackingLog(
 export async function ambilPembayaran(
   idPesanan: string
 ): Promise<ApiResponse<Pembayaran[]>> {
-  const response = await client.get(`/pembayaran/pesanan/${idPesanan}`);
+  const response = await client.get(`/api/pembayaran/pesanan/${idPesanan}`);
   return response.data;
 }
 
@@ -194,7 +194,7 @@ export async function verifikasiPembayaran(
   dto: VerifikasiPembayaranDto
 ): Promise<ApiResponse<Pembayaran>> {
   const response = await client.patch(
-    `/pembayaran/${idPembayaran}/verifikasi`,
+    `/api/pembayaran/${idPembayaran}/verifikasi`,
     dto
   );
   return response.data;
@@ -248,7 +248,7 @@ export const percetakanApi = {
   async buatPesananCetak(
     payload: BuatPesananCetakPayload
   ): Promise<ApiResponse<{ idPesanan: string }>> {
-    const response = await client.post("/percetakan", payload);
+    const response = await client.post("/api/percetakan", payload);
     return response.data;
   },
 
@@ -256,7 +256,7 @@ export const percetakanApi = {
    * Ambil daftar pesanan milik penulis yang login
    */
   async ambilPesananSaya(): Promise<ApiResponse<PesananCetak[]>> {
-    const response = await client.get("/percetakan/penulis/saya");
+    const response = await client.get("/api/percetakan/penulis/saya");
     return response.data;
   },
 
@@ -264,7 +264,7 @@ export const percetakanApi = {
    * Ambil detail pesanan by ID
    */
   async ambilPesananById(id: string): Promise<ApiResponse<PesananCetak>> {
-    const response = await client.get(`/percetakan/${id}`);
+    const response = await client.get(`/api/percetakan/${id}`);
     return response.data;
   },
 
@@ -275,7 +275,7 @@ export const percetakanApi = {
     id: string,
     alasan?: string
   ): Promise<ApiResponse<{ status: string }>> {
-    const response = await client.put(`/percetakan/${id}/batal`, { alasan });
+    const response = await client.put(`/api/percetakan/${id}/batal`, { alasan });
     return response.data;
   },
 };
