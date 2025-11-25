@@ -8,6 +8,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
+import { naskahApi } from "@/lib/api/naskah";
 import {
   BookOpen,
   FileText,
@@ -44,13 +46,11 @@ export default function DaftarNaskahDiterbitkan() {
 
   async function ambilNaskahDiterbitkan() {
     try {
-      // TODO: Ganti dengan API call
-      // const response = await naskahApi.ambilNaskahSaya({ status: 'diterbitkan' });
-      
-      // Dummy data
-      setNaskah([]);
+      const response = await naskahApi.ambilNaskahDiterbitkan();
+      setNaskah(response.data);
     } catch (error) {
-      console.error("Error loading naskah:", error);
+      console.error("Error mengambil naskah diterbitkan:", error);
+      toast.error("Gagal mengambil daftar naskah");
     } finally {
       setLoading(false);
     }

@@ -205,6 +205,28 @@ export class NaskahController {
   }
 
   /**
+   * GET /naskah/penulis/diterbitkan - Ambil naskah yang sudah diterbitkan (siap cetak)
+   * Role: penulis
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   */
+  @Get('penulis/diterbitkan')
+  @ApiBearerAuth()
+  @Peran('penulis')
+  @ApiOperation({
+    summary: 'Ambil naskah yang sudah diterbitkan dan siap dicetak',
+    description: 'Penulis mengambil daftar naskah yang sudah disetujui dan selesai direview dengan rekomendasi setujui. Naskah ini siap untuk dicetak.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar naskah diterbitkan berhasil diambil',
+  })
+  async ambilNaskahDiterbitkan(
+    @PenggunaSaatIni('id') idPenulis: string,
+  ) {
+    return await this.naskahService.ambilNaskahDiterbitkan(idPenulis);
+  }
+
+  /**
    * GET /naskah/:id - Ambil detail naskah
    */
   @Get(':id')

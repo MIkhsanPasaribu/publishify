@@ -7,6 +7,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import { naskahApi } from "@/lib/api/naskah";
 import {
   BookOpen,
   Package,
@@ -83,7 +85,7 @@ export default function BuatPesananCetak() {
 
   const [formData, setFormData] = useState<FormData>({
     idNaskah: naskahIdParam || "",
-    jumlah: 100,
+    jumlah: 0,
     formatKertas: "A5",
     jenisKertas: "HVS 80gr",
     jenisCover: "Soft Cover",
@@ -104,17 +106,22 @@ export default function BuatPesananCetak() {
 
   async function ambilNaskahDiterbitkan() {
     try {
-      // TODO: API call
-      // const response = await naskahApi.ambilNaskahSaya({ status: 'diterbitkan' });
-      setNaskahList([]);
+      const response = await naskahApi.ambilNaskahDiterbitkan();
+      setNaskahList(response.data);
     } catch (error) {
-      console.error(error);
+      console.error("Error mengambil naskah diterbitkan:", error);
+      toast.error("Gagal mengambil daftar naskah");
     }
   }
 
   function hitungHargaTotal(): number {
-    const { jumlah, formatKertas, jenisKertas, jenisCover, finishingTambahan } =
+    const { idNaskah, jumlah, formatKertas, jenisKertas, jenisCover, finishingTambahan } =
       formData;
+
+    // Return 0 jika belum pilih naskah atau jumlah masih 0
+    if (!idNaskah || jumlah === 0) {
+      return 0;
+    }
 
     const hargaFormat =
       HARGA_BASE.formatKertas[formatKertas as keyof typeof HARGA_BASE.formatKertas] || 0;

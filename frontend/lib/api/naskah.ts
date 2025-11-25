@@ -133,6 +133,15 @@ export const naskahApi = {
   },
 
   /**
+   * GET /naskah/penulis/diterbitkan - Ambil naskah yang sudah diterbitkan (siap cetak)
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   */
+  async ambilNaskahDiterbitkan(): Promise<ResponseSukses<Naskah[]>> {
+    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/diterbitkan");
+    return data;
+  },
+
+  /**
    * GET /naskah/:id - Ambil detail naskah by ID
    */
   async ambilNaskahById(id: string): Promise<ResponseSukses<Naskah>> {

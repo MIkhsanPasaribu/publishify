@@ -13,7 +13,7 @@ import {
   AjukanNaskahDto,
   TerbitkanNaskahDto,
 } from './dto';
-import { StatusNaskah } from '@prisma/client';
+import { StatusNaskah, StatusReview, Rekomendasi } from '@prisma/client';
 import {
   CursorPaginationDto,
   buildCursorPaginationResponse,
@@ -455,6 +455,91 @@ export class NaskahService {
   async ambilNaskahPenulis(idPenulis: string, filter: FilterNaskahDto) {
     // Override idPenulis di filter
     return this.ambilSemuaNaskah({ ...filter, idPenulis }, idPenulis);
+  }
+
+  /**
+   * Ambil naskah yang sudah diterbitkan dan siap cetak
+   * Role: penulis
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   */
+  async ambilNaskahDiterbitkan(idPenulis: string) {
+    const naskah = await this.prisma.naskah.findMany({
+      where: {
+        idPenulis,
+        status: StatusNaskah.disetujui,
+        reviewNaskah: {
+          some: {
+            status: StatusReview.selesai,
+            rekomendasi: Rekomendasi.setujui,
+          },
+        },
+      },
+      include: {
+        penulis: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+        kategori: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        genre: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        reviewNaskah: {
+          where: {
+            status: StatusReview.selesai,
+            rekomendasi: Rekomendasi.setujui,
+          },
+          include: {
+            editor: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            dibuatPada: 'desc',
+          },
+          take: 1, // Ambil review terakhir saja
+        },
+      },
+      orderBy: {
+        diperbaruiPada: 'desc',
+      },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Daftar naskah diterbitkan berhasil diambil',
+      data: naskah,
+      metadata: {
+        total: naskah.length,
+      },
+    };
   }
 
   /**
