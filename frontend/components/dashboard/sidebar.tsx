@@ -73,13 +73,13 @@ export function Sidebar() {
       href: "/dashboard/buku-terbit",
     },
     {
-      label: "Riwayat Pesanan Cetak",
+      label: "Percetakan",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
         </svg>
       ),
-      href: "/dashboard/pesanan-cetak",
+      href: "/dashboard/penulis/percetakan",
     },
   ];
 
@@ -102,6 +102,28 @@ export function Sidebar() {
         </svg>
       ),
       href: "/dashboard/editor/review",
+    },
+  ];
+
+  // Menu untuk Percetakan
+  const menuPercetakan = [
+    {
+      label: "Dashboard Percetakan",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan",
+    },
+    {
+      label: "Pesanan Masuk",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/pesanan",
     },
   ];
 
@@ -158,6 +180,7 @@ export function Sidebar() {
   const menuItems = [
     ...(hasRole("penulis") ? menuPenulis : []),
     ...(hasRole("editor") ? menuEditor : []),
+    ...(hasRole("percetakan") ? menuPercetakan : []),
     ...(hasRole("admin") ? menuAdmin : []),
   ];
 
