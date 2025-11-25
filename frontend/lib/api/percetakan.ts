@@ -1,132 +1,212 @@
-import api from "./client";
+/**
+ * API Client untuk Module Percetakan
+ * Semua request ke backend API percetakan
+ */
 
-// ================================
-// TIPE DATA
-// ================================
+import client from "./client";
+import type {
+  ApiResponse,
+  PesananCetak,
+  StatistikDashboard,
+  PaginationParams,
+  UpdateStatusPesananDto,
+  LogProduksi,
+  TambahLogProduksiDto,
+  Pengiriman,
+  InputPengirimanDto,
+  Pembayaran,
+  VerifikasiPembayaranDto,
+  TrackingLog,
+} from "@/types/percetakan";
 
-// Tipe payload untuk membuat pesanan cetak fisik
-export interface BuatPesananCetakPayload {
-  idNaskah: string; // atau idBuku jika backend memakai entitas buku terbit
-  jumlah: number;
-  alamatPengiriman: {
-    penerima: string;
-    telepon: string;
-    alamat: string;
-    kota: string;
-    provinsi: string;
-    kodePos: string;
-  };
-  kurir: string; // mis. "jne_reg", "sicepat_best"
-  catatan?: string;
+/**
+ * Ambil statistik dashboard percetakan
+ */
+export async function ambilStatistikDashboard(): Promise<
+  ApiResponse<StatistikDashboard>
+> {
+  const response = await client.get("/percetakan/statistik");
+  return response.data;
 }
 
-export interface ItemPesananCetak {
-  id: string;
-  idNaskah: string;
-  judul: string;
-  jumlah: number;
-  hargaSatuan: number;
+/**
+ * Ambil daftar pesanan dengan pagination dan filter
+ */
+export async function ambilDaftarPesanan(
+  params?: PaginationParams
+): Promise<ApiResponse<PesananCetak[]>> {
+  const response = await client.get("/percetakan/pesanan", { params });
+  return response.data;
 }
 
-export interface PesananCetak {
-  id: string;
-  nomorPesanan: string;
-  tanggalPesan: string; // ISO format dari backend
-  status: string; // tertunda | diterima | dalam_produksi | kontrol_kualitas | siap | dikirim | terkirim | dibatalkan
-  hargaTotal: number;
-  jumlah: number;
-  formatKertas?: string;
-  jenisKertas?: string;
-  jenisCover?: string;
-  finishingTambahan?: string[];
-  catatan?: string;
-  
-  // Nested relations dari backend
-  naskah: {
-    id: string;
-    judul: string;
-    jumlahHalaman?: number;
-    urlSampul?: string;
-    isbn?: string;
-  };
-  
-  pemesan?: {
-    id: string;
-    email: string;
-    telepon?: string;
-    profilPengguna?: {
-      namaDepan?: string;
-      namaBelakang?: string;
-    };
-  };
-  
-  pengiriman?: {
-    id: string;
-    namaEkspedisi: string;
-    nomorResi: string;
-    status: string;
-  };
-  
-  // Alamat pengiriman
-  namaPenerima?: string;
-  teleponPenerima?: string;
-  alamatPengiriman?: string;
-  kota?: string;
-  provinsi?: string;
-  kodePos?: string;
-  
-  // Timestamps
-  dibuatPada?: string;
-  diperbaruiPada?: string;
+/**
+ * Ambil detail pesanan by ID
+ */
+export async function ambilDetailPesanan(
+  id: string
+): Promise<ApiResponse<PesananCetak>> {
+  const response = await client.get(`/percetakan/pesanan/${id}`);
+  return response.data;
 }
 
-export interface ResponseSukses<T> {
-  sukses: true;
-  pesan: string;
-  data: T;
+/**
+ * Terima pesanan (ubah status dari tertunda ke diterima)
+ */
+export async function terimaPesanan(
+  id: string,
+  catatan?: string
+): Promise<ApiResponse<PesananCetak>> {
+  const response = await client.patch(`/percetakan/pesanan/${id}/terima`, {
+    catatan,
+  });
+  return response.data;
 }
 
-// ================================
-// API CLIENT
-// ================================
-export const percetakanApi = {
-  // Buat pesanan cetak baru
-  async buatPesananCetak(payload: BuatPesananCetakPayload): Promise<ResponseSukses<{ idPesanan: string }>> {
-    const { data } = await api.post<ResponseSukses<{ idPesanan: string }>>("/percetakan", payload);
-    return data;
-  },
+/**
+ * Tolak pesanan (ubah status menjadi dibatalkan)
+ */
+export async function tolakPesanan(
+  id: string,
+  alasan: string
+): Promise<ApiResponse<PesananCetak>> {
+  const response = await client.patch(`/percetakan/pesanan/${id}/tolak`, {
+    alasan,
+  });
+  return response.data;
+}
 
-  // Ambil daftar pesanan milik penulis yang login
-  async ambilPesananSaya(): Promise<ResponseSukses<PesananCetak[]>> {
-    const { data } = await api.get<ResponseSukses<PesananCetak[]>>("/percetakan/penulis/saya");
-    return data;
-  },
+/**
+ * Update status pesanan
+ */
+export async function updateStatusPesanan(
+  id: string,
+  dto: UpdateStatusPesananDto
+): Promise<ApiResponse<PesananCetak>> {
+  const response = await client.patch(`/percetakan/pesanan/${id}/status`, dto);
+  return response.data;
+}
 
-  // Ambil detail pesanan
-  async ambilPesananById(id: string): Promise<ResponseSukses<PesananCetak>> {
-    const { data } = await api.get<ResponseSukses<PesananCetak>>(`/percetakan/${id}`);
-    return data;
-  },
+/**
+ * Ambil log produksi pesanan
+ */
+export async function ambilLogProduksi(
+  idPesanan: string
+): Promise<ApiResponse<LogProduksi[]>> {
+  const response = await client.get(
+    `/percetakan/pesanan/${idPesanan}/log-produksi`
+  );
+  return response.data;
+}
 
-  // Batalkan pesanan (hanya status tertunda)
-  async batalkanPesanan(id: string, alasan?: string): Promise<ResponseSukses<{ status: string }>> {
-    const { data } = await api.put<ResponseSukses<{ status: string }>>(`/percetakan/${id}/batal`, { alasan });
-    return data;
-  },
+/**
+ * Tambah log produksi
+ */
+export async function tambahLogProduksi(
+  idPesanan: string,
+  dto: TambahLogProduksiDto
+): Promise<ApiResponse<LogProduksi>> {
+  const response = await client.post(
+    `/percetakan/pesanan/${idPesanan}/log-produksi`,
+    dto
+  );
+  return response.data;
+}
 
-  // TODO: Endpoint ini belum tersedia di backend
-  // Konfirmasi pesanan diterima (ubah status menjadi selesai)
-  async konfirmasiPesananDiterima(id: string): Promise<ResponseSukses<{ status: string }>> {
-    // Endpoint ini perlu diimplementasikan di backend
-    const { data } = await api.post<ResponseSukses<{ status: string }>>(`/percetakan/${id}/diterima`, {});
-    return data;
-  },
+/**
+ * Ambil data pengiriman pesanan
+ */
+export async function ambilPengiriman(
+  idPesanan: string
+): Promise<ApiResponse<Pengiriman>> {
+  const response = await client.get(`/percetakan/pesanan/${idPesanan}/pengiriman`);
+  return response.data;
+}
 
-  // TODO: Endpoint ini belum tersedia di backend
-  // Bayar pesanan
-  async bayarPesanan(id: string): Promise<ResponseSukses<{ redirectUrl?: string }>> {
-    // Endpoint ini perlu diimplementasikan di backend (integrasi payment gateway)
-    const { data } = await api.post<ResponseSukses<{ redirectUrl?: string }>>(`/percetakan/${id}/bayar`, {});
-    return data;
-  },
-};
+/**
+ * Input data pengiriman
+ */
+export async function inputPengiriman(
+  idPesanan: string,
+  dto: InputPengirimanDto
+): Promise<ApiResponse<Pengiriman>> {
+  const response = await client.post(
+    `/percetakan/pesanan/${idPesanan}/pengiriman`,
+    dto
+  );
+  return response.data;
+}
+
+/**
+ * Update data pengiriman
+ */
+export async function updatePengiriman(
+  idPengiriman: string,
+  dto: Partial<InputPengirimanDto>
+): Promise<ApiResponse<Pengiriman>> {
+  const response = await client.patch(
+    `/percetakan/pengiriman/${idPengiriman}`,
+    dto
+  );
+  return response.data;
+}
+
+/**
+ * Ambil tracking log pengiriman
+ */
+export async function ambilTrackingLog(
+  idPengiriman: string
+): Promise<ApiResponse<TrackingLog[]>> {
+  const response = await client.get(
+    `/percetakan/pengiriman/${idPengiriman}/tracking`
+  );
+  return response.data;
+}
+
+/**
+ * Tambah tracking log
+ */
+export async function tambahTrackingLog(
+  idPengiriman: string,
+  data: Omit<TrackingLog, "id" | "idPengiriman" | "waktu">
+): Promise<ApiResponse<TrackingLog>> {
+  const response = await client.post(
+    `/percetakan/pengiriman/${idPengiriman}/tracking`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Ambil pembayaran pesanan
+ */
+export async function ambilPembayaran(
+  idPesanan: string
+): Promise<ApiResponse<Pembayaran[]>> {
+  const response = await client.get(`/pembayaran/pesanan/${idPesanan}`);
+  return response.data;
+}
+
+/**
+ * Verifikasi pembayaran
+ */
+export async function verifikasiPembayaran(
+  idPembayaran: string,
+  dto: VerifikasiPembayaranDto
+): Promise<ApiResponse<Pembayaran>> {
+  const response = await client.patch(
+    `/pembayaran/${idPembayaran}/verifikasi`,
+    dto
+  );
+  return response.data;
+}
+
+/**
+ * Download file naskah
+ */
+export async function downloadFileNaskah(urlFile: string): Promise<Blob> {
+  const response = await client.get(urlFile, {
+    responseType: "blob",
+  });
+  return response.data;
+}
+
