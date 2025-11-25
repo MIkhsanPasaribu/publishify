@@ -210,3 +210,72 @@ export async function downloadFileNaskah(urlFile: string): Promise<Blob> {
   return response.data;
 }
 
+// ================================
+// TYPES & INTERFACES untuk Penulis/Pemesan
+// ================================
+
+/**
+ * Payload untuk membuat pesanan cetak baru
+ * Digunakan oleh penulis untuk memesan cetak buku
+ */
+export interface BuatPesananCetakPayload {
+  idNaskah: string;
+  jumlah: number;
+  alamatPengiriman: {
+    penerima: string;
+    telepon: string;
+    alamat: string;
+    kota: string;
+    provinsi: string;
+    kodePos: string;
+  };
+  kurir: string; // mis. "jne_reg", "sicepat_best"
+  catatan?: string;
+}
+
+// ================================
+// API CLIENT OBJECT (Legacy Support)
+// ================================
+
+/**
+ * Object-style API client untuk backward compatibility
+ * dengan halaman yang sudah ada (buku-terbit, pesanan-cetak, dll)
+ */
+export const percetakanApi = {
+  /**
+   * Buat pesanan cetak baru (untuk penulis)
+   */
+  async buatPesananCetak(
+    payload: BuatPesananCetakPayload
+  ): Promise<ApiResponse<{ idPesanan: string }>> {
+    const response = await client.post("/percetakan", payload);
+    return response.data;
+  },
+
+  /**
+   * Ambil daftar pesanan milik penulis yang login
+   */
+  async ambilPesananSaya(): Promise<ApiResponse<PesananCetak[]>> {
+    const response = await client.get("/percetakan/penulis/saya");
+    return response.data;
+  },
+
+  /**
+   * Ambil detail pesanan by ID
+   */
+  async ambilPesananById(id: string): Promise<ApiResponse<PesananCetak>> {
+    const response = await client.get(`/percetakan/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Batalkan pesanan (hanya status tertunda)
+   */
+  async batalkanPesanan(
+    id: string,
+    alasan?: string
+  ): Promise<ApiResponse<{ status: string }>> {
+    const response = await client.put(`/percetakan/${id}/batal`, { alasan });
+    return response.data;
+  },
+};
