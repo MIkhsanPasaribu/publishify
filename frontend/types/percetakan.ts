@@ -228,13 +228,25 @@ export interface PaginationParams {
 // Interface untuk Statistik Dashboard
 export interface StatistikDashboard {
   totalPesanan: number;
-  pesananBaru: number;
-  dalamProduksi: number;
-  siapKirim: number;
-  selesai: number;
-  totalRevenue: number;
-  revenueHariIni: number;
-  revenueBulanIni: number;
+  pesananAktif?: number; // pesananBaru di backend
+  pesananSelesai?: number; // selesai di backend
+  pesananBaru?: number; // untuk compatibility
+  dalamProduksi?: number;
+  siapKirim?: number;
+  selesai?: number;
+  totalRevenue: number | string; // Backend return string
+  revenueHariIni?: number;
+  revenueBulanIni?: number;
+  statusBreakdown?: {
+    tertunda?: number;
+    diterima?: number;
+    dalam_produksi?: number;
+    kontrol_kualitas?: number;
+    siap?: number;
+    dikirim?: number;
+    terkirim?: number;
+    dibatalkan?: number;
+  };
 }
 
 // Interface untuk Filter Pesanan

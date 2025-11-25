@@ -15,16 +15,43 @@ export default function DashboardPercetakanPage() {
     async function loadData() {
       try {
         setLoading(true);
-        // Load statistik
-        const resStatistik = await ambilStatistikDashboard();
-        if (resStatistik.sukses) {
-          setStatistik(resStatistik.data);
+        
+        // Load statistik dengan error handling
+        try {
+          const resStatistik = await ambilStatistikDashboard();
+          if (resStatistik.sukses) {
+            setStatistik(resStatistik.data);
+          }
+        } catch (error: any) {
+          console.error("Error loading statistik:", error);
+          // Set default statistik jika gagal
+          setStatistik({
+            totalPesanan: 0,
+            pesananAktif: 0,
+            pesananSelesai: 0,
+            totalRevenue: "0",
+            statusBreakdown: {
+              tertunda: 0,
+              diterima: 0,
+              dalam_produksi: 0,
+              kontrol_kualitas: 0,
+              siap: 0,
+              dikirim: 0,
+              terkirim: 0,
+              dibatalkan: 0,
+            },
+          });
         }
 
-        // Load pesanan terbaru (limit 5)
-        const resPesanan = await ambilDaftarPesanan({ limit: 5, halaman: 1 });
-        if (resPesanan.sukses) {
-          setPesananTerbaru(resPesanan.data);
+        // Load pesanan terbaru (limit 5) dengan error handling
+        try {
+          const resPesanan = await ambilDaftarPesanan({ limit: 5, halaman: 1 });
+          if (resPesanan.sukses) {
+            setPesananTerbaru(resPesanan.data);
+          }
+        } catch (error: any) {
+          console.error("Error loading pesanan:", error);
+          setPesananTerbaru([]);
         }
       } catch (error) {
         console.error("Error loading dashboard:", error);
@@ -61,8 +88,8 @@ export default function DashboardPercetakanPage() {
       trend: null,
     },
     {
-      title: "Pesanan Baru",
-      value: statistik?.pesananBaru || 0,
+      title: "Pesanan Aktif",
+      value: statistik?.pesananAktif || statistik?.pesananBaru || 0,
       icon: AlertCircle,
       bgColor: "bg-yellow-50",
       iconColor: "text-yellow-600",
@@ -70,7 +97,7 @@ export default function DashboardPercetakanPage() {
     },
     {
       title: "Dalam Produksi",
-      value: statistik?.dalamProduksi || 0,
+      value: statistik?.statusBreakdown?.dalam_produksi || statistik?.dalamProduksi || 0,
       icon: Clock,
       bgColor: "bg-purple-50",
       iconColor: "text-purple-600",
@@ -78,7 +105,7 @@ export default function DashboardPercetakanPage() {
     },
     {
       title: "Selesai",
-      value: statistik?.selesai || 0,
+      value: statistik?.pesananSelesai || statistik?.selesai || 0,
       icon: CheckCircle,
       bgColor: "bg-green-50",
       iconColor: "text-green-600",
@@ -144,7 +171,9 @@ export default function DashboardPercetakanPage() {
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
           <p className="text-purple-100 text-sm mb-1">Total Revenue</p>
           <p className="text-3xl font-bold">
-            Rp {(statistik?.totalRevenue || 0).toLocaleString("id-ID")}
+            Rp {(typeof statistik?.totalRevenue === 'string' 
+              ? parseInt(statistik.totalRevenue) || 0 
+              : statistik?.totalRevenue || 0).toLocaleString("id-ID")}
           </p>
         </div>
       </div>
