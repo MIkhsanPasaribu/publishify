@@ -1,9 +1,5 @@
-/**
- * TypeScript Types untuk Module Percetakan
- * Sesuai dengan schema database PostgreSQL
- */
+// Types untuk modul percetakan berdasarkan schema database
 
-// Enum Status Pesanan
 export type StatusPesanan =
   | "tertunda"
   | "diterima"
@@ -14,38 +10,24 @@ export type StatusPesanan =
   | "terkirim"
   | "dibatalkan";
 
-// Enum Status Pembayaran
 export type StatusPembayaran =
   | "tertunda"
   | "diverifikasi"
   | "selesai"
   | "gagal";
 
-// Enum Metode Pembayaran
 export type MetodePembayaran =
   | "transfer_bank"
   | "e_wallet"
   | "kartu_kredit"
   | "cod";
 
-// Enum Status Pengiriman
 export type StatusPengiriman =
   | "diproses"
   | "dalam_perjalanan"
   | "terkirim"
   | "gagal";
 
-// Enum Status Naskah
-export type StatusNaskah =
-  | "draft"
-  | "diajukan"
-  | "dalam_review"
-  | "perlu_revisi"
-  | "disetujui"
-  | "ditolak"
-  | "diterbitkan";
-
-// Interface untuk Pesanan Cetak
 export interface PesananCetak {
   id: string;
   idNaskah: string;
@@ -56,97 +38,51 @@ export interface PesananCetak {
   formatKertas: string;
   jenisKertas: string;
   jenisCover: string;
-  finishingTambahan: string[];
+  finishingTambahan: string[] | null;
   catatan: string | null;
   hargaTotal: number;
   status: StatusPesanan;
-  tanggalPesan: Date | string;
-  estimasiSelesai: Date | string | null;
-  tanggalSelesai: Date | string | null;
-  diperbaruiPada: Date | string;
+  tanggalPesan: string;
+  estimasiSelesai: string | null;
+  tanggalSelesai: string | null;
+  diperbaruiPada: string;
   
-  // Relasi
-  naskah?: Naskah;
-  pemesan?: Pengguna;
+  // Relations (jika di-include dari API)
+  naskah?: {
+    id: string;
+    judul: string;
+    subJudul: string | null;
+    urlSampul: string | null;
+    urlFile: string | null;
+    penulis: {
+      id: string;
+      email: string;
+      profilPengguna: {
+        namaDepan: string | null;
+        namaBelakang: string | null;
+        namaTampilan: string | null;
+      } | null;
+    };
+  };
+  pemesan?: {
+    id: string;
+    email: string;
+    telepon: string | null;
+    profilPengguna: {
+      namaDepan: string | null;
+      namaBelakang: string | null;
+      namaTampilan: string | null;
+      alamat: string | null;
+      kota: string | null;
+      provinsi: string | null;
+      kodePos: string | null;
+    } | null;
+  };
   pembayaran?: Pembayaran[];
   pengiriman?: Pengiriman | null;
   logProduksi?: LogProduksi[];
 }
 
-// Interface untuk Naskah (simplified)
-export interface Naskah {
-  id: string;
-  judul: string;
-  subJudul: string | null;
-  sinopsis: string;
-  isbn: string | null;
-  idKategori: string;
-  idGenre: string;
-  bahasaTulis: string;
-  jumlahHalaman: number | null;
-  jumlahKata: number | null;
-  status: StatusNaskah;
-  urlSampul: string | null;
-  urlFile: string | null;
-  publik: boolean;
-  diterbitkanPada: Date | string | null;
-  dibuatPada: Date | string;
-  
-  // Relasi
-  penulis?: Pengguna;
-  kategori?: Kategori;
-  genre?: Genre;
-}
-
-// Interface untuk Pengguna (simplified)
-export interface Pengguna {
-  id: string;
-  email: string;
-  telepon: string | null;
-  aktif: boolean;
-  terverifikasi: boolean;
-  dibuatPada: Date | string;
-  
-  // Relasi
-  profilPengguna?: ProfilPengguna;
-}
-
-// Interface untuk Profil Pengguna
-export interface ProfilPengguna {
-  id: string;
-  idPengguna: string;
-  namaDepan: string | null;
-  namaBelakang: string | null;
-  namaTampilan: string | null;
-  bio: string | null;
-  urlAvatar: string | null;
-  tanggalLahir: Date | string | null;
-  jenisKelamin: string | null;
-  alamat: string | null;
-  kota: string | null;
-  provinsi: string | null;
-  kodePos: string | null;
-}
-
-// Interface untuk Kategori
-export interface Kategori {
-  id: string;
-  nama: string;
-  slug: string;
-  deskripsi: string | null;
-  aktif: boolean;
-}
-
-// Interface untuk Genre
-export interface Genre {
-  id: string;
-  nama: string;
-  slug: string;
-  deskripsi: string | null;
-  aktif: boolean;
-}
-
-// Interface untuk Pembayaran
 export interface Pembayaran {
   id: string;
   idPesanan: string;
@@ -157,12 +93,22 @@ export interface Pembayaran {
   status: StatusPembayaran;
   urlBukti: string | null;
   catatanPembayaran: string | null;
-  tanggalPembayaran: Date | string | null;
-  dibuatPada: Date | string;
-  diperbaruiPada: Date | string;
+  tanggalPembayaran: string | null;
+  dibuatPada: string;
+  diperbaruiPada: string;
+  
+  // Relations
+  pesanan?: PesananCetak;
+  pengguna?: {
+    id: string;
+    email: string;
+    profilPengguna: {
+      namaDepan: string | null;
+      namaBelakang: string | null;
+    } | null;
+  };
 }
 
-// Interface untuk Pengiriman
 export interface Pengiriman {
   id: string;
   idPesanan: string;
@@ -173,104 +119,123 @@ export interface Pengiriman {
   namaPenerima: string;
   teleponPenerima: string;
   status: StatusPengiriman;
-  tanggalKirim: Date | string | null;
-  estimasiTiba: Date | string | null;
-  tanggalTiba: Date | string | null;
-  dibuatPada: Date | string;
-  diperbaruiPada: Date | string;
+  tanggalKirim: string | null;
+  estimasiTiba: string | null;
+  tanggalTiba: string | null;
+  dibuatPada: string;
+  diperbaruiPada: string;
   
-  // Relasi
+  // Relations
+  pesanan?: PesananCetak;
   trackingLog?: TrackingLog[];
 }
 
-// Interface untuk Tracking Log
 export interface TrackingLog {
   id: string;
   idPengiriman: string;
   lokasi: string;
   status: string;
   deskripsi: string | null;
-  waktu: Date | string;
+  waktu: string;
 }
 
-// Interface untuk Log Produksi
 export interface LogProduksi {
   id: string;
   idPesanan: string;
   tahapan: string;
   deskripsi: string | null;
-  dibuatPada: Date | string;
+  dibuatPada: string;
 }
 
-// Interface untuk Response API
-export interface ApiResponse<T> {
-  sukses: boolean;
-  pesan: string;
-  data: T;
-  metadata?: {
-    total?: number;
-    halaman?: number;
-    limit?: number;
-    totalHalaman?: number;
-  };
+// DTOs untuk request API
+export interface BuatPesananCetakDto {
+  idNaskah: string;
+  jumlah: number;
+  formatKertas: string;
+  jenisKertas: string;
+  jenisCover: string;
+  finishingTambahan?: string[];
+  catatan?: string;
 }
 
-// Interface untuk Pagination
-export interface PaginationParams {
-  halaman?: number;
-  limit?: number;
-  cari?: string;
-  status?: StatusPesanan;
-  urutkan?: string;
-  arah?: "asc" | "desc";
-}
-
-// Interface untuk Statistik Dashboard
-export interface StatistikDashboard {
-  totalPesanan: number;
-  pesananBaru: number;
-  dalamProduksi: number;
-  siapKirim: number;
-  selesai: number;
-  totalRevenue: number;
-  revenueHariIni: number;
-  revenueBulanIni: number;
-}
-
-// Interface untuk Filter Pesanan
-export interface FilterPesanan {
-  status?: StatusPesanan[];
-  tanggalMulai?: Date | string;
-  tanggalAkhir?: Date | string;
-  cari?: string;
-}
-
-// DTO untuk Update Status Pesanan
 export interface UpdateStatusPesananDto {
   status: StatusPesanan;
   catatan?: string;
-  estimasiSelesai?: Date | string;
+  estimasiSelesai?: string;
 }
 
-// DTO untuk Tambah Log Produksi
-export interface TambahLogProduksiDto {
-  tahapan: string;
-  deskripsi: string;
+export interface KonfirmasiPesananDto {
+  diterima: boolean;
+  catatan?: string;
+  estimasiSelesai?: string;
 }
 
-// DTO untuk Input Pengiriman
-export interface InputPengirimanDto {
+export interface BuatPengirimanDto {
   namaEkspedisi: string;
-  nomorResi: string;
+  nomorResi?: string;
   biayaPengiriman: number;
   alamatTujuan: string;
   namaPenerima: string;
   teleponPenerima: string;
-  estimasiTiba?: Date | string;
+  estimasiTiba?: string;
 }
 
-// DTO untuk Verifikasi Pembayaran
-export interface VerifikasiPembayaranDto {
-  status: StatusPembayaran;
+export interface TambahLogProduksiDto {
+  tahapan: string;
+  deskripsi?: string;
+}
+
+export interface BuatPembayaranDto {
+  idPesanan: string;
+  jumlah: number;
+  metodePembayaran: MetodePembayaran;
+  urlBukti?: string;
+}
+
+export interface KonfirmasiPembayaranDto {
+  disetujui: boolean;
   catatanPembayaran?: string;
+}
+
+// Response dari API
+export interface ResponsePesananList {
+  sukses: boolean;
+  pesan: string;
+  data: PesananCetak[];
+  metadata: {
+    total: number;
+    halaman: number;
+    limit: number;
+    totalHalaman: number;
+  };
+}
+
+export interface ResponsePesananDetail {
+  sukses: boolean;
+  pesan: string;
+  data: PesananCetak;
+}
+
+export interface ResponseStatistikPercetakan {
+  sukses: boolean;
+  data: {
+    totalPesanan: number;
+    pesananTertunda: number;
+    pesananDalamProduksi: number;
+    pesananSelesai: number;
+    revenueBulanIni: number;
+    pesananBulanIni: number;
+    tingkatPenyelesaian: number;
+    rataRataWaktuProduksi: number;
+  };
+}
+
+// Filter untuk query pesanan
+export interface FilterPesanan {
+  status?: StatusPesanan;
+  tanggalMulai?: string;
+  tanggalAkhir?: string;
+  cari?: string;
+  halaman?: number;
+  limit?: number;
 }

@@ -1,265 +1,369 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, TrendingUp, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import { ambilStatistikDashboard, ambilDaftarPesanan } from "@/lib/api/percetakan";
-import type { StatistikDashboard, PesananCetak } from "@/types/percetakan";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthStore } from "@/stores/use-auth-store";
+import { ambilStatistikPercetakan, ambilDaftarPesanan } from "@/lib/api/percetakan";
+import type { PesananCetak } from "@/types/percetakan";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function DashboardPercetakanPage() {
-  const [statistik, setStatistik] = useState<StatistikDashboard | null>(null);
-  const [pesananTerbaru, setPesananTerbaru] = useState<PesananCetak[]>([]);
+  const router = useRouter();
+  const { pengguna } = useAuthStore();
   const [loading, setLoading] = useState(true);
+  const [statistik, setStatistik] = useState<any>(null);
+  const [pesananTerbaru, setPesananTerbaru] = useState<PesananCetak[]>([]);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        // Load statistik
-        const resStatistik = await ambilStatistikDashboard();
-        if (resStatistik.sukses) {
-          setStatistik(resStatistik.data);
-        }
+    // Cek apakah user memiliki role percetakan
+    const hasRolePercetakan = pengguna?.peran?.includes("percetakan") || 
+      pengguna?.peranPengguna?.some(p => p.jenisPeran === "percetakan" && p.aktif);
 
-        // Load pesanan terbaru (limit 5)
-        const resPesanan = await ambilDaftarPesanan({ limit: 5, halaman: 1 });
-        if (resPesanan.sukses) {
-          setPesananTerbaru(resPesanan.data);
-        }
-      } catch (error) {
-        console.error("Error loading dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (!hasRolePercetakan) {
+      router.push("/dashboard");
+      return;
     }
 
-    loadData();
-  }, []);
+    fetchData();
+  }, [pengguna, router]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [statsResponse, pesananResponse] = await Promise.all([
+        ambilStatistikPercetakan(),
+        ambilDaftarPesanan({ limit: 5, halaman: 1 }),
+      ]);
+
+      if (statsResponse.sukses) {
+        setStatistik(statsResponse.data);
+      }
+
+      if (pesananResponse.sukses) {
+        setPesananTerbaru(pesananResponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      tertunda: { label: "Tertunda", className: "bg-yellow-100 text-yellow-800" },
+      diterima: { label: "Diterima", className: "bg-blue-100 text-blue-800" },
+      dalam_produksi: { label: "Dalam Produksi", className: "bg-purple-100 text-purple-800" },
+      kontrol_kualitas: { label: "QC", className: "bg-indigo-100 text-indigo-800" },
+      siap: { label: "Siap", className: "bg-green-100 text-green-800" },
+      dikirim: { label: "Dikirim", className: "bg-teal-100 text-teal-800" },
+      terkirim: { label: "Terkirim", className: "bg-green-100 text-green-800" },
+      dibatalkan: { label: "Dibatalkan", className: "bg-red-100 text-red-800" },
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.tertunda;
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatTanggal = (tanggal: string) => {
+    return new Date(tanggal).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0d7377] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat data...</p>
         </div>
       </div>
     );
   }
 
-  const statCards = [
-    {
-      title: "Total Pesanan",
-      value: statistik?.totalPesanan || 0,
-      icon: Package,
-      bgColor: "bg-blue-50",
-      iconColor: "text-blue-600",
-      trend: null,
-    },
-    {
-      title: "Pesanan Baru",
-      value: statistik?.pesananBaru || 0,
-      icon: AlertCircle,
-      bgColor: "bg-yellow-50",
-      iconColor: "text-yellow-600",
-      trend: null,
-    },
-    {
-      title: "Dalam Produksi",
-      value: statistik?.dalamProduksi || 0,
-      icon: Clock,
-      bgColor: "bg-purple-50",
-      iconColor: "text-purple-600",
-      trend: null,
-    },
-    {
-      title: "Selesai",
-      value: statistik?.selesai || 0,
-      icon: CheckCircle,
-      bgColor: "bg-green-50",
-      iconColor: "text-green-600",
-      trend: "+12%",
-    },
-  ];
-
   return (
-    <div className="p-6 lg:p-8 space-y-8">
+    <div className="p-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-          Dashboard Percetakan
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Selamat datang kembali! Berikut ringkasan pesanan Anda hari ini.
-        </p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard Percetakan</h1>
+        <p className="text-gray-600 mt-2">Kelola pesanan cetak dan produksi</p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.title}
-              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                  {stat.trend && (
-                    <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
-                      {stat.trend}
-                    </p>
-                  )}
-                </div>
-                <div className={`${stat.bgColor} p-3 rounded-lg`}>
-                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
-                </div>
-              </div>
+      {/* Statistik Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total Pesanan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-gray-900">
+                {statistik?.totalPesanan || 0}
+              </p>
+              <span className="text-sm text-gray-500">pesanan</span>
             </div>
-          );
-        })}
-      </div>
+          </CardContent>
+        </Card>
 
-      {/* Revenue Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-6 text-white">
-          <p className="text-teal-100 text-sm mb-1">Revenue Hari Ini</p>
-          <p className="text-3xl font-bold">
-            Rp {(statistik?.revenueHariIni || 0).toLocaleString("id-ID")}
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-          <p className="text-blue-100 text-sm mb-1">Revenue Bulan Ini</p>
-          <p className="text-3xl font-bold">
-            Rp {(statistik?.revenueBulanIni || 0).toLocaleString("id-ID")}
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-          <p className="text-purple-100 text-sm mb-1">Total Revenue</p>
-          <p className="text-3xl font-bold">
-            Rp {(statistik?.totalRevenue || 0).toLocaleString("id-ID")}
-          </p>
-        </div>
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Pesanan Tertunda
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-yellow-600">
+                {statistik?.pesananTertunda || 0}
+              </p>
+              <span className="text-sm text-gray-500">perlu konfirmasi</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Dalam Produksi
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-purple-600">
+                {statistik?.pesananDalamProduksi || 0}
+              </p>
+              <span className="text-sm text-gray-500">sedang diproses</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Revenue Bulan Ini
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-bold text-green-600">
+                {formatRupiah(statistik?.revenueBulanIni || 0)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Pesanan Terbaru */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Pesanan Terbaru
-          </h2>
-          <Link
-            href="/dashboard/percetakan/pesanan"
-            className="text-sm text-teal-600 hover:text-teal-700 font-medium"
-          >
-            Lihat Semua →
-          </Link>
-        </div>
-
-        {pesananTerbaru.length === 0 ? (
-          <div className="p-12 text-center">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">Belum ada pesanan</p>
+      <Card>
+        <CardHeader className="border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-bold text-gray-900">
+              Pesanan Terbaru
+            </CardTitle>
+            <Link
+              href="/dashboard/percetakan/pesanan"
+              className="text-sm font-medium text-[#0d7377] hover:text-[#0a5c5f] transition-colors"
+            >
+              Lihat Semua →
+            </Link>
           </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {pesananTerbaru.map((pesanan) => (
-              <Link
-                key={pesanan.id}
-                href={`/dashboard/percetakan/pesanan/${pesanan.id}`}
-                className="block p-6 hover:bg-gray-50 transition-colors"
+        </CardHeader>
+        <CardContent className="p-0">
+          {pesananTerbaru.length === 0 ? (
+            <div className="text-center py-12">
+              <svg
+                className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-semibold text-gray-900">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <p className="text-gray-500">Belum ada pesanan</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      No. Pesanan
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Naskah
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Pemesan
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Jumlah
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tanggal
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {pesananTerbaru.map((pesanan) => (
+                    <tr key={pesanan.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {pesanan.nomorPesanan}
-                      </span>
-                      <StatusBadge status={pesanan.status} />
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      {pesanan.naskah?.judul || "Judul tidak tersedia"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {pesanan.jumlah} eksemplar • {pesanan.formatKertas}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">
-                      Rp {pesanan.hargaTotal.toLocaleString("id-ID")}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(pesanan.tanggalPesan).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {pesanan.naskah?.judul || "-"}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {pesanan.formatKertas} • {pesanan.jenisKertas}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {pesanan.pemesan?.profilPengguna?.namaTampilan || 
+                           pesanan.pemesan?.email || "-"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {pesanan.jumlah} eks
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatRupiah(pesanan.hargaTotal)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(pesanan.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatTanggal(pesanan.tanggalPesan)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Link
+                          href={`/dashboard/percetakan/pesanan/${pesanan.id}`}
+                          className="text-[#0d7377] hover:text-[#0a5c5f] font-medium"
+                        >
+                          Detail
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Link
+          href="/dashboard/percetakan/pesanan?status=tertunda"
+          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <svg
+                className="w-6 h-6 text-yellow-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Pesanan Tertunda</h3>
+              <p className="text-sm text-gray-600">Konfirmasi pesanan baru</p>
+            </div>
           </div>
-        )}
+        </Link>
+
+        <Link
+          href="/dashboard/percetakan/pesanan?status=dalam_produksi"
+          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <svg
+                className="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Dalam Produksi</h3>
+              <p className="text-sm text-gray-600">Pantau proses produksi</p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/dashboard/percetakan/pembayaran"
+          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Pembayaran</h3>
+              <p className="text-sm text-gray-600">Verifikasi pembayaran</p>
+            </div>
+          </div>
+        </Link>
       </div>
     </div>
-  );
-}
-
-// Component untuk Badge Status
-function StatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<string, { label: string; className: string }> = {
-    tertunda: {
-      label: "Tertunda",
-      className: "bg-yellow-100 text-yellow-800",
-    },
-    diterima: {
-      label: "Diterima",
-      className: "bg-blue-100 text-blue-800",
-    },
-    dalam_produksi: {
-      label: "Produksi",
-      className: "bg-purple-100 text-purple-800",
-    },
-    kontrol_kualitas: {
-      label: "QC",
-      className: "bg-indigo-100 text-indigo-800",
-    },
-    siap: {
-      label: "Siap Kirim",
-      className: "bg-teal-100 text-teal-800",
-    },
-    dikirim: {
-      label: "Dikirim",
-      className: "bg-cyan-100 text-cyan-800",
-    },
-    terkirim: {
-      label: "Selesai",
-      className: "bg-green-100 text-green-800",
-    },
-    dibatalkan: {
-      label: "Dibatalkan",
-      className: "bg-red-100 text-red-800",
-    },
-  };
-
-  const config = statusConfig[status] || {
-    label: status,
-    className: "bg-gray-100 text-gray-800",
-  };
-
-  return (
-    <span
-      className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}
-    >
-      {config.label}
-    </span>
   );
 }
