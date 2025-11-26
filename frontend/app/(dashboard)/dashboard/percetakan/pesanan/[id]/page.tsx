@@ -480,7 +480,7 @@ export default function DetailPesananPage() {
                 <div className="pt-3 border-t space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Status Pembayaran</span>
-                    <Badge variant={pesanan.pembayaran.status === "berhasil" ? "default" : "secondary"}>
+                    <Badge variant={pesanan.pembayaran.status === "selesai" ? "default" : "secondary"}>
                       {pesanan.pembayaran.status}
                     </Badge>
                   </div>

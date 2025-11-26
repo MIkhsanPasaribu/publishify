@@ -40,7 +40,7 @@ export default function KelolaNaskahPage() {
 
   // Check authorization
   useEffect(() => {
-    if (!pengguna || !pengguna.peran.includes("admin")) {
+    if (!pengguna || !pengguna.peran?.includes("admin")) {
       router.push("/dashboard");
     }
   }, [pengguna, router]);

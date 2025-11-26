@@ -10,26 +10,26 @@ export const FilterPesananSchema = z.object({
   halaman: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .default('1')
+    .transform((val) => parseInt(val, 10))
     .pipe(
       z.number()
         .int('Halaman harus berupa bilangan bulat')
         .positive('Halaman harus lebih dari 0')
     )
-    .default(1)
     .describe('Nomor halaman untuk pagination'),
 
   limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 20))
+    .default('20')
+    .transform((val) => parseInt(val, 10))
     .pipe(
       z.number()
         .int('Limit harus berupa bilangan bulat')
         .positive('Limit harus lebih dari 0')
         .max(100, 'Limit maksimal 100')
     )
-    .default(20)
     .describe('Jumlah data per halaman'),
 
   // Filters

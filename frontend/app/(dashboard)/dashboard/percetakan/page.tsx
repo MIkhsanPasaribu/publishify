@@ -243,7 +243,7 @@ export default function DashboardPercetakanPage() {
                           {pesanan.naskah?.judul || "-"}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {pesanan.formatKertas} • {pesanan.jenisKertas}
+                          {pesanan.ukuranKertas} • {pesanan.jenisKertas}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -253,16 +253,16 @@ export default function DashboardPercetakanPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {pesanan.jumlah} eks
+                        {pesanan.jumlahCetak} eks
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatRupiah(pesanan.hargaTotal)}
+                        {formatRupiah(pesanan.totalHarga)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(pesanan.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatTanggal(pesanan.tanggalPesan)}
+                        {formatTanggal(pesanan.dibuatPada)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <Link

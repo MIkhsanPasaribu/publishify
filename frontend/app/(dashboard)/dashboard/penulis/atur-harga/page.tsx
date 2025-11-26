@@ -47,7 +47,7 @@ export default function AturHargaJualPage() {
 
   // Check authorization
   useEffect(() => {
-    if (!pengguna || !pengguna.peran.includes("penulis")) {
+    if (!pengguna || !pengguna.peran?.includes("penulis")) {
       router.push("/dashboard");
     }
   }, [pengguna, router]);

@@ -385,23 +385,23 @@ export default function DaftarPesananPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            {item.formatKertas}
+                            {item.ukuranKertas}
                           </div>
                           <div className="text-sm text-gray-500">
                             {item.jenisKertas} • {item.jenisCover}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                          {item.jumlah} eks
+                          {item.jumlahCetak} eks
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                          {formatRupiah(item.hargaTotal)}
+                          {formatRupiah(item.totalHarga)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(item.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatTanggal(item.tanggalPesan)}
+                          {formatTanggal(item.dibuatPada)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <Link
