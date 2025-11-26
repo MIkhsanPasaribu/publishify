@@ -69,21 +69,46 @@ export class PercetakanService {
       jumlahHalaman: naskah.jumlahHalaman || 100, // Default 100 halaman
     });
 
-    // Buat pesanan
-    const pesanan = await this.prisma.pesananCetak.create({
-      data: {
-        idNaskah: dto.idNaskah,
-        idPemesan,
-        nomorPesanan,
-        jumlah: dto.jumlah,
-        formatKertas: dto.formatKertas,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        finishingTambahan: dto.finishingTambahan || [],
-        catatan: dto.catatan,
-        hargaTotal: new Decimal(hargaTotal),
-        status: 'tertunda',
-      },
+    // Buat pesanan dengan pengiriman
+    const pesanan = await this.prisma.$transaction(async (prisma) => {
+      // Buat pesanan cetak
+      const pesanan = await prisma.pesananCetak.create({
+        data: {
+          idNaskah: dto.idNaskah,
+          idPemesan,
+          nomorPesanan,
+          jumlah: dto.jumlah,
+          formatKertas: dto.formatKertas,
+          jenisKertas: dto.jenisKertas,
+          jenisCover: dto.jenisCover,
+          finishingTambahan: dto.finishingTambahan || [],
+          catatan: dto.catatan,
+          hargaTotal: new Decimal(dto.hargaTotal || hargaTotal),
+          status: 'tertunda',
+        },
+      });
+
+      // Buat data pengiriman jika ada alamat
+      if (dto.alamatPengiriman && dto.namaPenerima && dto.teleponPenerima) {
+        await prisma.pengiriman.create({
+          data: {
+            idPesanan: pesanan.id,
+            namaEkspedisi: 'TBD', // To be determined by admin
+            biayaPengiriman: new Decimal(0), // Will be calculated later
+            alamatTujuan: dto.alamatPengiriman,
+            namaPenerima: dto.namaPenerima,
+            teleponPenerima: dto.teleponPenerima,
+            status: 'diproses',
+          },
+        });
+      }
+
+      return pesanan;
+    });
+
+    // Fetch pesanan lengkap dengan relasi
+    const pesananLengkap = await this.prisma.pesananCetak.findUnique({
+      where: { id: pesanan.id },
       include: {
         naskah: {
           select: {
@@ -104,6 +129,7 @@ export class PercetakanService {
             },
           },
         },
+        pengiriman: true,
       },
     });
 
@@ -122,7 +148,7 @@ export class PercetakanService {
     return {
       sukses: true,
       pesan: 'Pesanan cetak berhasil dibuat',
-      data: pesanan,
+      data: pesananLengkap,
     };
   }
 

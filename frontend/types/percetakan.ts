@@ -175,6 +175,10 @@ export interface BuatPesananCetakDto {
   jenisCover: string;
   finishingTambahan?: string[];
   catatan?: string;
+  hargaTotal: number;
+  alamatPengiriman: string;
+  namaPenerima: string;
+  teleponPenerima: string;
 }
 
 export interface UpdateStatusPesananDto {

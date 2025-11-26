@@ -54,7 +54,7 @@ export default function CetakFisikPage() {
     jumlahEksemplar: 1,
     ukuran: "A5",
     jenisKertas: "Bookpaper",
-    jenisCover: "Softcover",
+    jenisCover: "Soft Cover",
     finishing: [],
     alamatLengkap: "",
     namaPenerima: "",
@@ -96,7 +96,7 @@ export default function CetakFisikPage() {
     if (!naskah?.jumlahHalaman) return { biayaCetak: 0, biayaJilid: 0, biayaLayanan: 0, ongkir: 0, total: 0 };
 
     const biayaCetakPerBuku = naskah.jumlahHalaman * HARGA_PER_HALAMAN;
-    const biayaJilidPerBuku = formData.jenisCover === "Hardcover" ? BIAYA_JILID_HARDCOVER : BIAYA_JILID_SOFTCOVER;
+    const biayaJilidPerBuku = formData.jenisCover === "Hard Cover" ? BIAYA_JILID_HARDCOVER : BIAYA_JILID_SOFTCOVER;
     const subtotalPerBuku = biayaCetakPerBuku + biayaJilidPerBuku;
     
     const biayaCetak = subtotalPerBuku * formData.jumlahEksemplar;
@@ -264,8 +264,10 @@ export default function CetakFisikPage() {
                           <SelectValue placeholder="Pilih jenis kertas" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Bookpaper">Bookpaper 70gr</SelectItem>
-                          <SelectItem value="HVS">HVS 80gr</SelectItem>
+                          <SelectItem value="Bookpaper">Bookpaper</SelectItem>
+                          <SelectItem value="HVS 70gr">HVS 70gr</SelectItem>
+                          <SelectItem value="HVS 80gr">HVS 80gr</SelectItem>
+                          <SelectItem value="Art Paper 120gr">Art Paper 120gr</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -281,8 +283,8 @@ export default function CetakFisikPage() {
                           <SelectValue placeholder="Pilih jilid" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Softcover">Softcover (+{formatRupiah(BIAYA_JILID_SOFTCOVER)})</SelectItem>
-                          <SelectItem value="Hardcover">Hardcover (+{formatRupiah(BIAYA_JILID_HARDCOVER)})</SelectItem>
+                          <SelectItem value="Soft Cover">Soft Cover (+{formatRupiah(BIAYA_JILID_SOFTCOVER)})</SelectItem>
+                          <SelectItem value="Hard Cover">Hard Cover (+{formatRupiah(BIAYA_JILID_HARDCOVER)})</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
