@@ -7,29 +7,23 @@ import { ApiProperty } from '@nestjs/swagger';
  */
 export const FilterPesananSchema = z.object({
   // Pagination
-  halaman: z
-    .string()
-    .optional()
-    .default('1')
-    .transform((val) => parseInt(val, 10))
-    .pipe(
-      z.number()
-        .int('Halaman harus berupa bilangan bulat')
-        .positive('Halaman harus lebih dari 0')
-    )
+  halaman: z.coerce
+    .number({
+      invalid_type_error: 'Halaman harus berupa angka',
+    })
+    .int('Halaman harus berupa bilangan bulat')
+    .positive('Halaman harus lebih dari 0')
+    .default(1)
     .describe('Nomor halaman untuk pagination'),
 
-  limit: z
-    .string()
-    .optional()
-    .default('20')
-    .transform((val) => parseInt(val, 10))
-    .pipe(
-      z.number()
-        .int('Limit harus berupa bilangan bulat')
-        .positive('Limit harus lebih dari 0')
-        .max(100, 'Limit maksimal 100')
-    )
+  limit: z.coerce
+    .number({
+      invalid_type_error: 'Limit harus berupa angka',
+    })
+    .int('Limit harus berupa bilangan bulat')
+    .positive('Limit harus lebih dari 0')
+    .max(100, 'Limit maksimal 100')
+    .default(20)
     .describe('Jumlah data per halaman'),
 
   // Filters
