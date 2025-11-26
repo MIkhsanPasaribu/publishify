@@ -82,7 +82,7 @@ export default function DetailPesananPage() {
 
   // Check authorization
   useEffect(() => {
-    if (!pengguna || !pengguna.peran.includes("percetakan")) {
+    if (!pengguna || !pengguna.peran?.includes("percetakan")) {
       router.push("/dashboard");
     }
   }, [pengguna, router]);

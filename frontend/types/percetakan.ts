@@ -34,15 +34,29 @@ export interface PesananCetak {
   idPemesan: string;
   idPercetakan: string | null;
   nomorPesanan: string;
-  jumlah: number;
-  formatKertas: string;
+  
+  // Spesifikasi cetak
+  jumlahCetak: number; // Changed from 'jumlah'
+  ukuranKertas: string; // Changed from 'formatKertas'
   jenisKertas: string;
   jenisCover: string;
-  finishingTambahan: string[] | null;
-  catatan: string | null;
-  hargaTotal: number;
+  finishing: string; // Changed from 'finishingTambahan'
+  warnaCetak: string; // Added
+  catatanTambahan: string | null; // Changed from 'catatan'
+  
+  // Informasi pemesan
+  namaPemesan: string;
+  teleponPemesan: string;
+  alamatPengiriman: string;
+  
+  // Pricing
+  hargaPerUnit: number; // Added
+  totalHarga: number; // Changed from 'hargaTotal'
+  
+  // Status & dates
   status: StatusPesanan;
-  tanggalPesan: string;
+  dibuatPada: string; // Changed from 'tanggalPesan'
+  tanggalDiterima: string | null; // Added
   estimasiSelesai: string | null;
   tanggalSelesai: string | null;
   diperbaruiPada: string;
@@ -52,6 +66,8 @@ export interface PesananCetak {
     id: string;
     judul: string;
     subJudul: string | null;
+    isbn: string | null; // Added
+    jumlahHalaman: number | null; // Added
     urlSampul: string | null;
     urlFile: string | null;
     penulis: {
@@ -78,7 +94,7 @@ export interface PesananCetak {
       kodePos: string | null;
     } | null;
   };
-  pembayaran?: Pembayaran[];
+  pembayaran?: Pembayaran | null; // Changed from array to single object
   pengiriman?: Pengiriman | null;
   logProduksi?: LogProduksi[];
 }
@@ -112,7 +128,8 @@ export interface Pembayaran {
 export interface Pengiriman {
   id: string;
   idPesanan: string;
-  namaEkspedisi: string;
+  namaKurir: string; // Changed from namaEkspedisi
+  namaEkspedisi: string; // Keep both for compatibility
   nomorResi: string | null;
   biayaPengiriman: number;
   alamatTujuan: string;
@@ -142,8 +159,10 @@ export interface TrackingLog {
 export interface LogProduksi {
   id: string;
   idPesanan: string;
+  status: string; // Added - displayed in timeline
   tahapan: string;
-  deskripsi: string | null;
+  keterangan: string | null; // Changed from deskripsi
+  deskripsi: string | null; // Keep for compatibility
   dibuatPada: string;
 }
 
