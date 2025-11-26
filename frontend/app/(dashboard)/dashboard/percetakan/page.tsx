@@ -1,368 +1,315 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthStore } from "@/stores/use-auth-store";
-import { ambilStatistikPercetakan, ambilDaftarPesanan } from "@/lib/api/percetakan";
-import type { PesananCetak } from "@/types/percetakan";
-import { Badge } from "@/components/ui/badge";
+import {
+  Package,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  Users,
+  DollarSign,
+  FileText,
+  ArrowRight,
+  AlertCircle,
+  Printer,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+// Dummy Data
+const STATS = {
+  totalPesanan: 127,
+  pesananAktif: 23,
+  selesaiBulanIni: 45,
+  pendapatanBulanIni: 125000000,
+  rataWaktuProduksi: 7, // hari
+  tingkatKepuasan: 4.8,
+};
+
+const PESANAN_TERBARU = [
+  {
+    id: "1",
+    nomorPesanan: "PO-20251126-1234",
+    judul: "Petualangan di Negeri Dongeng",
+    pemesan: "Ahmad Rudi",
+    jumlah: 100,
+    status: "dalam_produksi",
+    tanggal: "2025-11-26",
+    estimasi: "2025-12-03",
+  },
+  {
+    id: "2",
+    nomorPesanan: "PO-20251125-5678",
+    judul: "Panduan Lengkap Pemrograman Web",
+    pemesan: "Siti Nurhaliza",
+    jumlah: 50,
+    status: "kontrol_kualitas",
+    tanggal: "2025-11-25",
+    estimasi: "2025-11-30",
+  },
+  {
+    id: "3",
+    nomorPesanan: "PO-20251124-9012",
+    judul: "Resep Masakan Nusantara",
+    pemesan: "Budi Santoso",
+    jumlah: 200,
+    status: "siap",
+    tanggal: "2025-11-24",
+    estimasi: "2025-11-29",
+  },
+  {
+    id: "4",
+    nomorPesanan: "PO-20251123-3456",
+    judul: "Kisah Inspiratif Para Pejuang",
+    pemesan: "Dewi Lestari",
+    jumlah: 75,
+    status: "tertunda",
+    tanggal: "2025-11-23",
+    estimasi: "2025-11-30",
+  },
+];
+
+const AKTIVITAS_PRODUKSI = [
+  {
+    id: "1",
+    pesanan: "PO-20251126-1234",
+    aktivitas: "Proses pencetakan halaman 1-50 selesai",
+    waktu: "2 jam yang lalu",
+  },
+  {
+    id: "2",
+    pesanan: "PO-20251125-5678",
+    aktivitas: "Quality control tahap 2",
+    waktu: "5 jam yang lalu",
+  },
+  {
+    id: "3",
+    pesanan: "PO-20251124-9012",
+    aktivitas: "Proses finishing dan packaging selesai",
+    waktu: "1 hari yang lalu",
+  },
+  {
+    id: "4",
+    pesanan: "PO-20251123-3456",
+    aktivitas: "Menunggu konfirmasi pembayaran",
+    waktu: "2 hari yang lalu",
+  },
+];
+
+const STATUS_CONFIG = {
+  tertunda: { label: "Tertunda", color: "bg-amber-100 text-amber-800" },
+  dalam_produksi: { label: "Dalam Produksi", color: "bg-blue-100 text-blue-800" },
+  kontrol_kualitas: { label: "QC", color: "bg-purple-100 text-purple-800" },
+  siap: { label: "Siap Kirim", color: "bg-green-100 text-green-800" },
+};
+
+function formatRupiah(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
+}
 
 export default function DashboardPercetakanPage() {
-  const router = useRouter();
-  const { pengguna } = useAuthStore();
-  const [loading, setLoading] = useState(true);
-  const [statistik, setStatistik] = useState<any>(null);
-  const [pesananTerbaru, setPesananTerbaru] = useState<PesananCetak[]>([]);
-
-  useEffect(() => {
-    // Cek apakah user memiliki role percetakan
-    const hasRolePercetakan = pengguna?.peran?.includes("percetakan") || 
-      pengguna?.peranPengguna?.some(p => p.jenisPeran === "percetakan" && p.aktif);
-
-    if (!hasRolePercetakan) {
-      router.push("/dashboard");
-      return;
-    }
-
-    fetchData();
-  }, [pengguna, router]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [statsResponse, pesananResponse] = await Promise.all([
-        ambilStatistikPercetakan(),
-        ambilDaftarPesanan({ limit: 5, halaman: 1 }),
-      ]);
-
-      if (statsResponse.sukses) {
-        setStatistik(statsResponse.data);
-      }
-
-      if (pesananResponse.sukses) {
-        setPesananTerbaru(pesananResponse.data);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      tertunda: { label: "Tertunda", className: "bg-yellow-100 text-yellow-800" },
-      diterima: { label: "Diterima", className: "bg-blue-100 text-blue-800" },
-      dalam_produksi: { label: "Dalam Produksi", className: "bg-purple-100 text-purple-800" },
-      kontrol_kualitas: { label: "QC", className: "bg-indigo-100 text-indigo-800" },
-      siap: { label: "Siap", className: "bg-green-100 text-green-800" },
-      dikirim: { label: "Dikirim", className: "bg-teal-100 text-teal-800" },
-      terkirim: { label: "Terkirim", className: "bg-green-100 text-green-800" },
-      dibatalkan: { label: "Dibatalkan", className: "bg-red-100 text-red-800" },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.tertunda;
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatTanggal = (tanggal: string) => {
-    return new Date(tanggal).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0d7377] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Percetakan</h1>
-        <p className="text-gray-600 mt-2">Kelola pesanan cetak dan produksi</p>
-      </div>
-
-      {/* Statistik Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Total Pesanan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-gray-900">
-                {statistik?.totalPesanan || 0}
-              </p>
-              <span className="text-sm text-gray-500">pesanan</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Pesanan Tertunda
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-yellow-600">
-                {statistik?.pesananTertunda || 0}
-              </p>
-              <span className="text-sm text-gray-500">perlu konfirmasi</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Dalam Produksi
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-purple-600">
-                {statistik?.pesananDalamProduksi || 0}
-              </p>
-              <span className="text-sm text-gray-500">sedang diproses</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Revenue Bulan Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-green-600">
-                {formatRupiah(statistik?.revenueBulanIni || 0)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pesanan Terbaru */}
-      <Card>
-        <CardHeader className="border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-bold text-gray-900">
-              Pesanan Terbaru
-            </CardTitle>
-            <Link
-              href="/dashboard/percetakan/pesanan"
-              className="text-sm font-medium text-[#0d7377] hover:text-[#0a5c5f] transition-colors"
-            >
-              Lihat Semua →
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Dashboard Percetakan
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Kelola dan pantau semua aktivitas produksi percetakan
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/dashboard/percetakan/pesanan">
+              <Button className="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white shadow-lg">
+                <Package className="mr-2 h-4 w-4" />
+                Kelola Pesanan
+              </Button>
             </Link>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {pesananTerbaru.length === 0 ? (
-            <div className="text-center py-12">
-              <svg
-                className="w-16 h-16 text-gray-300 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p className="text-gray-500">Belum ada pesanan</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      No. Pesanan
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Naskah
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Pemesan
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Jumlah
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tanggal
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pesananTerbaru.map((pesanan) => (
-                    <tr key={pesanan.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {pesanan.nomorPesanan}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {pesanan.naskah?.judul || "-"}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {pesanan.ukuranKertas} • {pesanan.jenisKertas}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {pesanan.pemesan?.profilPengguna?.namaTampilan || 
-                           pesanan.pemesan?.email || "-"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {pesanan.jumlahCetak} eks
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatRupiah(pesanan.totalHarga)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(pesanan.status)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatTanggal(pesanan.dibuatPada)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Link
-                          href={`/dashboard/percetakan/pesanan/${pesanan.id}`}
-                          className="text-[#0d7377] hover:text-[#0a5c5f] font-medium"
-                        >
-                          Detail
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <Link
-          href="/dashboard/percetakan/pesanan?status=tertunda"
-          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Pesanan Tertunda</h3>
-              <p className="text-sm text-gray-600">Konfirmasi pesanan baru</p>
-            </div>
-          </div>
-        </Link>
+        {/* Statistik Cards - Grid 3 kolom */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-blue-50 to-cyan-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Package className="h-6 w-6 text-blue-600" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Total Pesanan</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{STATS.totalPesanan}</p>
+              <p className="text-xs text-gray-500 mt-2">+12% dari bulan lalu</p>
+            </CardContent>
+          </Card>
 
-        <Link
-          href="/dashboard/percetakan/pesanan?status=dalam_produksi"
-          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Dalam Produksi</h3>
-              <p className="text-sm text-gray-600">Pantau proses produksi</p>
-            </div>
-          </div>
-        </Link>
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-amber-50 to-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-amber-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
+                <Printer className="h-5 w-5 text-amber-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Pesanan Aktif</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{STATS.pesananAktif}</p>
+              <p className="text-xs text-gray-500 mt-2">Sedang dalam proses</p>
+            </CardContent>
+          </Card>
 
-        <Link
-          href="/dashboard/percetakan/pembayaran"
-          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Pembayaran</h3>
-              <p className="text-sm text-gray-600">Verifikasi pembayaran</p>
-            </div>
-          </div>
-        </Link>
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Selesai Bulan Ini</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{STATS.selesaiBulanIni}</p>
+              <p className="text-xs text-gray-500 mt-2">Target: 50 pesanan</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-purple-50 to-pink-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-purple-600" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Pendapatan Bulan Ini</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {formatRupiah(STATS.pendapatanBulanIni)}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">+18% dari bulan lalu</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-teal-50 to-cyan-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-teal-100 rounded-lg">
+                  <Clock className="h-6 w-6 text-teal-600" />
+                </div>
+                <CheckCircle2 className="h-5 w-5 text-teal-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Rata-rata Waktu Produksi</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{STATS.rataWaktuProduksi} <span className="text-lg">hari</span></p>
+              <p className="text-xs text-gray-500 mt-2">Target: ≤ 10 hari</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-gradient-to-br from-rose-50 to-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-rose-100 rounded-lg">
+                  <Users className="h-6 w-6 text-rose-600" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Tingkat Kepuasan</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{STATS.tingkatKepuasan} <span className="text-lg">/5.0</span></p>
+              <p className="text-xs text-gray-500 mt-2">Dari 89 ulasan</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Pesanan Terbaru */}
+          <Card className="border-2">
+            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-gray-50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-slate-700" />
+                  Pesanan Terbaru
+                </CardTitle>
+                <Link href="/dashboard/percetakan/pesanan">
+                  <Button variant="ghost" size="sm" className="text-slate-700">
+                    Lihat Semua
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {PESANAN_TERBARU.map((pesanan) => {
+                  const config = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
+                  return (
+                    <div
+                      key={pesanan.id}
+                      className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                            {pesanan.judul}
+                          </h4>
+                          <p className="text-xs text-gray-600 font-mono">
+                            {pesanan.nomorPesanan}
+                          </p>
+                        </div>
+                        <Badge className={`${config.color} text-xs`}>
+                          {config.label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{pesanan.pemesan} • {pesanan.jumlah} eks</span>
+                        <span>Est: {pesanan.estimasi}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Aktivitas Produksi */}
+          <Card className="border-2">
+            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-gray-50">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-slate-700" />
+                Aktivitas Produksi
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {AKTIVITAS_PRODUKSI.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900 font-medium mb-1">
+                          {item.aktivitas}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-600 font-mono">
+                            {item.pesanan}
+                          </p>
+                          <p className="text-xs text-gray-500">{item.waktu}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
