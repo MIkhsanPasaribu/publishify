@@ -94,7 +94,7 @@ export default function NaskahSiapTerbitPage() {
       console.log("✅ Naskah berhasil diterbitkan:", result);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: { sukses: boolean; pesan: string; data: Naskah }) => {
       console.log("✅ Mutation success, data:", data);
       toast.success("Naskah berhasil diterbitkan!", {
         description: `"${selectedNaskah?.judul}" sekarang berstatus diterbitkan`,
@@ -116,7 +116,7 @@ export default function NaskahSiapTerbitPage() {
   const naskahList = response?.data || [];
 
   // Filter berdasarkan search
-  const filteredNaskah = naskahList.filter((naskah) => {
+  const filteredNaskah = naskahList.filter((naskah: Naskah) => {
     const matchSearch =
       naskah.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (naskah.subJudul?.toLowerCase() || "").includes(searchQuery.toLowerCase());
@@ -285,7 +285,7 @@ export default function NaskahSiapTerbitPage() {
         {/* List Naskah */}
         {!isLoading && !error && filteredNaskah.length > 0 && (
           <div className="grid grid-cols-1 gap-6">
-            {filteredNaskah.map((naskah) => (
+            {filteredNaskah.map((naskah: Naskah) => (
               <Card
                 key={naskah.id}
                 className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
