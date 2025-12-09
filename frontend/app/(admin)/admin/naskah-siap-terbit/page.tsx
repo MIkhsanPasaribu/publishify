@@ -354,12 +354,23 @@ export default function NaskahSiapTerbitPage() {
       // Simulasi konversi (2 detik)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Untuk simulasi, gunakan URL file asli (dalam implementasi nyata, ini akan jadi URL PDF hasil konversi)
-      const simulatedPdfUrl = selectedNaskah.urlFile.replace(/\.[^.]+$/, ".pdf");
-      setConvertedPdfUrl(simulatedPdfUrl);
+      // Untuk simulasi/demo:
+      // - Jika file asli sudah PDF, gunakan URL asli
+      // - Jika bukan PDF, gunakan URL asli (dalam implementasi nyata akan dikonversi)
+      // Dalam production, ini akan diganti dengan URL hasil konversi dari backend
+      const fileExt = getFileExtension(selectedNaskah.urlFile);
+      if (fileExt === "pdf") {
+        setConvertedPdfUrl(selectedNaskah.urlFile);
+      } else {
+        // Untuk demo, gunakan URL file asli agar preview tidak error
+        // Dalam implementasi nyata, backend akan mengkonversi dan return URL PDF baru
+        setConvertedPdfUrl(selectedNaskah.urlFile);
+      }
 
       toast.success("Konversi berhasil!", {
-        description: "File PDF hasil konversi siap untuk di-preview",
+        description: fileExt === "pdf" 
+          ? "File sudah dalam format PDF" 
+          : "File berhasil dikonversi ke PDF (simulasi)",
       });
     } catch (error: any) {
       toast.error("Gagal mengkonversi file", {
@@ -1155,11 +1166,54 @@ export default function NaskahSiapTerbitPage() {
           </DialogHeader>
           <div className="flex-1 h-full min-h-[500px]">
             {finalPdfUrl ? (
-              <iframe
-                src={finalPdfUrl}
-                className="w-full h-full border rounded-lg"
-                title="PDF Preview"
-              />
+              <>
+                {/* Cek apakah URL adalah blob (dari upload lokal) atau URL external */}
+                {finalPdfUrl.startsWith("blob:") ? (
+                  <iframe
+                    src={finalPdfUrl}
+                    className="w-full h-full border rounded-lg"
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
+                    <div className="text-center space-y-4">
+                      <div className="p-4 bg-blue-100 rounded-full inline-block">
+                        <FileText className="h-12 w-12 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-2">Preview File</p>
+                        <p className="text-sm text-gray-600 mb-4">
+                          File tersimpan di server. Klik tombol di bawah untuk membuka preview.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                          <Button
+                            onClick={() => window.open(finalPdfUrl, "_blank")}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Buka Preview di Tab Baru
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = finalPdfUrl;
+                              link.download = getFileName(finalPdfUrl);
+                              link.click();
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download File
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-4">
+                        URL: {finalPdfUrl.length > 60 ? finalPdfUrl.substring(0, 60) + "..." : finalPdfUrl}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
                 <p className="text-gray-500">Tidak ada file PDF untuk ditampilkan</p>
@@ -1170,12 +1224,6 @@ export default function NaskahSiapTerbitPage() {
             <Button variant="outline" onClick={() => setModalPreviewPdf(false)}>
               Tutup
             </Button>
-            {finalPdfUrl && (
-              <Button onClick={() => window.open(finalPdfUrl, "_blank")}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Buka di Tab Baru
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
