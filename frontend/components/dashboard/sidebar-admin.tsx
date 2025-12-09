@@ -73,7 +73,7 @@ export function SidebarAdmin() {
         {
           label: "Overview",
           icon: <LayoutDashboard className="w-4 h-4" />,
-          href: "/dashboard/admin",
+          href: "/admin",
         },
       ],
       defaultOpen: true,
@@ -85,22 +85,22 @@ export function SidebarAdmin() {
         {
           label: "Antrean Review",
           icon: <ClipboardList className="w-4 h-4" />,
-          href: "/dashboard/admin/antrian-review",
+          href: "/admin/antrian-review",
         },
         {
           label: "Monitoring Review",
           icon: <Eye className="w-4 h-4" />,
-          href: "/dashboard/admin/monitoring",
+          href: "/admin/monitoring",
         },
         {
           label: "Naskah Siap Terbit",
           icon: <BookCheck className="w-4 h-4" />,
-          href: "/dashboard/admin/naskah-siap-terbit",
+          href: "/admin/naskah-siap-terbit",
         },
         {
           label: "Semua Naskah",
           icon: <Library className="w-4 h-4" />,
-          href: "/dashboard/admin/review",
+          href: "/admin/review",
         },
       ],
       defaultOpen: true,
@@ -112,12 +112,12 @@ export function SidebarAdmin() {
         {
           label: "Buku Terbit",
           icon: <BookOpen className="w-4 h-4" />,
-          href: "/dashboard/admin/buku",
+          href: "/admin/buku",
         },
         {
           label: "Master Kategori",
           icon: <Tags className="w-4 h-4" />,
-          href: "/dashboard/admin/master/kategori",
+          href: "/admin/master/kategori",
         },
       ],
     },
@@ -128,12 +128,12 @@ export function SidebarAdmin() {
         {
           label: "Pesanan Cetak",
           icon: <ShoppingCart className="w-4 h-4" />,
-          href: "/dashboard/admin/pesanan",
+          href: "/admin/pesanan",
         },
         {
           label: "Pengiriman",
           icon: <Truck className="w-4 h-4" />,
-          href: "/dashboard/admin/pengiriman",
+          href: "/admin/pengiriman",
         },
       ],
     },
@@ -144,7 +144,7 @@ export function SidebarAdmin() {
         {
           label: "Kelola Pengguna",
           icon: <Users className="w-4 h-4" />,
-          href: "/dashboard/admin/pengguna",
+          href: "/admin/pengguna",
         },
       ],
     },
@@ -155,7 +155,7 @@ export function SidebarAdmin() {
         {
           label: "Pengaturan Akun",
           icon: <Settings className="w-4 h-4" />,
-          href: "/dashboard/admin/pengaturan",
+          href: "/admin/pengaturan",
         },
       ],
     },

@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
       color: "blue",
       lightBg: "bg-blue-50",
       iconColor: "text-blue-600",
-      link: "/dashboard/admin/review",
+      link: "/admin/review",
     },
     {
       title: "Menunggu Review",
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
       color: "amber",
       lightBg: "bg-amber-50",
       iconColor: "text-amber-600",
-      link: "/dashboard/admin/antrian-review",
+      link: "/admin/antrian-review",
       highlight: statistik.naskahDiajukan > 0,
     },
     {
@@ -199,7 +199,7 @@ export default function AdminDashboardPage() {
       color: "purple",
       lightBg: "bg-purple-50",
       iconColor: "text-purple-600",
-      link: "/dashboard/admin/monitoring",
+      link: "/admin/monitoring",
     },
     {
       title: "Siap Terbit",
@@ -208,7 +208,7 @@ export default function AdminDashboardPage() {
       color: "green",
       lightBg: "bg-green-50",
       iconColor: "text-green-600",
-      link: "/dashboard/admin/naskah-siap-terbit",
+      link: "/admin/naskah-siap-terbit",
       highlight: statistik.naskahDisetujui > 0,
     },
     {
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
       color: "emerald",
       lightBg: "bg-emerald-50",
       iconColor: "text-emerald-600",
-      link: "/dashboard/admin/buku",
+      link: "/admin/buku",
     },
     {
       title: "Review Aktif",
@@ -227,7 +227,7 @@ export default function AdminDashboardPage() {
       color: "indigo",
       lightBg: "bg-indigo-50",
       iconColor: "text-indigo-600",
-      link: "/dashboard/admin/monitoring",
+      link: "/admin/monitoring",
     },
   ];
 
@@ -238,42 +238,42 @@ export default function AdminDashboardPage() {
       description: `${statistik.naskahDiajukan} naskah menunggu`,
       icon: Clock,
       color: "amber",
-      link: "/dashboard/admin/antrian-review",
+      link: "/admin/antrian-review",
     },
     {
       title: "Monitoring Review",
       description: `${statistik.reviewAktif} review aktif`,
       icon: Eye,
       color: "blue",
-      link: "/dashboard/admin/monitoring",
+      link: "/admin/monitoring",
     },
     {
       title: "Naskah Siap Terbit",
       description: `${statistik.naskahDisetujui} siap dipublikasi`,
       icon: BookOpen,
       color: "green",
-      link: "/dashboard/admin/naskah-siap-terbit",
+      link: "/admin/naskah-siap-terbit",
     },
     {
       title: "Katalog Buku",
       description: `${statistik.naskahDiterbitkan} buku terbit`,
       icon: BookMarked,
       color: "emerald",
-      link: "/dashboard/admin/buku",
+      link: "/admin/buku",
     },
     {
       title: "Kelola Pengguna",
       description: `${statistik.totalPenulis + statistik.totalEditor + statistik.totalPercetakan} pengguna`,
       icon: Users,
       color: "purple",
-      link: "/dashboard/admin/pengguna",
+      link: "/admin/pengguna",
     },
     {
       title: "Pengaturan",
       description: "Konfigurasi sistem",
       icon: Settings,
       color: "gray",
-      link: "/dashboard/admin/pengaturan",
+      link: "/admin/pengaturan",
     },
   ];
 
@@ -417,7 +417,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <button
-            onClick={() => router.push("/dashboard/admin/pengguna")}
+            onClick={() => router.push("/admin/pengguna")}
             className="w-full mt-4 flex items-center justify-center gap-2 py-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
           >
             Lihat semua pengguna
@@ -451,7 +451,7 @@ export default function AdminDashboardPage() {
               {aktivitasTerbaru.map((aktivitas) => (
                 <button
                   key={aktivitas.id}
-                  onClick={() => router.push(`/dashboard/admin/review`)}
+                  onClick={() => router.push(`/admin/review`)}
                   className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
                 >
                   <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">

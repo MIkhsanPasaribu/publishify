@@ -398,7 +398,7 @@ export default function KelolaPenggunaPage() {
                             {pengguna.aktif ? "Nonaktifkan" : "Aktifkan"}
                           </button>
                           <button
-                            onClick={() => router.push(`/dashboard/admin/pengguna/${pengguna.id}`)}
+                            onClick={() => router.push(`/admin/pengguna/${pengguna.id}`)}
                             className="px-3 py-1.5 bg-blue-100 text-blue-800 hover:bg-blue-200 rounded-lg text-xs font-medium transition-colors"
                           >
                             Detail
