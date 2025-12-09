@@ -114,6 +114,14 @@ enum Platform {
   @@map("platform")
 }
 
+enum FormatBuku {
+  A4
+  A5
+  B5
+
+  @@map("format_buku")
+}
+
 // ============================================
 // CORE USER MANAGEMENT (4 tabel)
 // ============================================
@@ -227,6 +235,7 @@ model Naskah {
   isbn           String?      @unique
   idKategori     String
   idGenre        String
+  formatBuku     FormatBuku   @default(A5)
   bahasaTulis    String       @default("id")
   jumlahHalaman  Int?
   jumlahKata     Int?

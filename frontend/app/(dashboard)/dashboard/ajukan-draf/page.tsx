@@ -18,9 +18,17 @@ export default function AjukanDrafPage() {
     sinopsis: "",
     idKategori: "",
     idGenre: "",
+    formatBuku: "A5" as "A4" | "A5" | "B5",
     bahasaTulis: "id",
     kontenTeks: "",
   });
+
+  // Daftar ukuran buku yang tersedia
+  const formatBukuList = [
+    { kode: "A4", nama: "A4 (21 × 29.7 cm)", deskripsi: "Ukuran besar, cocok untuk buku teks & katalog" },
+    { kode: "A5", nama: "A5 (14.8 × 21 cm)", deskripsi: "Ukuran standar novel & buku populer" },
+    { kode: "B5", nama: "B5 (17.6 × 25 cm)", deskripsi: "Ukuran sedang, cocok untuk majalah & jurnal" },
+  ] as const;
   
   const [fileSampul, setFileSampul] = useState<File | null>(null);
   const [fileNaskah, setFileNaskah] = useState<File | null>(null);
@@ -238,6 +246,7 @@ export default function AjukanDrafPage() {
 
       console.log("📋 Menyimpan naskah dengan data:", {
         judul: formData.judul,
+        formatBuku: formData.formatBuku,
         urlFile: urlFileAbsolut,
         urlSampul: urlSampulAbsolut,
         modeInput,
@@ -250,6 +259,7 @@ export default function AjukanDrafPage() {
         sinopsis: formData.sinopsis,
         idKategori: formData.idKategori,
         idGenre: formData.idGenre,
+        formatBuku: formData.formatBuku,
         bahasaTulis: formData.bahasaTulis,
         jumlahKata,
         urlSampul: urlSampulAbsolut,
@@ -515,6 +525,62 @@ export default function AjukanDrafPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Ukuran Buku */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ukuran Buku <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {formatBukuList.map((format) => (
+                      <button
+                        key={format.kode}
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, formatBuku: format.kode }))}
+                        className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                          formData.formatBuku === format.kode
+                            ? "border-[#14b8a6] bg-[#14b8a6]/5 shadow-md ring-2 ring-[#14b8a6]/20"
+                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {/* Checkmark indicator */}
+                        {formData.formatBuku === format.kode && (
+                          <div className="absolute top-2 right-2">
+                            <svg className="w-5 h-5 text-[#14b8a6]" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        {/* Book icon */}
+                        <div className={`w-10 h-12 mx-auto mb-2 rounded border-2 flex items-center justify-center ${
+                          formData.formatBuku === format.kode
+                            ? "border-[#14b8a6] bg-[#14b8a6]/10"
+                            : "border-gray-300 bg-gray-100"
+                        }`}>
+                          <span className={`text-xs font-bold ${
+                            formData.formatBuku === format.kode ? "text-[#14b8a6]" : "text-gray-500"
+                          }`}>
+                            {format.kode}
+                          </span>
+                        </div>
+                        <div className="text-center">
+                          <p className={`font-semibold text-sm ${
+                            formData.formatBuku === format.kode ? "text-[#14b8a6]" : "text-gray-900"
+                          }`}>
+                            {format.nama.split(" ")[0]}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {format.nama.match(/\(([^)]+)\)/)?.[1]}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    <span className="font-medium">Tips:</span>{" "}
+                    {formatBukuList.find((f) => f.kode === formData.formatBuku)?.deskripsi}
+                  </p>
                 </div>
 
                 {/* Sinopsis */}

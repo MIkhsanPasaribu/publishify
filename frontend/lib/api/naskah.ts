@@ -34,6 +34,7 @@ export interface Naskah {
   isbn?: string;
   idKategori: string;
   idGenre: string;
+  formatBuku?: 'A4' | 'A5' | 'B5';
   bahasaTulis: string;
   jumlahHalaman?: number;
   jumlahKata?: number;
@@ -62,6 +63,7 @@ export interface BuatNaskahPayload {
   sinopsis: string;
   idKategori: string;
   idGenre: string;
+  formatBuku?: 'A4' | 'A5' | 'B5';
   bahasaTulis?: string;
   jumlahHalaman?: number;
   jumlahKata?: number;
