@@ -621,8 +621,22 @@ export class UploadService {
     idPengguna: string,
   ): Promise<UploadResponseDto> {
     // Parse URL untuk mendapatkan path file
-    // URL format: /uploads/naskah/filename.docx
-    const urlPath = fileUrl.replace(/^\/uploads\//, '');
+    // Support berbagai format URL:
+    // - http://localhost:4000/uploads/naskah/filename.docx (full URL)
+    // - /uploads/naskah/filename.docx (relative URL)
+    // - uploads/naskah/filename.docx (path only)
+    
+    let urlPath = fileUrl;
+    
+    // Remove full URL prefix jika ada (http://host:port)
+    const urlMatch = fileUrl.match(/^https?:\/\/[^\/]+(.+)$/);
+    if (urlMatch) {
+      urlPath = urlMatch[1]; // /uploads/naskah/filename.docx
+    }
+    
+    // Remove /uploads/ prefix
+    urlPath = urlPath.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
+    
     const filePath = path.join(this.uploadDir, urlPath);
     
     // Cek apakah file fisik exists
