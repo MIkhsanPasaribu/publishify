@@ -82,9 +82,9 @@ export default function DashboardPage() {
       
       // Priority redirect: Admin > Editor > Percetakan > Penulis
       if (isAdmin) {
-        console.log("Redirecting admin to /dashboard/admin");
+        console.log("Redirecting admin to /admin");
         setIsRedirecting(true);
-        router.replace("/dashboard/admin");
+        router.replace("/admin");
         return;
       }
       
