@@ -170,6 +170,15 @@ export const naskahApi = {
   },
 
   /**
+   * PUT /naskah/:id/terbitkan - Admin terbitkan naskah (dari disetujui ke diterbitkan)
+   * Role: admin, editor
+   */
+  async terbitkanNaskah(id: string, payload: { isbn: string; biayaProduksi: number }): Promise<ResponseSukses<Naskah>> {
+    const { data } = await api.put<ResponseSukses<Naskah>>(`/naskah/${id}/terbitkan`, payload);
+    return data;
+  },
+
+  /**
    * DELETE /naskah/:id - Hapus naskah
    */
   async hapusNaskah(id: string): Promise<ResponseSukses<void>> {
