@@ -751,12 +751,13 @@ export class NaskahService {
       }
     }
 
-    // Update naskah dengan ISBN, biaya produksi, dan status diterbitkan
+    // Update naskah dengan ISBN, format buku, jumlah halaman, dan status diterbitkan
     const naskahUpdated = await this.prisma.naskah.update({
       where: { id },
       data: {
         isbn: dto.isbn,
-        biayaProduksi: dto.biayaProduksi,
+        formatBuku: dto.formatBuku,
+        jumlahHalaman: dto.jumlahHalaman,
         status: StatusNaskah.diterbitkan,
         diterbitkanPada: new Date(),
         // Catatan: publik akan di-set true setelah penulis set harga jual
@@ -773,7 +774,7 @@ export class NaskahService {
       data: {
         idPengguna: naskah.idPenulis,
         judul: 'Naskah Anda Telah Diterbitkan!',
-        pesan: `Selamat! Naskah "${naskah.judul}" telah diterbitkan dengan ISBN ${dto.isbn}. Modal cetak ditetapkan sebesar Rp ${dto.biayaProduksi.toLocaleString('id-ID')}. Silakan atur harga jual buku Anda.`,
+        pesan: `Selamat! Naskah "${naskah.judul}" telah diterbitkan dengan ISBN ${dto.isbn}. Jumlah halaman: ${dto.jumlahHalaman} halaman. Silakan atur harga jual buku Anda.`,
         tipe: 'info',
         url: `/dashboard/penulis/atur-harga`,
       },
@@ -787,7 +788,7 @@ export class NaskahService {
         aksi: 'Terbitkan Naskah',
         entitas: 'Naskah',
         idEntitas: id,
-        deskripsi: `Naskah "${naskah.judul}" berhasil diterbitkan dengan ISBN ${dto.isbn} dan biaya produksi Rp ${dto.biayaProduksi.toLocaleString('id-ID')}`,
+        deskripsi: `Naskah "${naskah.judul}" berhasil diterbitkan dengan ISBN ${dto.isbn}, ${dto.jumlahHalaman} halaman`,
       },
     });
 

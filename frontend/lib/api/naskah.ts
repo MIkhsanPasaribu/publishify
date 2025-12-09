@@ -174,8 +174,13 @@ export const naskahApi = {
   /**
    * PUT /naskah/:id/terbitkan - Admin terbitkan naskah (dari disetujui ke diterbitkan)
    * Role: admin, editor
+   * Field: isbn, formatBuku (opsional), jumlahHalaman
    */
-  async terbitkanNaskah(id: string, payload: { isbn: string; biayaProduksi: number }): Promise<ResponseSukses<Naskah>> {
+  async terbitkanNaskah(id: string, payload: { 
+    isbn: string; 
+    formatBuku?: 'A4' | 'A5' | 'B5';
+    jumlahHalaman: number;
+  }): Promise<ResponseSukses<Naskah>> {
     const { data } = await api.put<ResponseSukses<Naskah>>(`/naskah/${id}/terbitkan`, payload);
     return data;
   },

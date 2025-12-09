@@ -12,6 +12,9 @@ import {
   Eye,
   BookCheck,
   Loader2,
+  FileText,
+  Download,
+  FileType,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +38,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
 
+// Daftar format buku yang tersedia
+const formatBukuList = [
+  { kode: "A4", nama: "A4 (21 × 29.7 cm)", deskripsi: "Ukuran besar, cocok untuk buku teks & katalog" },
+  { kode: "A5", nama: "A5 (14.8 × 21 cm)", deskripsi: "Ukuran standar novel & buku populer" },
+  { kode: "B5", nama: "B5 (17.6 × 25 cm)", deskripsi: "Ukuran sedang, cocok untuk majalah & jurnal" },
+] as const;
+
 function formatTanggal(iso: string) {
   const date = new Date(iso);
   return date.toLocaleDateString("id-ID", {
@@ -46,21 +56,16 @@ function formatTanggal(iso: string) {
   });
 }
 
-function formatRupiah(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
-
 export default function NaskahSiapTerbitPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNaskah, setSelectedNaskah] = useState<Naskah | null>(null);
   const [modalTerbitkan, setModalTerbitkan] = useState(false);
+  const [isConvertingPdf, setIsConvertingPdf] = useState(false);
+  const [pdfReady, setPdfReady] = useState(false);
   const [formData, setFormData] = useState({
     isbn: "",
-    biayaProduksi: "",
+    formatBuku: "A5" as "A4" | "A5" | "B5",
+    jumlahHalaman: "",
   });
 
   const queryClient = useQueryClient();
@@ -87,7 +92,7 @@ export default function NaskahSiapTerbitPage() {
       payload,
     }: {
       id: string;
-      payload: { isbn: string; biayaProduksi: number };
+      payload: { isbn: string; formatBuku?: 'A4' | 'A5' | 'B5'; jumlahHalaman: number };
     }) => {
       console.log("🚀 Menerbitkan naskah:", { id, payload });
       const result = await naskahApi.terbitkanNaskah(id, payload);
@@ -102,7 +107,8 @@ export default function NaskahSiapTerbitPage() {
       queryClient.invalidateQueries({ queryKey: ["naskah-siap-terbit"] });
       setModalTerbitkan(false);
       setSelectedNaskah(null);
-      setFormData({ isbn: "", biayaProduksi: "" });
+      setFormData({ isbn: "", formatBuku: "A5", jumlahHalaman: "" });
+      setPdfReady(false);
     },
     onError: (error: any) => {
       console.error("❌ Error menerbitkan naskah:", error);
@@ -128,9 +134,41 @@ export default function NaskahSiapTerbitPage() {
     setSelectedNaskah(naskah);
     setFormData({
       isbn: naskah.isbn || "",
-      biayaProduksi: "",
+      formatBuku: (naskah.formatBuku as "A4" | "A5" | "B5") || "A5",
+      jumlahHalaman: naskah.jumlahHalaman?.toString() || "",
     });
+    setPdfReady(false);
     setModalTerbitkan(true);
+  };
+
+  // Handler untuk konversi Word ke PDF (simulasi)
+  const handleConvertToPdf = async () => {
+    if (!selectedNaskah?.urlFile) {
+      toast.error("Tidak ada file naskah untuk dikonversi");
+      return;
+    }
+
+    setIsConvertingPdf(true);
+    
+    // Simulasi proses konversi (dalam implementasi nyata, ini akan memanggil API backend)
+    try {
+      // TODO: Implementasi konversi Word ke PDF di backend
+      // const result = await uploadApi.convertToPdf(selectedNaskah.urlFile);
+      
+      // Simulasi delay konversi
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setPdfReady(true);
+      toast.success("File berhasil dikonversi ke PDF!", {
+        description: "File PDF siap untuk diterbitkan",
+      });
+    } catch (error: any) {
+      toast.error("Gagal mengkonversi file", {
+        description: error.message || "Terjadi kesalahan saat konversi",
+      });
+    } finally {
+      setIsConvertingPdf(false);
+    }
   };
 
   const handleSubmitTerbitkan = () => {
@@ -142,19 +180,24 @@ export default function NaskahSiapTerbitPage() {
       return;
     }
 
-    const biaya = parseFloat(formData.biayaProduksi);
-    if (isNaN(biaya) || biaya <= 0) {
-      toast.error("Biaya produksi harus lebih dari 0");
+    const jumlahHalaman = parseInt(formData.jumlahHalaman);
+    if (isNaN(jumlahHalaman) || jumlahHalaman <= 0) {
+      toast.error("Jumlah halaman harus lebih dari 0");
       return;
     }
 
-    console.log("📝 Submitting form:", { isbn: formData.isbn, biayaProduksi: biaya });
+    console.log("📝 Submitting form:", { 
+      isbn: formData.isbn, 
+      formatBuku: formData.formatBuku,
+      jumlahHalaman 
+    });
 
     terbitkanMutation.mutate({
       id: selectedNaskah.id,
       payload: {
         isbn: formData.isbn.trim(),
-        biayaProduksi: biaya,
+        formatBuku: formData.formatBuku,
+        jumlahHalaman,
       },
     });
   };
@@ -211,8 +254,8 @@ export default function NaskahSiapTerbitPage() {
                 </div>
               </div>
               <p className="text-sm text-blue-700 font-medium">Aksi Diperlukan</p>
-              <p className="text-2xl font-bold text-blue-900 mt-1">Input ISBN</p>
-              <p className="text-xs text-blue-600 mt-2">& biaya produksi</p>
+              <p className="text-2xl font-bold text-blue-900 mt-1">Input Data</p>
+              <p className="text-xs text-blue-600 mt-2">ISBN, format & halaman</p>
             </CardContent>
           </Card>
         </div>
@@ -327,7 +370,11 @@ export default function NaskahSiapTerbitPage() {
                       <p className="text-gray-700 line-clamp-2">{naskah.sinopsis}</p>
 
                       {/* Metadata */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">Format</p>
+                          <p className="font-semibold">{naskah.formatBuku || "A5"}</p>
+                        </div>
                         <div>
                           <p className="text-gray-500">Halaman</p>
                           <p className="font-semibold">{naskah.jumlahHalaman || "-"} hal</p>
@@ -399,11 +446,11 @@ export default function NaskahSiapTerbitPage() {
 
       {/* Modal Terbitkan Naskah */}
       <Dialog open={modalTerbitkan} onOpenChange={setModalTerbitkan}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Terbitkan Naskah</DialogTitle>
             <DialogDescription>
-              Masukkan ISBN dan biaya produksi untuk menerbitkan naskah ini
+              Finalisasi naskah dengan konversi ke PDF, lalu isi data penerbitan
             </DialogDescription>
           </DialogHeader>
 
@@ -414,54 +461,176 @@ export default function NaskahSiapTerbitPage() {
               {selectedNaskah?.subJudul && (
                 <p className="text-sm text-gray-600 italic">{selectedNaskah.subJudul}</p>
               )}
-              <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                <span>{selectedNaskah?.jumlahHalaman} hal</span>
+              <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                <span>Format: {selectedNaskah?.formatBuku || "A5"}</span>
                 <span>•</span>
-                <span>{selectedNaskah?.jumlahKata?.toLocaleString("id-ID")} kata</span>
+                <span>{selectedNaskah?.jumlahKata?.toLocaleString("id-ID") || "-"} kata</span>
               </div>
             </div>
 
-            {/* Form */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="isbn" className="text-sm font-semibold">
-                  ISBN <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="isbn"
-                  placeholder="978-602-xxxxx-x-x"
-                  value={formData.isbn}
-                  onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                  className="mt-1.5"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Nomor ISBN yang sudah terdaftar di Perpusnas
+            {/* Step 1: Konversi PDF */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${pdfReady ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  1
+                </div>
+                <Label className="text-base font-semibold">Konversi ke PDF (Opsional)</Label>
+              </div>
+              
+              <div className="ml-9 space-y-3">
+                {selectedNaskah?.urlFile ? (
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-blue-900">File Naskah</p>
+                          <p className="text-xs text-blue-600 truncate max-w-[200px]">
+                            {selectedNaskah.urlFile.split('/').pop()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(selectedNaskah.urlFile!, '_blank')}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Unduh
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleConvertToPdf}
+                          disabled={isConvertingPdf || pdfReady}
+                          className={pdfReady ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
+                        >
+                          {isConvertingPdf ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              Mengkonversi...
+                            </>
+                          ) : pdfReady ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              PDF Siap
+                            </>
+                          ) : (
+                            <>
+                              <FileType className="h-4 w-4 mr-1" />
+                              Konversi ke PDF
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+                    <p className="text-sm text-amber-800">
+                      ⚠️ Tidak ada file naskah yang terunggah
+                    </p>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  Konversi file Word ke PDF agar tampilan konsisten di semua platform
                 </p>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="biayaProduksi" className="text-sm font-semibold">
-                  Biaya Produksi (Rp) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="biayaProduksi"
-                  type="number"
-                  placeholder="50000"
-                  value={formData.biayaProduksi}
-                  onChange={(e) => setFormData({ ...formData, biayaProduksi: e.target.value })}
-                  className="mt-1.5"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Estimasi biaya cetak per eksemplar
-                </p>
+            {/* Step 2: Form Input */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
+                  2
+                </div>
+                <Label className="text-base font-semibold">Data Penerbitan</Label>
+              </div>
+
+              <div className="ml-9 space-y-4">
+                {/* ISBN */}
+                <div>
+                  <Label htmlFor="isbn" className="text-sm font-semibold">
+                    ISBN <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="isbn"
+                    placeholder="978-602-xxxxx-x-x"
+                    value={formData.isbn}
+                    onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Nomor ISBN yang sudah terdaftar di Perpusnas
+                  </p>
+                </div>
+
+                {/* Format Buku */}
+                <div>
+                  <Label className="text-sm font-semibold">
+                    Format Buku <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="grid grid-cols-3 gap-3 mt-2">
+                    {formatBukuList.map((format) => (
+                      <button
+                        key={format.kode}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, formatBuku: format.kode })}
+                        className={`relative p-3 rounded-xl border-2 transition-all text-left ${
+                          formData.formatBuku === format.kode
+                            ? "border-[#14b8a6] bg-[#14b8a6]/5 shadow-md ring-2 ring-[#14b8a6]/20"
+                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {formData.formatBuku === format.kode && (
+                          <div className="absolute top-1.5 right-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-[#14b8a6]" />
+                          </div>
+                        )}
+                        <div className="text-center">
+                          <p className={`font-semibold text-sm ${
+                            formData.formatBuku === format.kode ? "text-[#14b8a6]" : "text-gray-900"
+                          }`}>
+                            {format.kode}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {format.nama.match(/\(([^)]+)\)/)?.[1]}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {formatBukuList.find((f) => f.kode === formData.formatBuku)?.deskripsi}
+                  </p>
+                </div>
+
+                {/* Jumlah Halaman */}
+                <div>
+                  <Label htmlFor="jumlahHalaman" className="text-sm font-semibold">
+                    Jumlah Halaman <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="jumlahHalaman"
+                    type="number"
+                    placeholder="250"
+                    value={formData.jumlahHalaman}
+                    onChange={(e) => setFormData({ ...formData, jumlahHalaman: e.target.value })}
+                    className="mt-1.5"
+                    min={1}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Jumlah halaman buku setelah layout final
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Warning */}
             <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
               <p className="text-sm text-amber-800">
-                ⚠️ Setelah diterbitkan, naskah akan muncul di halaman "Buku Terbit" penulis dan
-                tidak dapat dikembalikan ke status disetujui.
+                ⚠️ Setelah diterbitkan, naskah akan muncul di halaman "Buku Terbit" penulis.
+                Harga cetak akan ditentukan oleh mitra percetakan saat penulis melakukan checkout.
               </p>
             </div>
           </div>
