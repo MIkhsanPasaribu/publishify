@@ -17,9 +17,16 @@ import {
   IMAGE_PRESETS,
 } from './dto';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import sharp from 'sharp';
+// @ts-ignore - libreoffice-convert tidak punya types
+import libre from 'libreoffice-convert';
+import { promisify } from 'util';
+
+// Promisify libre.convert
+const libreConvert = promisify(libre.convert);
 
 @Injectable()
 export class UploadService {
@@ -504,5 +511,203 @@ export class UploadService {
       },
       idPengguna,
     );
+  }
+
+  /**
+   * Konversi file DOCX ke PDF menggunakan LibreOffice
+   */
+  async konversiDocxKePdf(
+    id: string,
+    idPengguna: string,
+  ): Promise<UploadResponseDto> {
+    // Ambil data file dari database
+    const file = await this.prisma.file.findUnique({
+      where: { id },
+    });
+
+    if (!file) {
+      throw new NotFoundException('File tidak ditemukan');
+    }
+
+    // Validasi ekstensi file
+    const ext = file.ekstensi.toLowerCase();
+    if (ext !== '.docx' && ext !== '.doc') {
+      throw new BadRequestException('File harus berformat DOCX atau DOC untuk dikonversi ke PDF');
+    }
+
+    // Cek apakah file fisik exists
+    try {
+      await fs.access(file.path);
+    } catch {
+      throw new NotFoundException('File fisik tidak ditemukan di server');
+    }
+
+    try {
+      // Baca file DOCX
+      const docxBuffer = await fs.readFile(file.path);
+      
+      // Konversi ke PDF menggunakan LibreOffice
+      const pdfBuffer = await libreConvert(docxBuffer, '.pdf', undefined);
+      
+      // Generate nama file PDF baru
+      const pdfFilename = file.namaFileSimpan.replace(/\.(docx|doc)$/i, '.pdf');
+      const pdfPath = path.join(this.uploadDir, file.tujuan, pdfFilename);
+      const pdfRelativeUrl = `/uploads/${file.tujuan}/${pdfFilename}`;
+      
+      // Simpan file PDF
+      await fs.writeFile(pdfPath, pdfBuffer);
+      
+      // Simpan metadata ke database
+      const pdfRecord = await this.prisma.file.create({
+        data: {
+          idPengguna,
+          namaFileAsli: file.namaFileAsli.replace(/\.(docx|doc)$/i, '.pdf'),
+          namaFileSimpan: pdfFilename,
+          ukuran: pdfBuffer.length,
+          mimeType: 'application/pdf',
+          ekstensi: '.pdf',
+          tujuan: file.tujuan,
+          path: pdfPath,
+          url: pdfRelativeUrl,
+          idReferensi: file.idReferensi,
+          deskripsi: `Hasil konversi dari ${file.namaFileAsli}`,
+        },
+      });
+
+      // Log activity
+      await this.prisma.logAktivitas.create({
+        data: {
+          idPengguna,
+          jenis: 'konversi_pdf',
+          aksi: 'Konversi DOCX ke PDF',
+          entitas: 'File',
+          idEntitas: pdfRecord.id,
+          deskripsi: `File "${file.namaFileAsli}" berhasil dikonversi ke PDF`,
+        },
+      });
+
+      return {
+        id: pdfRecord.id,
+        namaFileAsli: pdfRecord.namaFileAsli,
+        namaFileSimpan: pdfRecord.namaFileSimpan,
+        url: pdfRecord.url,
+        urlPublik: pdfRecord.urlPublik ?? undefined,
+        ukuran: pdfRecord.ukuran,
+        mimeType: pdfRecord.mimeType,
+        ekstensi: pdfRecord.ekstensi,
+        tujuan: pdfRecord.tujuan,
+        path: pdfRecord.path,
+        diuploadPada: pdfRecord.diuploadPada,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Cek jika LibreOffice tidak terinstall
+      if (errorMessage.includes('soffice') || errorMessage.includes('libreoffice')) {
+        throw new InternalServerErrorException(
+          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.'
+        );
+      }
+      
+      throw new InternalServerErrorException('Gagal mengkonversi file ke PDF: ' + errorMessage);
+    }
+  }
+
+  /**
+   * Konversi file DOCX ke PDF dari URL (untuk file yang belum ada di database)
+   */
+  async konversiDocxKePdfDariUrl(
+    fileUrl: string,
+    idPengguna: string,
+  ): Promise<UploadResponseDto> {
+    // Parse URL untuk mendapatkan path file
+    // URL format: /uploads/naskah/filename.docx
+    const urlPath = fileUrl.replace(/^\/uploads\//, '');
+    const filePath = path.join(this.uploadDir, urlPath);
+    
+    // Cek apakah file fisik exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      throw new NotFoundException('File fisik tidak ditemukan di server: ' + filePath);
+    }
+
+    // Validasi ekstensi file
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext !== '.docx' && ext !== '.doc') {
+      throw new BadRequestException('File harus berformat DOCX atau DOC untuk dikonversi ke PDF');
+    }
+
+    const originalFilename = path.basename(filePath);
+    const tujuan = urlPath.split('/')[0] as TipeFile; // naskah, dokumen, etc
+
+    try {
+      // Baca file DOCX
+      const docxBuffer = await fs.readFile(filePath);
+      
+      // Konversi ke PDF menggunakan LibreOffice
+      const pdfBuffer = await libreConvert(docxBuffer, '.pdf', undefined);
+      
+      // Generate nama file PDF baru
+      const pdfFilename = originalFilename.replace(/\.(docx|doc)$/i, '.pdf');
+      const pdfPath = path.join(this.uploadDir, tujuan, pdfFilename);
+      const pdfRelativeUrl = `/uploads/${tujuan}/${pdfFilename}`;
+      
+      // Simpan file PDF
+      await fs.writeFile(pdfPath, pdfBuffer);
+      
+      // Simpan metadata ke database
+      const pdfRecord = await this.prisma.file.create({
+        data: {
+          idPengguna,
+          namaFileAsli: originalFilename.replace(/\.(docx|doc)$/i, '.pdf'),
+          namaFileSimpan: pdfFilename,
+          ukuran: pdfBuffer.length,
+          mimeType: 'application/pdf',
+          ekstensi: '.pdf',
+          tujuan: tujuan,
+          path: pdfPath,
+          url: pdfRelativeUrl,
+          deskripsi: `Hasil konversi dari ${originalFilename}`,
+        },
+      });
+
+      // Log activity
+      await this.prisma.logAktivitas.create({
+        data: {
+          idPengguna,
+          jenis: 'konversi_pdf',
+          aksi: 'Konversi DOCX ke PDF',
+          entitas: 'File',
+          idEntitas: pdfRecord.id,
+          deskripsi: `File "${originalFilename}" berhasil dikonversi ke PDF`,
+        },
+      });
+
+      return {
+        id: pdfRecord.id,
+        namaFileAsli: pdfRecord.namaFileAsli,
+        namaFileSimpan: pdfRecord.namaFileSimpan,
+        url: pdfRecord.url,
+        urlPublik: pdfRecord.urlPublik ?? undefined,
+        ukuran: pdfRecord.ukuran,
+        mimeType: pdfRecord.mimeType,
+        ekstensi: pdfRecord.ekstensi,
+        tujuan: pdfRecord.tujuan,
+        path: pdfRecord.path,
+        diuploadPada: pdfRecord.diuploadPada,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Cek jika LibreOffice tidak terinstall
+      if (errorMessage.includes('soffice') || errorMessage.includes('libreoffice')) {
+        throw new InternalServerErrorException(
+          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.'
+        );
+      }
+      
+      throw new InternalServerErrorException('Gagal mengkonversi file ke PDF: ' + errorMessage);
+    }
   }
 }

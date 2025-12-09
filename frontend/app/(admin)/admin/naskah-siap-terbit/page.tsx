@@ -40,6 +40,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
+import { uploadApi } from "@/lib/api/upload";
 
 // ============================================
 // CONSTANTS
@@ -333,7 +334,11 @@ export default function NaskahSiapTerbitPage() {
 
   const handleDownloadOriginal = () => {
     if (selectedNaskah?.urlFile) {
-      window.open(selectedNaskah.urlFile, "_blank");
+      // Buat full URL jika relative
+      const fileUrl = selectedNaskah.urlFile.startsWith("http")
+        ? selectedNaskah.urlFile
+        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}${selectedNaskah.urlFile}`;
+      window.open(fileUrl, "_blank");
     }
   };
 
@@ -343,39 +348,47 @@ export default function NaskahSiapTerbitPage() {
       return;
     }
 
+    // Cek apakah file sudah PDF
+    const fileExt = getFileExtension(selectedNaskah.urlFile);
+    if (fileExt === "pdf") {
+      // File sudah PDF, langsung gunakan
+      setConvertedPdfUrl(selectedNaskah.urlFile);
+      toast.success("File sudah dalam format PDF", {
+        description: "Tidak perlu konversi",
+      });
+      return;
+    }
+
     setIsConvertingPdf(true);
     setConvertedPdfUrl(null);
 
     try {
-      // TODO: Implementasi konversi Word ke PDF di backend
-      // const result = await uploadApi.convertToPdf(selectedNaskah.urlFile);
-      // setConvertedPdfUrl(result.data.url);
-
-      // Simulasi konversi (2 detik)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Untuk simulasi/demo:
-      // - Jika file asli sudah PDF, gunakan URL asli
-      // - Jika bukan PDF, gunakan URL asli (dalam implementasi nyata akan dikonversi)
-      // Dalam production, ini akan diganti dengan URL hasil konversi dari backend
-      const fileExt = getFileExtension(selectedNaskah.urlFile);
-      if (fileExt === "pdf") {
-        setConvertedPdfUrl(selectedNaskah.urlFile);
-      } else {
-        // Untuk demo, gunakan URL file asli agar preview tidak error
-        // Dalam implementasi nyata, backend akan mengkonversi dan return URL PDF baru
-        setConvertedPdfUrl(selectedNaskah.urlFile);
-      }
+      // Panggil API backend untuk konversi
+      const result = await uploadApi.konversiDariUrl(selectedNaskah.urlFile);
+      
+      // Set URL PDF hasil konversi
+      setConvertedPdfUrl(result.url);
 
       toast.success("Konversi berhasil!", {
-        description: fileExt === "pdf" 
-          ? "File sudah dalam format PDF" 
-          : "File berhasil dikonversi ke PDF (simulasi)",
+        description: `File berhasil dikonversi ke PDF`,
       });
     } catch (error: any) {
-      toast.error("Gagal mengkonversi file", {
-        description: error.message || "Terjadi kesalahan saat konversi",
-      });
+      console.error("Error konversi PDF:", error);
+      
+      // Handle error spesifik
+      const errorMessage = error.response?.data?.pesan || error.message || "Terjadi kesalahan saat konversi";
+      
+      // Cek jika error karena LibreOffice tidak terinstall
+      if (errorMessage.toLowerCase().includes("libreoffice")) {
+        toast.error("LibreOffice belum terinstall", {
+          description: "Fitur konversi otomatis memerlukan LibreOffice di server. Silakan gunakan 'Upload PDF Manual' sebagai alternatif.",
+          duration: 6000,
+        });
+      } else {
+        toast.error("Gagal mengkonversi file", {
+          description: errorMessage,
+        });
+      }
     } finally {
       setIsConvertingPdf(false);
     }
@@ -1181,13 +1194,19 @@ export default function NaskahSiapTerbitPage() {
                         <FileText className="h-12 w-12 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 mb-2">Preview File</p>
+                        <p className="font-semibold text-gray-900 mb-2">Preview File PDF</p>
                         <p className="text-sm text-gray-600 mb-4">
                           File tersimpan di server. Klik tombol di bawah untuk membuka preview.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-2 justify-center">
                           <Button
-                            onClick={() => window.open(finalPdfUrl, "_blank")}
+                            onClick={() => {
+                              // Buat full URL jika relative
+                              const fullUrl = finalPdfUrl.startsWith("http")
+                                ? finalPdfUrl
+                                : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}${finalPdfUrl}`;
+                              window.open(fullUrl, "_blank");
+                            }}
                             className="bg-blue-600 hover:bg-blue-700"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -1196,8 +1215,12 @@ export default function NaskahSiapTerbitPage() {
                           <Button
                             variant="outline"
                             onClick={() => {
+                              // Buat full URL jika relative
+                              const fullUrl = finalPdfUrl.startsWith("http")
+                                ? finalPdfUrl
+                                : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}${finalPdfUrl}`;
                               const link = document.createElement("a");
-                              link.href = finalPdfUrl;
+                              link.href = fullUrl;
                               link.download = getFileName(finalPdfUrl);
                               link.click();
                             }}
