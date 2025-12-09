@@ -467,7 +467,7 @@ export class NaskahService {
       where: {
         idPenulis,
         status: StatusNaskah.disetujui,
-        reviewNaskah: {
+        review: {
           some: {
             status: StatusReview.selesai,
             rekomendasi: Rekomendasi.setujui,
@@ -502,7 +502,7 @@ export class NaskahService {
             slug: true,
           },
         },
-        reviewNaskah: {
+        review: {
           where: {
             status: StatusReview.selesai,
             rekomendasi: Rekomendasi.setujui,
@@ -522,7 +522,7 @@ export class NaskahService {
             },
           },
           orderBy: {
-            dibuatPada: 'desc',
+            selesaiPada: 'desc',
           },
           take: 1, // Ambil review terakhir saja
         },
