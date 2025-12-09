@@ -71,6 +71,9 @@ api.interceptors.response.use(
         baseURL: error.config?.baseURL,
         fullURL: `${error.config?.baseURL}${error.config?.url}`,
       });
+      
+      // Log full error for debugging
+      console.error("Full error object:", error);
     }
     
     const originalRequest = error.config as any;

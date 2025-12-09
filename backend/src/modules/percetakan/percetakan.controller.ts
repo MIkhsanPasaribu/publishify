@@ -31,6 +31,7 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
 import { PenggunaSaatIni } from '@/modules/auth/decorators/pengguna-saat-ini.decorator';
+import { Public } from '@/common/decorators/public.decorator';
 import { ValidasiZodPipe } from '@/common/pipes/validasi-zod.pipe';
 import {
   BuatPesananSchema,
@@ -51,6 +52,26 @@ import {
 @UseGuards(JwtAuthGuard, PeranGuard)
 export class PercetakanController {
   constructor(private readonly percetakanService: PercetakanService) {}
+
+  /**
+   * Health check endpoint (public, tidak perlu auth)
+   * Untuk testing apakah module percetakan berjalan
+   */
+  @Get('health')
+  @Public()
+  @ApiOperation({ summary: 'Health check percetakan module' })
+  @ApiResponse({ status: 200, description: 'Module percetakan berjalan dengan baik' })
+  async healthCheck() {
+    return {
+      sukses: true,
+      pesan: 'Module percetakan berjalan dengan baik',
+      data: {
+        timestamp: new Date().toISOString(),
+        module: 'percetakan',
+        status: 'healthy',
+      },
+    };
+  }
 
   /**
    * Buat pesanan cetak baru

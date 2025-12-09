@@ -41,6 +41,9 @@ export interface Naskah {
   urlSampul?: string;
   urlFile?: string;
   publik: boolean;
+  biayaProduksi?: number | string;
+  hargaJual?: number | string;
+  diterbitkanPada?: string;
   dibuatPada: string;
   diperbaruiPada: string;
   review?: Array<{
@@ -198,3 +201,19 @@ export const naskahApi = {
     return data;
   },
 };
+
+/**
+ * GET /naskah/:id - Ambil detail naskah by ID
+ */
+export async function ambilNaskahById(id: string): Promise<ResponseSukses<Naskah>> {
+  const { data } = await api.get<ResponseSukses<Naskah>>(`/naskah/${id}`);
+  return data;
+}
+
+/**
+ * GET /naskah/penulis/saya - Ambil naskah milik penulis yang login
+ */
+export async function ambilNaskahPenulis(): Promise<ResponseSukses<Naskah[]>> {
+  const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/saya");
+  return data;
+}

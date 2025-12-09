@@ -2,26 +2,23 @@ import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * Schema Zod untuk menerbitkan naskah
+ * Schema Zod untuk Admin terbitkan naskah
+ * Admin mengisi ISBN dan biaya produksi
  */
 export const TerbitkanNaskahSchema = z.object({
   isbn: z
     .string({
       required_error: 'ISBN wajib diisi untuk penerbitan',
     })
-    .regex(
-      /^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/,
-      'Format ISBN tidak valid',
-    )
+    .min(1, 'ISBN tidak boleh kosong')
     .trim(),
 
-  tanggalTerbit: z
-    .string()
-    .datetime('Format tanggal tidak valid')
-    .optional()
-    .default(() => new Date().toISOString()),
-
-  catatan: z.string().max(500, 'Catatan maksimal 500 karakter').trim().optional().nullable(),
+  biayaProduksi: z
+    .number({
+      required_error: 'Biaya produksi wajib diisi',
+    })
+    .positive('Biaya produksi harus lebih dari 0')
+    .min(0, 'Biaya produksi minimal 0'),
 });
 
 /**
@@ -34,26 +31,16 @@ export type TerbitkanNaskahDto = z.infer<typeof TerbitkanNaskahSchema>;
  */
 export class TerbitkanNaskahDtoClass {
   @ApiProperty({
-    description: 'ISBN naskah (International Standard Book Number)',
-    example: '978-3-16-148410-0',
+    description: 'Nomor ISBN yang sudah diurus di Perpusnas',
+    example: '978-602-xxxxx-x-x',
     type: String,
   })
   isbn!: string;
 
   @ApiProperty({
-    description: 'Tanggal penerbitan (ISO 8601 format)',
-    example: '2025-10-29T00:00:00.000Z',
-    required: false,
-    type: String,
+    description: 'Biaya produksi untuk cetak buku (dalam Rupiah)',
+    example: 30000,
+    type: Number,
   })
-  tanggalTerbit?: string;
-
-  @ApiProperty({
-    description: 'Catatan penerbitan',
-    example: 'Edisi pertama - Cetakan pertama',
-    required: false,
-    maxLength: 500,
-    type: String,
-  })
-  catatan?: string;
+  biayaProduksi!: number;
 }

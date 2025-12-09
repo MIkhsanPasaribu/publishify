@@ -51,6 +51,29 @@ export const BuatPesananSchema = z.object({
     .max(1000, 'Catatan maksimal 1000 karakter')
     .optional()
     .describe('Catatan tambahan untuk pesanan'),
+
+  hargaTotal: z
+    .number()
+    .positive('Harga total harus lebih dari 0')
+    .describe('Total harga pesanan cetak'),
+
+  alamatPengiriman: z
+    .string()
+    .min(10, 'Alamat pengiriman minimal 10 karakter')
+    .max(500, 'Alamat pengiriman maksimal 500 karakter')
+    .describe('Alamat lengkap pengiriman'),
+
+  namaPenerima: z
+    .string()
+    .min(3, 'Nama penerima minimal 3 karakter')
+    .max(100, 'Nama penerima maksimal 100 karakter')
+    .describe('Nama lengkap penerima'),
+
+  teleponPenerima: z
+    .string()
+    .min(8, 'Nomor telepon minimal 8 karakter')
+    .max(20, 'Nomor telepon maksimal 20 karakter')
+    .describe('Nomor telepon penerima'),
 });
 
 export type BuatPesananDto = z.infer<typeof BuatPesananSchema>;
@@ -114,4 +137,35 @@ export class BuatPesananDtoClass implements BuatPesananDto {
     maxLength: 1000,
   })
   catatan?: string;
+
+  @ApiProperty({
+    description: 'Total harga pesanan cetak',
+    example: 500000,
+    minimum: 0,
+  })
+  hargaTotal!: number;
+
+  @ApiProperty({
+    description: 'Alamat lengkap pengiriman',
+    example: 'Jl. Merdeka No. 123, RT 01/RW 02, Kelurahan Sukamaju, Kecamatan Bandung Utara, Kota Bandung, Jawa Barat 40123',
+    minLength: 10,
+    maxLength: 500,
+  })
+  alamatPengiriman!: string;
+
+  @ApiProperty({
+    description: 'Nama lengkap penerima',
+    example: 'Budi Santoso',
+    minLength: 3,
+    maxLength: 100,
+  })
+  namaPenerima!: string;
+
+  @ApiProperty({
+    description: 'Nomor telepon penerima',
+    example: '081234567890',
+    minLength: 8,
+    maxLength: 20,
+  })
+  teleponPenerima!: string;
 }

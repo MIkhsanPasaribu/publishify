@@ -234,6 +234,8 @@ model Naskah {
   urlSampul      String?
   urlFile        String?
   publik         Boolean      @default(false)
+  biayaProduksi  Decimal?     @db.Decimal(10, 2)
+  hargaJual      Decimal?     @db.Decimal(10, 2)
   diterbitkanPada DateTime?
   dibuatPada     DateTime     @default(now())
   diperbaruiPada DateTime     @updatedAt

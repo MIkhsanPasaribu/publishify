@@ -5,26 +5,47 @@
 
 import client from "./client";
 import type {
-  ApiResponse,
   PesananCetak,
-  StatistikDashboard,
-  PaginationParams,
+  ResponsePesananList,
+  ResponsePesananDetail,
+  ResponseStatistikPercetakan,
+  FilterPesanan,
   UpdateStatusPesananDto,
+  KonfirmasiPesananDto,
+  BuatPengirimanDto,
+  BuatPesananCetakDto,
+  Pembayaran,
+  KonfirmasiPembayaranDto,
   LogProduksi,
   TambahLogProduksiDto,
-  Pengiriman,
-  InputPengirimanDto,
-  Pembayaran,
-  VerifikasiPembayaranDto,
-  TrackingLog,
 } from "@/types/percetakan";
+
+// Re-export types untuk backward compatibility
+export type { 
+  PesananCetak,
+  Pembayaran,
+  LogProduksi,
+} from "@/types/percetakan";
+
+// Alias untuk backward compatibility
+export type BuatPesananCetakPayload = BuatPesananCetakDto;
+
+// ============= PESANAN CETAK =============
+
+/**
+ * Buat pesanan cetak baru
+ */
+export async function buatPesananCetak(
+  dto: BuatPesananCetakDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.post("/percetakan", dto);
+  return response.data;
+}
 
 /**
  * Ambil statistik dashboard percetakan
  */
-export async function ambilStatistikDashboard(): Promise<
-  ApiResponse<StatistikDashboard>
-> {
+export async function ambilStatistikPercetakan(): Promise<ResponseStatistikPercetakan> {
   const response = await client.get("/percetakan/statistik");
   return response.data;
 }
@@ -33,9 +54,14 @@ export async function ambilStatistikDashboard(): Promise<
  * Ambil daftar pesanan dengan pagination dan filter
  */
 export async function ambilDaftarPesanan(
-  params?: PaginationParams
-): Promise<ApiResponse<PesananCetak[]>> {
-  const response = await client.get("/percetakan", { params });
+  filter?: FilterPesanan
+): Promise<ResponsePesananList> {
+  // Bersihkan filter dari undefined values
+  const cleanFilter = filter ? Object.fromEntries(
+    Object.entries(filter).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+  ) : {};
+  
+  const response = await client.get("/percetakan", { params: cleanFilter });
   return response.data;
 }
 
@@ -44,57 +70,53 @@ export async function ambilDaftarPesanan(
  */
 export async function ambilDetailPesanan(
   id: string
-): Promise<ApiResponse<PesananCetak>> {
+): Promise<ResponsePesananDetail> {
   const response = await client.get(`/percetakan/${id}`);
   return response.data;
 }
 
 /**
- * Terima pesanan (ubah status dari tertunda ke diterima)
- */
-export async function terimaPesanan(
-  id: string,
-  catatan?: string
-): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.post(`/percetakan/${id}/konfirmasi`, {
-    catatan,
-  });
-  return response.data;
-}
-
-/**
- * Tolak pesanan (ubah status menjadi dibatalkan)
- */
-export async function tolakPesanan(
-  id: string,
-  alasan: string
-): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.put(`/percetakan/${id}/batal`, {
-    alasan,
-  });
-  return response.data;
-}
-
-/**
- * Update status pesanan
+ * Update status pesanan (untuk tracking produksi)
  */
 export async function updateStatusPesanan(
   id: string,
   dto: UpdateStatusPesananDto
-): Promise<ApiResponse<PesananCetak>> {
-  const response = await client.patch(`/percetakan/${id}/status`, dto);
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/status`, dto);
   return response.data;
 }
 
 /**
- * Ambil log produksi pesanan
+ * Konfirmasi atau tolak pesanan oleh percetakan
+ */
+export async function konfirmasiPesanan(
+  id: string,
+  dto: KonfirmasiPesananDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/konfirmasi`, dto);
+  return response.data;
+}
+
+/**
+ * Batalkan pesanan
+ */
+export async function batalkanPesanan(
+  id: string,
+  alasan?: string
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/batal`, { alasan });
+  return response.data;
+}
+
+// ============= LOG PRODUKSI =============
+
+/**
+ * Ambil log produksi by ID pesanan
  */
 export async function ambilLogProduksi(
   idPesanan: string
-): Promise<ApiResponse<LogProduksi[]>> {
-  const response = await client.get(
-    `/percetakan/${idPesanan}/log-produksi`
-  );
+): Promise<{ sukses: boolean; data: LogProduksi[] }> {
+  const response = await client.get(`/percetakan/${idPesanan}/log-produksi`);
   return response.data;
 }
 
@@ -104,181 +126,97 @@ export async function ambilLogProduksi(
 export async function tambahLogProduksi(
   idPesanan: string,
   dto: TambahLogProduksiDto
-): Promise<ApiResponse<LogProduksi>> {
-  const response = await client.post(
-    `/percetakan/${idPesanan}/log-produksi`,
-    dto
-  );
+): Promise<{ sukses: boolean; data: LogProduksi }> {
+  const response = await client.post(`/percetakan/${idPesanan}/log-produksi`, dto);
   return response.data;
 }
 
-/**
- * Ambil data pengiriman pesanan
- */
-export async function ambilPengiriman(
-  idPesanan: string
-): Promise<ApiResponse<Pengiriman>> {
-  const response = await client.get(`/percetakan/${idPesanan}/pengiriman`);
-  return response.data;
-}
+// ============= PENGIRIMAN =============
 
 /**
- * Input data pengiriman
+ * Buat data pengiriman untuk pesanan
  */
-export async function inputPengiriman(
+export async function buatPengiriman(
   idPesanan: string,
-  dto: InputPengirimanDto
-): Promise<ApiResponse<Pengiriman>> {
-  const response = await client.post(
-    `/percetakan/${idPesanan}/pengiriman`,
-    dto
-  );
+  dto: BuatPengirimanDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.post(`/percetakan/${idPesanan}/pengiriman`, dto);
+  return response.data;
+}
+
+// ============= PEMBAYARAN =============
+
+/**
+ * Ambil daftar pembayaran
+ */
+export async function ambilDaftarPembayaran(
+  filter?: { status?: string; halaman?: number; limit?: number }
+): Promise<{ sukses: boolean; data: Pembayaran[]; metadata: any }> {
+  const response = await client.get("/pembayaran", { params: filter });
   return response.data;
 }
 
 /**
- * Update data pengiriman
+ * Ambil detail pembayaran by ID
  */
-export async function updatePengiriman(
-  idPengiriman: string,
-  dto: Partial<InputPengirimanDto>
-): Promise<ApiResponse<Pengiriman>> {
-  const response = await client.patch(
-    `/percetakan/pengiriman/${idPengiriman}`,
-    dto
-  );
+export async function ambilDetailPembayaran(
+  id: string
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.get(`/pembayaran/${id}`);
   return response.data;
 }
 
 /**
- * Ambil tracking log pengiriman
+ * Konfirmasi pembayaran
  */
-export async function ambilTrackingLog(
-  idPengiriman: string
-): Promise<ApiResponse<TrackingLog[]>> {
-  const response = await client.get(
-    `/percetakan/pengiriman/${idPengiriman}/tracking`
-  );
+export async function konfirmasiPembayaran(
+  id: string,
+  dto: KonfirmasiPembayaranDto
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.put(`/pembayaran/${id}/konfirmasi`, dto);
   return response.data;
 }
 
 /**
- * Tambah tracking log
+ * Batalkan pembayaran
  */
-export async function tambahTrackingLog(
-  idPengiriman: string,
-  data: Omit<TrackingLog, "id" | "idPengiriman" | "waktu">
-): Promise<ApiResponse<TrackingLog>> {
-  const response = await client.post(
-    `/percetakan/pengiriman/${idPengiriman}/tracking`,
-    data
-  );
+export async function batalkanPembayaran(
+  id: string,
+  alasan?: string
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.put(`/pembayaran/${id}/batal`, { alasan });
   return response.data;
 }
 
-/**
- * Ambil pembayaran pesanan
- */
-export async function ambilPembayaran(
-  idPesanan: string
-): Promise<ApiResponse<Pembayaran[]>> {
-  const response = await client.get(`/api/pembayaran/pesanan/${idPesanan}`);
-  return response.data;
-}
+// ============= DEFAULT EXPORT =============
+// Export sebagai object untuk backward compatibility
 
-/**
- * Verifikasi pembayaran
- */
-export async function verifikasiPembayaran(
-  idPembayaran: string,
-  dto: VerifikasiPembayaranDto
-): Promise<ApiResponse<Pembayaran>> {
-  const response = await client.patch(
-    `/api/pembayaran/${idPembayaran}/verifikasi`,
-    dto
-  );
-  return response.data;
-}
-
-/**
- * Download file naskah
- */
-export async function downloadFileNaskah(urlFile: string): Promise<Blob> {
-  const response = await client.get(urlFile, {
-    responseType: "blob",
-  });
-  return response.data;
-}
-
-// ================================
-// TYPES & INTERFACES untuk Penulis/Pemesan
-// ================================
-
-/**
- * Payload untuk membuat pesanan cetak baru
- * Digunakan oleh penulis untuk memesan cetak buku
- */
-export interface BuatPesananCetakPayload {
-  idNaskah: string;
-  jumlah: number;
-  alamatPengiriman: {
-    penerima: string;
-    telepon: string;
-    alamat: string;
-    kota: string;
-    provinsi: string;
-    kodePos: string;
-  };
-  kurir: string; // mis. "jne_reg", "sicepat_best"
-  catatan?: string;
-}
-
-// ================================
-// API CLIENT OBJECT (Legacy Support)
-// ================================
-
-/**
- * Object-style API client untuk backward compatibility
- * dengan halaman yang sudah ada (buku-terbit, pesanan-cetak, dll)
- */
-export const percetakanApi = {
-  /**
-   * Buat pesanan cetak baru (untuk penulis)
-   */
-  async buatPesananCetak(
-    payload: BuatPesananCetakPayload
-  ): Promise<ApiResponse<{ idPesanan: string }>> {
-    const response = await client.post("/percetakan", payload);
-    return response.data;
-  },
-
-  /**
-   * Ambil daftar pesanan milik penulis yang login
-   */
-  async ambilPesananSaya(): Promise<ApiResponse<PesananCetak[]>> {
-    const response = await client.get("/percetakan/penulis/saya");
-    return response.data;
-  },
-
-  /**
-   * Ambil detail pesanan by ID
-   */
-  async ambilPesananById(id: string): Promise<ApiResponse<PesananCetak>> {
-    const response = await client.get(`/percetakan/${id}`);
-    return response.data;
-  },
-
-  /**
-   * Batalkan pesanan (hanya status tertunda)
-   */
-  async batalkanPesanan(
-    id: string,
-    alasan?: string
-  ): Promise<ApiResponse<{ status: string }>> {
-    const response = await client.put(`/percetakan/${id}/batal`, { alasan });
-    return response.data;
-  },
+const percetakanApi = {
+  // Statistik
+  ambilStatistikPercetakan,
+  
+  // Pesanan
+  buatPesananCetak,
+  ambilDaftarPesanan,
+  ambilDetailPesanan,
+  updateStatusPesanan,
+  konfirmasiPesanan,
+  batalkanPesanan,
+  
+  // Log Produksi
+  ambilLogProduksi,
+  tambahLogProduksi,
+  
+  // Pengiriman
+  buatPengiriman,
+  
+  // Pembayaran
+  ambilDaftarPembayaran,
+  ambilDetailPembayaran,
+  konfirmasiPembayaran,
+  batalkanPembayaran,
 };
 
-
+export default percetakanApi;
+export { percetakanApi };
 

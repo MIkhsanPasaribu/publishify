@@ -1,351 +1,397 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, Filter, Package, ChevronLeft, ChevronRight } from "lucide-react";
-import { ambilDaftarPesanan } from "@/lib/api/percetakan";
-import type { PesananCetak, StatusPesanan } from "@/types/percetakan";
+import { useState } from "react";
 import Link from "next/link";
+import {
+  Package,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Printer,
+  AlertCircle,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function DaftarPesananPage() {
-  const [pesanan, setPesanan] = useState<PesananCetak[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [halaman, setHalaman] = useState(1);
-  const [totalHalaman, setTotalHalaman] = useState(1);
-  const [filterStatus, setFilterStatus] = useState<StatusPesanan | "semua">("semua");
-  const [cari, setCari] = useState("");
+// Dummy Data - Pesanan yang perlu dikelola oleh percetakan
+const DUMMY_PESANAN = [
+  {
+    id: "1",
+    nomorPesanan: "PO-20251126-1234",
+    judul: "Petualangan di Negeri Dongeng",
+    pemesan: "Ahmad Rudi",
+    email: "ahmad.rudi@email.com",
+    jumlah: 100,
+    formatKertas: "A5",
+    jenisKertas: "Bookpaper",
+    jenisCover: "Soft Cover",
+    hargaTotal: 2500000,
+    status: "dalam_produksi",
+    tanggalPesan: "2025-11-26T10:00:00Z",
+    estimasiSelesai: "2025-12-03T10:00:00Z",
+    progress: 45,
+  },
+  {
+    id: "2",
+    nomorPesanan: "PO-20251125-5678",
+    judul: "Panduan Lengkap Pemrograman Web",
+    pemesan: "Siti Nurhaliza",
+    email: "siti.nur@email.com",
+    jumlah: 50,
+    formatKertas: "A4",
+    jenisKertas: "HVS 80gr",
+    jenisCover: "Hard Cover",
+    hargaTotal: 3500000,
+    status: "kontrol_kualitas",
+    tanggalPesan: "2025-11-25T14:30:00Z",
+    estimasiSelesai: "2025-11-30T10:00:00Z",
+    progress: 85,
+  },
+  {
+    id: "3",
+    nomorPesanan: "PO-20251124-9012",
+    judul: "Resep Masakan Nusantara",
+    pemesan: "Budi Santoso",
+    email: "budi.santoso@email.com",
+    jumlah: 200,
+    formatKertas: "A5",
+    jenisKertas: "Art Paper 120gr",
+    jenisCover: "Soft Cover",
+    hargaTotal: 4800000,
+    status: "siap",
+    tanggalPesan: "2025-11-24T09:00:00Z",
+    estimasiSelesai: "2025-11-29T10:00:00Z",
+    progress: 100,
+  },
+  {
+    id: "4",
+    nomorPesanan: "PO-20251123-3456",
+    judul: "Kisah Inspiratif Para Pejuang",
+    pemesan: "Dewi Lestari",
+    email: "dewi.l@email.com",
+    jumlah: 75,
+    formatKertas: "B5",
+    jenisKertas: "Bookpaper",
+    jenisCover: "Hard Cover",
+    hargaTotal: 4200000,
+    status: "tertunda",
+    tanggalPesan: "2025-11-23T11:00:00Z",
+    progress: 0,
+  },
+  {
+    id: "5",
+    nomorPesanan: "PO-20251122-7890",
+    judul: "Belajar Bahasa Inggris dengan Mudah",
+    pemesan: "Eko Prasetyo",
+    email: "eko.p@email.com",
+    jumlah: 150,
+    formatKertas: "A5",
+    jenisKertas: "HVS 70gr",
+    jenisCover: "Soft Cover",
+    hargaTotal: 3200000,
+    status: "diterima",
+    tanggalPesan: "2025-11-22T16:00:00Z",
+    estimasiSelesai: "2025-11-29T10:00:00Z",
+    progress: 15,
+  },
+];
 
-  const limit = 10;
+const STATUS_CONFIG = {
+  tertunda: {
+    label: "Tertunda",
+    icon: AlertCircle,
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    dotColor: "bg-amber-500",
+  },
+  diterima: {
+    label: "Diterima",
+    icon: CheckCircle2,
+    color: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    dotColor: "bg-cyan-500",
+  },
+  dalam_produksi: {
+    label: "Dalam Produksi",
+    icon: Printer,
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    dotColor: "bg-blue-500",
+  },
+  kontrol_kualitas: {
+    label: "Quality Control",
+    icon: CheckCircle2,
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    dotColor: "bg-purple-500",
+  },
+  siap: {
+    label: "Siap Kirim",
+    icon: Package,
+    color: "bg-green-100 text-green-800 border-green-200",
+    dotColor: "bg-green-500",
+  },
+  dikirim: {
+    label: "Dikirim",
+    icon: Package,
+    color: "bg-teal-100 text-teal-800 border-teal-200",
+    dotColor: "bg-teal-500",
+  },
+  selesai: {
+    label: "Selesai",
+    icon: CheckCircle2,
+    color: "bg-gray-100 text-gray-800 border-gray-200",
+    dotColor: "bg-gray-500",
+  },
+};
 
-  useEffect(() => {
-    loadPesanan();
-  }, [halaman, filterStatus]);
+function formatTanggal(iso: string) {
+  const date = new Date(iso);
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-  async function loadPesanan() {
-    try {
-      setLoading(true);
-      const params: any = {
-        halaman,
-        limit,
-        cari: cari || undefined,
-      };
+function formatRupiah(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
+}
 
-      if (filterStatus !== "semua") {
-        params.status = filterStatus;
-      }
+export default function DaftarPesananPercetakanPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("semua");
 
-      const response = await ambilDaftarPesanan(params);
-      if (response.sukses) {
-        setPesanan(response.data);
-        if (response.metadata) {
-          setTotalHalaman(response.metadata.totalHalaman || 1);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading pesanan:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Filter data
+  const filteredPesanan = DUMMY_PESANAN.filter((pesanan) => {
+    const matchSearch =
+      pesanan.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pesanan.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pesanan.pemesan.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = filterStatus === "semua" || pesanan.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
-  function handleSearch() {
-    setHalaman(1);
-    loadPesanan();
-  }
-
-  const statusOptions: { value: StatusPesanan | "semua"; label: string }[] = [
-    { value: "semua", label: "Semua Status" },
-    { value: "tertunda", label: "Tertunda" },
-    { value: "diterima", label: "Diterima" },
-    { value: "dalam_produksi", label: "Dalam Produksi" },
-    { value: "kontrol_kualitas", label: "Quality Control" },
-    { value: "siap", label: "Siap Kirim" },
-    { value: "dikirim", label: "Dikirim" },
-    { value: "terkirim", label: "Selesai" },
-    { value: "dibatalkan", label: "Dibatalkan" },
-  ];
+  // Statistik
+  const stats = {
+    total: DUMMY_PESANAN.length,
+    tertunda: DUMMY_PESANAN.filter((p) => p.status === "tertunda").length,
+    produksi: DUMMY_PESANAN.filter((p) => p.status === "dalam_produksi").length,
+    qc: DUMMY_PESANAN.filter((p) => p.status === "kontrol_kualitas").length,
+    siap: DUMMY_PESANAN.filter((p) => p.status === "siap").length,
+  };
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-          Daftar Pesanan
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Kelola semua pesanan cetak yang masuk
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari nomor pesanan atau nama pemesan..."
-                value={cari}
-                onChange={(e) => setCari(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Status Filter */}
-          <div className="lg:w-64">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <select
-                value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e.target.value as StatusPesanan | "semua");
-                  setHalaman(1);
-                }}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent appearance-none bg-white"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Search Button */}
-          <button
-            onClick={handleSearch}
-            className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
-          >
-            Cari
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-            <p className="text-gray-600 mt-4">Memuat data...</p>
-          </div>
-        ) : pesanan.length === 0 ? (
-          <div className="p-12 text-center">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 font-medium mb-1">Tidak ada pesanan</p>
-            <p className="text-gray-500 text-sm">
-              Belum ada pesanan yang masuk saat ini
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Kelola Pesanan Cetak
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Pantau dan kelola semua pesanan cetak dari penulis
             </p>
           </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
+          <Link href="/dashboard/percetakan">
+            <Button variant="outline" className="border-slate-300">
+              Kembali ke Dashboard
+            </Button>
+          </Link>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="border-2">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-gray-600 mb-1">Total</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-amber-200 bg-amber-50/30">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-amber-700 mb-1">Tertunda</p>
+              <p className="text-2xl font-bold text-amber-800">{stats.tertunda}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-blue-200 bg-blue-50/30">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-blue-700 mb-1">Produksi</p>
+              <p className="text-2xl font-bold text-blue-800">{stats.produksi}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-purple-200 bg-purple-50/30">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-purple-700 mb-1">QC</p>
+              <p className="text-2xl font-bold text-purple-800">{stats.qc}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-green-200 bg-green-50/30">
+            <CardContent className="pt-4 pb-4">
+              <p className="text-xs text-green-700 mb-1">Siap Kirim</p>
+              <p className="text-2xl font-bold text-green-800">{stats.siap}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filter & Search */}
+        <Card className="border-2">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Cari pesanan, pemesan, atau judul buku..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full md:w-64 h-11">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semua">Semua Status</SelectItem>
+                  <SelectItem value="tertunda">Tertunda</SelectItem>
+                  <SelectItem value="diterima">Diterima</SelectItem>
+                  <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
+                  <SelectItem value="kontrol_kualitas">Quality Control</SelectItem>
+                  <SelectItem value="siap">Siap Kirim</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Table Pesanan */}
+        <Card className="border-2">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-50 border-b-2">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      No. Pesanan
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Pesanan
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Naskah
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Pemesan
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Spesifikasi
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tanggal
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Progress
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Aksi
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {pesanan.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/dashboard/percetakan/pesanan/${item.id}`}
-                          className="font-medium text-teal-600 hover:text-teal-700"
-                        >
-                          {item.nomorPesanan}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">
-                          {item.naskah?.judul || "-"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {item.naskah?.jumlahHalaman || 0} halaman
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-gray-900">
-                          {item.pemesan?.profilPengguna?.namaDepan}{" "}
-                          {item.pemesan?.profilPengguna?.namaBelakang}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {item.pemesan?.email}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900">
-                          {item.jumlah} eks • {item.formatKertas}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {item.jenisKertas} • {item.jenisCover}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold text-gray-900">
-                          Rp {item.hargaTotal.toLocaleString("id-ID")}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={item.status} />
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(item.tanggalPesan).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y">
+                  {filteredPesanan.map((pesanan) => {
+                    const config = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
+                    const StatusIcon = config.icon;
+
+                    return (
+                      <tr
+                        key={pesanan.id}
+                        className="hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-sm text-gray-900 mb-1">
+                            {pesanan.judul}
+                          </div>
+                          <div className="text-xs text-gray-600 font-mono">
+                            {pesanan.nomorPesanan}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {formatTanggal(pesanan.tanggalPesan)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">{pesanan.pemesan}</div>
+                          <div className="text-xs text-gray-500">{pesanan.email}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {pesanan.jumlah} eks
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {pesanan.formatKertas} • {pesanan.jenisKertas}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {pesanan.jenisCover}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            className={`${config.color} border flex items-center gap-1.5 w-fit`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor} animate-pulse`} />
+                            <StatusIcon className="h-3 w-3" />
+                            <span className="text-xs">{config.label}</span>
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                style={{ width: `${pesanan.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-gray-700">
+                              {pesanan.progress}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-slate-300"
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              Detail
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-slate-700 hover:bg-slate-800"
+                            >
+                              <Edit className="h-3.5 w-3.5 mr-1" />
+                              Update
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden divide-y divide-gray-200">
-              {pesanan.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/dashboard/percetakan/pesanan/${item.id}`}
-                  className="block p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-medium text-teal-600 mb-1">
-                        {item.nomorPesanan}
-                      </p>
-                      <StatusBadge status={item.status} />
-                    </div>
-                    <p className="font-semibold text-gray-900">
-                      Rp {item.hargaTotal.toLocaleString("id-ID")}
-                    </p>
-                  </div>
-                  <p className="font-medium text-gray-900 mb-1">
-                    {item.naskah?.judul || "-"}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {item.jumlah} eks • {item.formatKertas} • {item.jenisKertas}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(item.tanggalPesan).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Pagination */}
-      {!loading && pesanan.length > 0 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            Halaman {halaman} dari {totalHalaman}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setHalaman((p) => Math.max(1, p - 1))}
-              disabled={halaman === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Sebelumnya
-            </button>
-            <button
-              onClick={() => setHalaman((p) => Math.min(totalHalaman, p + 1))}
-              disabled={halaman === totalHalaman}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              Selanjutnya
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
-  );
-}
-
-// Component untuk Badge Status
-function StatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<string, { label: string; className: string }> = {
-    tertunda: {
-      label: "Tertunda",
-      className: "bg-yellow-100 text-yellow-800",
-    },
-    diterima: {
-      label: "Diterima",
-      className: "bg-blue-100 text-blue-800",
-    },
-    dalam_produksi: {
-      label: "Produksi",
-      className: "bg-purple-100 text-purple-800",
-    },
-    kontrol_kualitas: {
-      label: "QC",
-      className: "bg-indigo-100 text-indigo-800",
-    },
-    siap: {
-      label: "Siap Kirim",
-      className: "bg-teal-100 text-teal-800",
-    },
-    dikirim: {
-      label: "Dikirim",
-      className: "bg-cyan-100 text-cyan-800",
-    },
-    terkirim: {
-      label: "Selesai",
-      className: "bg-green-100 text-green-800",
-    },
-    dibatalkan: {
-      label: "Dibatalkan",
-      className: "bg-red-100 text-red-800",
-    },
-  };
-
-  const config = statusConfig[status] || {
-    label: status,
-    className: "bg-gray-100 text-gray-800",
-  };
-
-  return (
-    <span
-      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}
-    >
-      {config.label}
-    </span>
   );
 }
