@@ -109,18 +109,22 @@ export default function BukuTerbitPage() {
     if (!bukuTerpilih) return;
     setProses(true);
     try {
+      // Gabungkan alamat menjadi string lengkap
+      const alamatLengkap = `${v.alamat}, ${v.kota}, ${v.provinsi} ${v.kodePos}`;
+      
       const payload: BuatPesananCetakPayload = {
         idNaskah: bukuTerpilih.id,
         jumlah: Number(v.jumlah),
-        alamatPengiriman: {
-          penerima: v.penerima,
-          telepon: v.telepon,
-          alamat: v.alamat,
-          kota: v.kota,
-          provinsi: v.provinsi,
-          kodePos: v.kodePos,
-        },
-        kurir: v.kurir,
+        // Format default untuk pesanan cetak
+        formatKertas: "A5",
+        jenisKertas: "HVS 80gsm",
+        jenisCover: "Soft Cover",
+        finishingTambahan: [],
+        hargaTotal: ringkasan.total,
+        // Alamat pengiriman sebagai string
+        alamatPengiriman: alamatLengkap,
+        namaPenerima: v.penerima,
+        teleponPenerima: v.telepon,
         catatan: v.catatan,
       };
 
