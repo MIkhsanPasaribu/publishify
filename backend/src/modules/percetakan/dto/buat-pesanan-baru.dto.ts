@@ -4,24 +4,24 @@ import { ApiProperty } from '@nestjs/swagger';
 export class BuatPesananBaruDto {
   @ApiProperty({ description: 'ID Naskah', example: 'uuid-naskah' })
   @IsUUID()
-  naskahId: string;
+  naskahId!: string;
 
   @ApiProperty({ description: 'ID Percetakan yang dipilih', example: 'uuid-percetakan' })
   @IsUUID()
-  percetakanId: string;
+  percetakanId!: string;
 
   @ApiProperty({ description: 'Jenis kertas', example: 'BOOKPAPER' })
   @IsString()
-  jenisKertas: string;
+  jenisKertas!: string;
 
   @ApiProperty({ description: 'Jenis cover', example: 'SOFTCOVER' })
   @IsString()
-  jenisCover: string;
+  jenisCover!: string;
 
   @ApiProperty({ description: 'Jumlah order', example: 100 })
   @IsNumber()
   @Min(1)
-  jumlahOrder: number;
+  jumlahOrder!: number;
 
   @ApiProperty({ description: 'Catatan tambahan', required: false })
   @IsOptional()

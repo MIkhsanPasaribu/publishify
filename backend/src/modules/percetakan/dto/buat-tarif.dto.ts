@@ -4,25 +4,25 @@ import { ApiProperty } from '@nestjs/swagger';
 export class BuatTarifDto {
   @ApiProperty({ description: 'Format buku', example: 'A5' })
   @IsString()
-  formatBuku: string;
+  formatBuku!: string;
 
   @ApiProperty({ description: 'Jenis kertas', example: 'BOOKPAPER' })
   @IsString()
-  jenisKertas: string;
+  jenisKertas!: string;
 
   @ApiProperty({ description: 'Jenis cover', example: 'SOFTCOVER' })
   @IsString()
-  jenisCover: string;
+  jenisCover!: string;
 
   @ApiProperty({ description: 'Harga per halaman', example: 500 })
   @IsNumber()
   @Min(0)
-  hargaPerHalaman: number;
+  hargaPerHalaman!: number;
 
   @ApiProperty({ description: 'Biaya jilid', example: 5000 })
   @IsNumber()
   @Min(0)
-  biayaJilid: number;
+  biayaJilid!: number;
 
   @ApiProperty({ description: 'Minimum pesanan', example: 1, required: false })
   @IsOptional()

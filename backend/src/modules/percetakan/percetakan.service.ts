@@ -85,6 +85,10 @@ export class PercetakanService {
           catatan: dto.catatan,
           hargaTotal: new Decimal(dto.hargaTotal || hargaTotal),
           status: 'tertunda',
+          // Tambahkan snapshot fields yang required
+          judulSnapshot: naskah.judul,
+          formatSnapshot: dto.formatKertas,
+          jumlahHalamanSnapshot: naskah.jumlahHalaman || 0,
         },
       });
 
@@ -1116,7 +1120,8 @@ export class PercetakanService {
 
     // 3. Hitung estimasi harga untuk setiap percetakan
     const opsiHarga = tarifList.map((tarif) => {
-      const biayaCetak = tarif.hargaPerHalaman.toNumber() * naskah.jumlahHalaman;
+      const jumlahHalaman = naskah.jumlahHalaman || 0;
+      const biayaCetak = tarif.hargaPerHalaman.toNumber() * jumlahHalaman;
       const totalHarga = biayaCetak + tarif.biayaJilid.toNumber();
 
       return {
