@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, StatusPesanan } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -779,7 +779,7 @@ async function main() {
         finishingTambahan: [],
         catatan: `Pesanan untuk ${data.naskah.judul}. Mohon dikerjakan dengan kualitas terbaik.`,
         hargaTotal: data.hargaTotal,
-        status: data.status,
+        status: data.status as StatusPesanan,
         judulSnapshot: data.naskah.judul,
         formatSnapshot: data.formatKertas,
         jumlahHalamanSnapshot: data.naskah.jumlahHalaman || 0,
