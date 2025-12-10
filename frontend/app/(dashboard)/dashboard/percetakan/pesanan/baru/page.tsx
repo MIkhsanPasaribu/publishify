@@ -67,7 +67,7 @@ export default function PesananBaruPage() {
   const handleTerima = (pesanan: PesananCetak) => {
     if (
       confirm(
-        `Terima pesanan ${pesanan.nomorPesanan}?\n\nAnda akan bertanggung jawab untuk mencetak ${pesanan.jumlah} eksemplar.`
+        `Terima pesanan ${pesanan.nomorPesanan}?\n\nAnda akan bertanggung jawab untuk mencetak ${pesanan.jumlahCetak} eksemplar.`
       )
     ) {
       konfirmasiMutation.mutate({
@@ -204,10 +204,10 @@ export default function PesananBaruPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {pesanan.judulSnapshot || pesanan.naskah?.judul}
+                            {pesanan.naskah?.judul || "-"}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {pesanan.jumlahHalamanSnapshot || 0} halaman
+                            {pesanan.naskah?.jumlahHalaman || 0} halaman
                           </span>
                         </div>
                       </TableCell>
@@ -217,13 +217,13 @@ export default function PesananBaruPage() {
                           "-"}
                       </TableCell>
                       <TableCell className="text-center font-semibold">
-                        {pesanan.jumlah} eks
+                        {pesanan.jumlahCetak} eks
                       </TableCell>
                       <TableCell>
                         <div className="text-sm space-y-1">
                           <div>
                             <span className="text-gray-500">Format:</span>{" "}
-                            {pesanan.formatSnapshot}
+                            {pesanan.ukuranKertas}
                           </div>
                           <div>
                             <span className="text-gray-500">Kertas:</span>{" "}
@@ -236,7 +236,7 @@ export default function PesananBaruPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono font-semibold">
-                        {formatRupiah(pesanan.totalHarga || pesanan.hargaTotal || 0)}
+                        {formatRupiah(pesanan.totalHarga || 0)}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
@@ -286,7 +286,7 @@ export default function PesananBaruPage() {
                           {pesanan.naskah?.urlFile && (
                             <Button
                               size="sm"
-                              variant="secondary"
+                              variant="outline"
                               onClick={() => handleDownloadPDF(pesanan)}
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -328,7 +328,7 @@ export default function PesananBaruPage() {
                   <p className="text-sm text-gray-500">Tanggal Pesan</p>
                   <p className="font-medium">
                     {format(
-                      new Date(selectedPesanan.dibuatPada || selectedPesanan.tanggalPesan),
+                      new Date(selectedPesanan.dibuatPada),
                       "dd MMMM yyyy, HH:mm",
                       { locale: id }
                     )}
@@ -343,18 +343,17 @@ export default function PesananBaruPage() {
                   <div>
                     <p className="text-sm text-gray-500">Judul</p>
                     <p className="font-medium">
-                      {selectedPesanan.judulSnapshot ||
-                        selectedPesanan.naskah?.judul}
+                      {selectedPesanan.naskah?.judul || "-"}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Format</p>
-                      <p>{selectedPesanan.formatSnapshot}</p>
+                      <p>{selectedPesanan.ukuranKertas}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Jumlah Halaman</p>
-                      <p>{selectedPesanan.jumlahHalamanSnapshot} halaman</p>
+                      <p>{selectedPesanan.naskah?.jumlahHalaman || 0} halaman</p>
                     </div>
                   </div>
                 </div>
@@ -375,24 +374,24 @@ export default function PesananBaruPage() {
                   <div>
                     <p className="text-sm text-gray-500">Jumlah Cetak</p>
                     <p className="font-medium text-lg">
-                      {selectedPesanan.jumlah} eksemplar
+                      {selectedPesanan.jumlahCetak} eksemplar
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Total Harga</p>
                     <p className="font-mono font-bold text-lg text-primary">
-                      {formatRupiah(selectedPesanan.totalHarga || selectedPesanan.hargaTotal || 0)}
+                      {formatRupiah(selectedPesanan.totalHarga || 0)}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Catatan */}
-              {selectedPesanan.catatan && (
+              {selectedPesanan.catatanTambahan && (
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-2">Catatan Pemesan</h3>
                   <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
-                    {selectedPesanan.catatan}
+                    {selectedPesanan.catatanTambahan}
                   </p>
                 </div>
               )}

@@ -69,9 +69,9 @@ export default function PengirimanPage() {
     const searchLower = searchQuery.toLowerCase();
     return (
       pesanan.nomorPesanan?.toLowerCase().includes(searchLower) ||
-      pesanan.judulSnapshot?.toLowerCase().includes(searchLower) ||
+      pesanan.naskah?.judul?.toLowerCase().includes(searchLower) ||
       pesanan.pemesan?.email?.toLowerCase().includes(searchLower) ||
-      pesanan.nomorResi?.toLowerCase().includes(searchLower)
+      pesanan.pengiriman?.nomorResi?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -87,7 +87,7 @@ export default function PengirimanPage() {
 
   // Mutation untuk kirim pesanan
   const kirimPesananMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       idPesanan,
       nomorResi,
       catatan,
@@ -95,12 +95,13 @@ export default function PengirimanPage() {
       idPesanan: string;
       nomorResi: string;
       catatan: string;
-    }) =>
-      perbaruiStatusPesanan(idPesanan, {
+    }) => {
+      // Update status ke dikirim dengan catatan resi
+      return perbaruiStatusPesanan(idPesanan, {
         status: "dikirim",
-        nomorResi,
-        catatanPengiriman: catatan,
-      }),
+        catatan: `Resi: ${nomorResi}. ${catatan}`,
+      });
+    },
     onSuccess: () => {
       toast.success("Pesanan berhasil dikirim");
       queryClient.invalidateQueries({ queryKey: ["pesanan-pengiriman"] });
@@ -145,7 +146,7 @@ export default function PengirimanPage() {
 
   const openKirimDialog = (pesanan: PesananCetak) => {
     setSelectedPesanan(pesanan);
-    setNomorResi(pesanan.nomorResi || "");
+    setNomorResi(pesanan.pengiriman?.nomorResi || "");
     setCatatanPengiriman("");
     setKirimDialogOpen(true);
   };
@@ -285,7 +286,7 @@ export default function PengirimanPage() {
                       {pesanan.nomorPesanan}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {pesanan.judulSnapshot || pesanan.naskah?.judul || "-"}
+                      {pesanan.naskah?.judul || "-"}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
@@ -304,7 +305,7 @@ export default function PengirimanPage() {
                         {pesanan.alamatPengiriman || "-"}
                       </div>
                     </TableCell>
-                    <TableCell>{pesanan.jumlah} eks</TableCell>
+                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
                     <TableCell>
                       <Badge
                         className={
@@ -323,9 +324,9 @@ export default function PengirimanPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {pesanan.nomorResi ? (
+                      {pesanan.pengiriman?.nomorResi ? (
                         <span className="font-mono text-sm">
-                          {pesanan.nomorResi}
+                          {pesanan.pengiriman.nomorResi}
                         </span>
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
@@ -383,14 +384,13 @@ export default function PengirimanPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Judul:</span>
                   <span className="font-medium">
-                    {selectedPesanan.judulSnapshot ||
-                      selectedPesanan.naskah?.judul}
+                    {selectedPesanan.naskah?.judul || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Jumlah:</span>
                   <span className="font-medium">
-                    {selectedPesanan.jumlah} eksemplar
+                    {selectedPesanan.jumlahCetak} eksemplar
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

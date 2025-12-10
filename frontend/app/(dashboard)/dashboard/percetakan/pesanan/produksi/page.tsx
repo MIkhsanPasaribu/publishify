@@ -73,7 +73,7 @@ export default function DalamProduksiPage() {
     const searchLower = searchQuery.toLowerCase();
     return (
       pesanan.nomorPesanan?.toLowerCase().includes(searchLower) ||
-      pesanan.judulSnapshot?.toLowerCase().includes(searchLower) ||
+      pesanan.naskah?.judul?.toLowerCase().includes(searchLower) ||
       pesanan.pemesan?.email?.toLowerCase().includes(searchLower)
     );
   });
@@ -264,18 +264,18 @@ export default function DalamProduksiPage() {
                       {pesanan.nomorPesanan}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {pesanan.judulSnapshot || pesanan.naskah?.judul || "-"}
+                      {pesanan.naskah?.judul || "-"}
                     </TableCell>
                     <TableCell>
                       {pesanan.pemesan?.profilPengguna?.namaTampilan ||
                         pesanan.pemesan?.email ||
                         "-"}
                     </TableCell>
-                    <TableCell>{pesanan.jumlah} eks</TableCell>
+                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-600">
                         <div>
-                          {pesanan.formatSnapshot || pesanan.formatBuku} •{" "}
+                          {pesanan.ukuranKertas} •{" "}
                           {pesanan.jenisKertas}
                         </div>
                         <div>{pesanan.jenisCover}</div>
@@ -341,14 +341,13 @@ export default function DalamProduksiPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Judul:</span>
                   <span className="font-medium">
-                    {selectedPesanan.judulSnapshot ||
-                      selectedPesanan.naskah?.judul}
+                    {selectedPesanan.naskah?.judul || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Jumlah:</span>
                   <span className="font-medium">
-                    {selectedPesanan.jumlah} eksemplar
+                    {selectedPesanan.jumlahCetak} eksemplar
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

@@ -87,7 +87,7 @@ export default function RiwayatPesananPage() {
     }
 
     return pesananList.filter((p: PesananCetak) => {
-      const tanggal = p.tanggalTerkirim || p.diperbaruiPada || p.dibuatPada;
+      const tanggal = p.tanggalSelesai || p.diperbaruiPada || p.dibuatPada;
       return new Date(tanggal) >= startDate;
     });
   };
@@ -99,9 +99,9 @@ export default function RiwayatPesananPage() {
     const searchLower = searchQuery.toLowerCase();
     return (
       pesanan.nomorPesanan?.toLowerCase().includes(searchLower) ||
-      pesanan.judulSnapshot?.toLowerCase().includes(searchLower) ||
+      pesanan.naskah?.judul?.toLowerCase().includes(searchLower) ||
       pesanan.pemesan?.email?.toLowerCase().includes(searchLower) ||
-      pesanan.nomorResi?.toLowerCase().includes(searchLower)
+      pesanan.pengiriman?.nomorResi?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -270,7 +270,7 @@ export default function RiwayatPesananPage() {
                       {pesanan.nomorPesanan}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {pesanan.judulSnapshot || pesanan.naskah?.judul || "-"}
+                      {pesanan.naskah?.judul || "-"}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
@@ -281,23 +281,23 @@ export default function RiwayatPesananPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{pesanan.jumlah} eks</TableCell>
+                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
                     <TableCell className="font-semibold">
                       {formatRupiah(parseFloat(pesanan.totalHarga?.toString() || "0"))}
                     </TableCell>
                     <TableCell>
-                      {pesanan.nomorResi ? (
+                      {pesanan.pengiriman?.nomorResi ? (
                         <span className="font-mono text-sm">
-                          {pesanan.nomorResi}
+                          {pesanan.pengiriman.nomorResi}
                         </span>
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      {pesanan.tanggalTerkirim
+                      {pesanan.tanggalSelesai
                         ? format(
-                            new Date(pesanan.tanggalTerkirim),
+                            new Date(pesanan.tanggalSelesai),
                             "dd MMM yyyy",
                             { locale: id }
                           )
@@ -339,21 +339,19 @@ export default function RiwayatPesananPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Judul:</span>
                     <span className="font-medium">
-                      {selectedPesanan.judulSnapshot ||
-                        selectedPesanan.naskah?.judul}
+                      {selectedPesanan.naskah?.judul || "-"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Format:</span>
                     <span className="font-medium">
-                      {selectedPesanan.formatSnapshot ||
-                        selectedPesanan.formatBuku}
+                      {selectedPesanan.ukuranKertas}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Jumlah Halaman:</span>
                     <span className="font-medium">
-                      {selectedPesanan.jumlahHalamanSnapshot} halaman
+                      {selectedPesanan.naskah?.jumlahHalaman || "-"} halaman
                     </span>
                   </div>
                 </div>
@@ -374,7 +372,7 @@ export default function RiwayatPesananPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Jumlah Cetak:</span>
                     <span className="font-medium">
-                      {selectedPesanan.jumlah} eksemplar
+                      {selectedPesanan.jumlahCetak} eksemplar
                     </span>
                   </div>
                 </div>
@@ -387,7 +385,7 @@ export default function RiwayatPesananPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Nomor Resi:</span>
                     <span className="font-mono font-medium">
-                      {selectedPesanan.nomorResi || "-"}
+                      {selectedPesanan.pengiriman?.nomorResi || "-"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -397,11 +395,11 @@ export default function RiwayatPesananPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tanggal Terkirim:</span>
+                    <span className="text-gray-600">Tanggal Selesai:</span>
                     <span className="font-medium">
-                      {selectedPesanan.tanggalTerkirim
+                      {selectedPesanan.tanggalSelesai
                         ? format(
-                            new Date(selectedPesanan.tanggalTerkirim),
+                            new Date(selectedPesanan.tanggalSelesai),
                             "dd MMM yyyy",
                             { locale: id }
                           )

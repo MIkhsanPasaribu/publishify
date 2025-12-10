@@ -56,11 +56,17 @@ export default function DashboardPercetakanPage() {
 
   const stats = statsData?.data || {
     totalPesanan: 0,
-    pesananAktif: 0,
+    pesananTertunda: 0,
+    pesananDalamProduksi: 0,
     pesananSelesai: 0,
-    totalRevenue: 0,
-    statusBreakdown: {},
+    revenueBulanIni: 0,
+    pesananBulanIni: 0,
+    tingkatPenyelesaian: 0,
+    rataRataWaktuProduksi: 0,
   };
+
+  // Calculate pesananAktif from pesananDalamProduksi + pesananTertunda
+  const pesananAktif = stats.pesananTertunda + stats.pesananDalamProduksi;
 
   const pesananList = pesananData?.data || [];
   const pesananTerbaru = pesananList.slice(0, 5); // Ambil 5 terbaru
@@ -126,7 +132,7 @@ export default function DashboardPercetakanPage() {
               </div>
               <p className="text-sm text-gray-600 font-medium">Pesanan Aktif</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {stats.pesananAktif}
+                {pesananAktif}
               </p>
               <p className="text-xs text-gray-500 mt-2">Dalam proses</p>
             </CardContent>
@@ -156,11 +162,11 @@ export default function DashboardPercetakanPage() {
                 </div>
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-sm text-gray-600 font-medium">Total Revenue</p>
+              <p className="text-sm text-gray-600 font-medium">Revenue Bulan Ini</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatRupiah(parseFloat(stats.totalRevenue?.toString() || "0"))}
+                {formatRupiah(parseFloat(stats.revenueBulanIni?.toString() || "0"))}
               </p>
-              <p className="text-xs text-gray-500 mt-2">Semua waktu</p>
+              <p className="text-xs text-gray-500 mt-2">Bulan ini</p>
             </CardContent>
           </Card>
         </div>
@@ -177,7 +183,7 @@ export default function DashboardPercetakanPage() {
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">Pesanan Baru</p>
                     <p className="text-sm text-gray-600">
-                      {stats.statusBreakdown?.tertunda || 0} menunggu konfirmasi
+                      {stats.pesananTertunda || 0} menunggu konfirmasi
                     </p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
@@ -259,9 +265,7 @@ export default function DashboardPercetakanPage() {
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900 text-sm mb-1">
-                              {pesanan.judulSnapshot ||
-                                pesanan.naskah?.judul ||
-                                "-"}
+                              {pesanan.naskah?.judul || "-"}
                             </h4>
                             <p className="text-xs text-gray-600 font-mono">
                               {pesanan.nomorPesanan}
@@ -275,7 +279,7 @@ export default function DashboardPercetakanPage() {
                           <div className="flex items-center gap-4 text-xs text-gray-600">
                             <span className="flex items-center gap-1">
                               <Package className="h-3 w-3" />
-                              {pesanan.jumlah} eks
+                              {pesanan.jumlahCetak} eks
                             </span>
                             <span>
                               {pesanan.pemesan?.profilPengguna?.namaTampilan ||
@@ -285,9 +289,7 @@ export default function DashboardPercetakanPage() {
                           </div>
                           <span className="text-xs text-gray-500">
                             {format(
-                              new Date(
-                                pesanan.dibuatPada || pesanan.tanggalPesan
-                              ),
+                              new Date(pesanan.dibuatPada),
                               "dd MMM yyyy",
                               { locale: id }
                             )}

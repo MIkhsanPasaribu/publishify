@@ -23,7 +23,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -174,13 +173,27 @@ export default function KelolaTarifPage() {
           </p>
         </div>
 
+        <Button 
+          className="gap-2"
+          onClick={() => {
+            setEditingTarif(null);
+            setFormData({
+              formatBuku: "A5",
+              jenisKertas: "BOOKPAPER",
+              jenisCover: "SOFTCOVER",
+              hargaPerHalaman: "",
+              biayaJilid: "",
+              minimumPesanan: "1",
+              aktif: true,
+            });
+            setIsDialogOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4" />
+          Tambah Tarif
+        </Button>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Tambah Tarif
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>

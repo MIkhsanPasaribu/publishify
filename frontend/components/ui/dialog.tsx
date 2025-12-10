@@ -90,5 +90,16 @@ const DialogFooter = ({
   />
 );
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter };
+const DialogTrigger = ({
+  children,
+  onClick,
+  className = "",
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button className={className} onClick={onClick} {...props}>
+    {children}
+  </button>
+);
+
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger };
 

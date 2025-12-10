@@ -87,6 +87,11 @@ export async function updateStatusPesanan(
 }
 
 /**
+ * Alias untuk updateStatusPesanan (backward compatibility)
+ */
+export const perbaruiStatusPesanan = updateStatusPesanan;
+
+/**
  * Konfirmasi atau tolak pesanan oleh percetakan
  */
 export async function konfirmasiPesanan(
