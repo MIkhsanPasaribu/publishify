@@ -799,69 +799,91 @@ export class PercetakanService {
       where.idPercetakan = idPengguna;
     }
 
-    const [totalPesanan, pesananAktif, pesananSelesai, totalRevenue, breakdownStatus] =
-      await Promise.all([
-        // Total semua pesanan
-        this.prisma.pesananCetak.count({ where }),
+    // Hitung tanggal awal bulan ini
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-        // Pesanan aktif (belum selesai/dibatalkan)
-        this.prisma.pesananCetak.count({
-          where: {
-            ...where,
-            status: {
-              notIn: ['terkirim', 'dibatalkan'],
-            },
-          },
-        }),
+    const [
+      totalPesanan,
+      pesananTertunda,
+      pesananDalamProduksi,
+      pesananSelesai,
+      revenueBulanIni,
+      pesananBulanIni,
+    ] = await Promise.all([
+      // Total semua pesanan
+      this.prisma.pesananCetak.count({ where }),
 
-        // Pesanan selesai (terkirim)
-        this.prisma.pesananCetak.count({
-          where: {
-            ...where,
-            status: 'terkirim',
-          },
-        }),
+      // Pesanan tertunda
+      this.prisma.pesananCetak.count({
+        where: {
+          ...where,
+          status: 'tertunda',
+        },
+      }),
 
-        // Total revenue (dari pesanan yang tidak dibatalkan)
-        this.prisma.pesananCetak.aggregate({
-          where: {
-            ...where,
-            status: {
-              not: 'dibatalkan',
-            },
-          },
-          _sum: {
-            hargaTotal: true,
-          },
-        }),
+      // Pesanan dalam produksi
+      this.prisma.pesananCetak.count({
+        where: {
+          ...where,
+          status: 'dalam_produksi',
+        },
+      }),
 
-        // Breakdown berdasarkan status
-        this.prisma.pesananCetak.groupBy({
-          by: ['status'],
-          where,
-          _count: {
-            status: true,
-          },
-        }),
-      ]);
+      // Pesanan selesai (terkirim)
+      this.prisma.pesananCetak.count({
+        where: {
+          ...where,
+          status: 'terkirim',
+        },
+      }),
 
-    // Format breakdown status
-    const statusBreakdown = breakdownStatus.reduce(
-      (acc, item) => {
-        acc[item.status] = item._count.status;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+      // Revenue bulan ini
+      this.prisma.pesananCetak.aggregate({
+        where: {
+          ...where,
+          status: {
+            not: 'dibatalkan',
+          },
+          dibuatPada: {
+            gte: startOfMonth,
+          },
+        },
+        _sum: {
+          hargaTotal: true,
+        },
+      }),
+
+      // Pesanan bulan ini
+      this.prisma.pesananCetak.count({
+        where: {
+          ...where,
+          dibuatPada: {
+            gte: startOfMonth,
+          },
+        },
+      }),
+    ]);
+
+    // Hitung tingkat penyelesaian
+    const tingkatPenyelesaian =
+      totalPesanan > 0 ? Math.round((pesananSelesai / totalPesanan) * 100) : 0;
+
+    // Hitung rata-rata waktu produksi (placeholder - bisa ditingkatkan dengan data real)
+    const rataRataWaktuProduksi = 5; // 5 hari (default)
 
     return {
       sukses: true,
       data: {
         totalPesanan,
-        pesananAktif,
+        pesananTertunda,
+        pesananDalamProduksi,
         pesananSelesai,
-        totalRevenue: totalRevenue._sum.hargaTotal?.toString() || '0',
-        statusBreakdown,
+        revenueBulanIni: Number(revenueBulanIni._sum.hargaTotal || 0),
+        pesananBulanIni,
+        tingkatPenyelesaian,
+        rataRataWaktuProduksi,
       },
     };
   }

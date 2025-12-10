@@ -66,7 +66,7 @@ export default function DashboardPercetakanPage() {
   };
 
   // Calculate pesananAktif from pesananDalamProduksi + pesananTertunda
-  const pesananAktif = stats.pesananTertunda + stats.pesananDalamProduksi;
+  const pesananAktif = (Number(stats.pesananTertunda) || 0) + (Number(stats.pesananDalamProduksi) || 0);
 
   const pesananList = pesananData?.data || [];
   const pesananTerbaru = pesananList.slice(0, 5); // Ambil 5 terbaru
@@ -114,7 +114,7 @@ export default function DashboardPercetakanPage() {
               </div>
               <p className="text-sm text-gray-600 font-medium">Total Pesanan</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {stats.totalPesanan}
+                {Number(stats.totalPesanan) || 0}
               </p>
               <p className="text-xs text-gray-500 mt-2">Semua waktu</p>
             </CardContent>
@@ -148,7 +148,7 @@ export default function DashboardPercetakanPage() {
               </div>
               <p className="text-sm text-gray-600 font-medium">Selesai</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
-                {stats.pesananSelesai}
+                {Number(stats.pesananSelesai) || 0}
               </p>
               <p className="text-xs text-gray-500 mt-2">Pesanan terkirim</p>
             </CardContent>
@@ -183,7 +183,7 @@ export default function DashboardPercetakanPage() {
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">Pesanan Baru</p>
                     <p className="text-sm text-gray-600">
-                      {stats.pesananTertunda || 0} menunggu konfirmasi
+                      {Number(stats.pesananTertunda) || 0} menunggu konfirmasi
                     </p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
