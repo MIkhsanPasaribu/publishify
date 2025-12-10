@@ -308,11 +308,11 @@ export default function DetailPesananPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jumlah Eksemplar</p>
-                <p className="font-medium text-gray-900">{pesanan.jumlah} pcs</p>
+                <p className="font-medium text-gray-900">{pesanan.jumlahCetak} pcs</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Format Kertas</p>
-                <p className="font-medium text-gray-900">{pesanan.formatKertas}</p>
+                <p className="font-medium text-gray-900">{pesanan.ukuranKertas}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jenis Kertas</p>
@@ -322,20 +322,10 @@ export default function DetailPesananPage() {
                 <p className="text-sm text-gray-500 mb-1">Jenis Cover</p>
                 <p className="font-medium text-gray-900">{pesanan.jenisCover}</p>
               </div>
-              {pesanan.finishingTambahan && pesanan.finishingTambahan.length > 0 && (
-                <div className="col-span-2">
-                  <p className="text-sm text-gray-500 mb-1">Finishing Tambahan</p>
-                  <p className="font-medium text-gray-900">
-                    {pesanan.finishingTambahan.join(", ")}
-                  </p>
-                </div>
-              )}
-              {pesanan.catatan && (
+              {pesanan.catatanTambahan && (
                 <div className="col-span-2">
                   <p className="text-sm text-gray-500 mb-1">Catatan</p>
-                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
-                    {pesanan.catatan}
-                  </p>
+                  <p className="font-medium text-gray-900">{pesanan.catatanTambahan}</p>
                 </div>
               )}
             </div>
@@ -357,7 +347,7 @@ export default function DetailPesananPage() {
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-900">
-                    {pesanan.pemesan.profilPengguna?.namaLengkap ||
+                    {pesanan.pemesan.profilPengguna?.namaDepan || pesanan.pemesan.profilPengguna?.namaTampilan ||
                       pesanan.pemesan.email}
                   </span>
                 </div>
@@ -390,7 +380,7 @@ export default function DetailPesananPage() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Alamat Pengiriman</p>
-                  <p className="text-gray-900">{pesanan.pengiriman.alamat}</p>
+                  <p className="text-gray-900">{pesanan.pengiriman.alamatTujuan}</p>
                 </div>
                 {pesanan.pengiriman.nomorResi && (
                   <div>
@@ -400,10 +390,10 @@ export default function DetailPesananPage() {
                     </p>
                   </div>
                 )}
-                {pesanan.pengiriman.ekspedisi && (
+                {pesanan.pengiriman.namaEkspedisi && (
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Ekspedisi</p>
-                    <p className="text-gray-900">{pesanan.pengiriman.ekspedisi}</p>
+                    <p className="text-gray-900">{pesanan.pengiriman.namaEkspedisi}</p>
                   </div>
                 )}
               </div>
@@ -436,20 +426,20 @@ export default function DetailPesananPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Harga Satuan:</span>
                 <span className="font-medium text-teal-900">
-                  {formatRupiah(Number(pesanan.hargaTotal) / pesanan.jumlah)}
+                  {formatRupiah(Number(pesanan.totalHarga) / pesanan.jumlahCetak)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Jumlah:</span>
                 <span className="font-medium text-teal-900">
-                  {pesanan.jumlah} pcs
+                  {pesanan.jumlahCetak} pcs
                 </span>
               </div>
               <div className="h-px bg-teal-200"></div>
               <div className="flex justify-between">
                 <span className="font-semibold text-teal-900">Total:</span>
                 <span className="text-xl font-bold text-teal-600">
-                  {formatRupiah(pesanan.hargaTotal)}
+                  {formatRupiah(pesanan.totalHarga)}
                 </span>
               </div>
             </div>

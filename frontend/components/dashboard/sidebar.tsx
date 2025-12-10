@@ -7,6 +7,22 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { ambilPesananPercetakan } from "@/lib/api/percetakan";
 
+// Menu Item Types
+type MenuDivider = {
+  isDivider: true;
+  label: string;
+};
+
+type MenuItem = {
+  isDivider?: false;
+  label: string;
+  icon: React.ReactElement;
+  href: string;
+  badge?: number;
+};
+
+type MenuItemOrDivider = MenuItem | MenuDivider;
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -361,8 +377,8 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-6 px-3">
           <ul className="space-y-2">
             {menuItems.map((item, index) => {
-              // Render divider
-              if (item.isDivider) {
+              // Render divider with type guard
+              if ("isDivider" in item && item.isDivider) {
                 return (
                   <li key={index} className="pt-4 pb-2">
                     {!isCollapsed && (
@@ -379,26 +395,28 @@ export function Sidebar() {
                 );
               }
 
-              const isActive = pathname === item.href;
+              // Render normal menu item
+              const menuItem = item as MenuItem;
+              const isActive = pathname === menuItem.href;
               return (
                 <li key={index}>
                   <Link
-                    href={item.href}
+                    href={menuItem.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                       isActive
                         ? "bg-[#14b8a6] text-white shadow-lg"
                         : "hover:bg-white/10 text-white/80 hover:text-white"
                     } ${isCollapsed ? "justify-center" : ""}`}
-                    title={isCollapsed ? item.label : ""}
+                    title={isCollapsed ? menuItem.label : ""}
                   >
-                    {item.icon}
+                    {menuItem.icon}
                     {!isCollapsed && (
-                      <span className="font-medium flex-1">{item.label}</span>
+                      <span className="font-medium flex-1">{menuItem.label}</span>
                     )}
                     {/* Notification Badge */}
-                    {item.badge && item.badge > 0 && (
+                    {menuItem.badge && menuItem.badge > 0 && (
                       <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                        {item.badge > 99 ? "99+" : item.badge}
+                        {menuItem.badge > 99 ? "99+" : menuItem.badge}
                       </span>
                     )}
                   </Link>
