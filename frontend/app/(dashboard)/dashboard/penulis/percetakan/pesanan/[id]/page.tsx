@@ -451,7 +451,7 @@ export default function DetailPesananPage() {
               <div>
                 <p className="text-gray-500">Tanggal Pesanan</p>
                 <p className="font-medium text-gray-900">
-                  {formatTanggal(pesanan.tanggalPesan)}
+                  {formatTanggal(pesanan.dibuatPada)}
                 </p>
               </div>
               {pesanan.tanggalSelesai && (
