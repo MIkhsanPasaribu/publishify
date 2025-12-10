@@ -188,6 +188,80 @@ export async function batalkanPembayaran(
   return response.data;
 }
 
+// ============================================
+// TARIF PERCETAKAN (NEW)
+// ============================================
+
+/**
+ * Buat tarif percetakan baru
+ */
+export async function buatTarif(dto: any) {
+  const response = await client.post("/percetakan/tarif", dto);
+  return response.data;
+}
+
+/**
+ * Ambil semua tarif percetakan
+ */
+export async function ambilSemuaTarif(params?: { idPercetakan?: string; aktif?: boolean }) {
+  const response = await client.get("/percetakan/tarif", { params });
+  return response.data;
+}
+
+/**
+ * Ambil detail tarif by ID
+ */
+export async function ambilTarifById(id: string) {
+  const response = await client.get(`/percetakan/tarif/${id}`);
+  return response.data;
+}
+
+/**
+ * Perbarui tarif
+ */
+export async function perbaruiTarif(id: string, dto: any) {
+  const response = await client.put(`/percetakan/tarif/${id}`, dto);
+  return response.data;
+}
+
+/**
+ * Hapus tarif
+ */
+export async function hapusTarif(id: string) {
+  const response = await client.put(`/percetakan/tarif/${id}/hapus`);
+  return response.data;
+}
+
+// ============================================
+// KALKULASI & PESANAN BARU (NEW)
+// ============================================
+
+/**
+ * Kalkulasi estimasi harga dari berbagai percetakan
+ */
+export async function kalkulasiOpsiHarga(dto: any) {
+  const response = await client.post("/percetakan/kalkulasi-harga", dto);
+  return response.data;
+}
+
+/**
+ * Buat pesanan baru dengan snapshot pattern
+ */
+export async function buatPesananBaru(dto: any) {
+  const response = await client.post("/percetakan/pesanan/baru", dto);
+  return response.data;
+}
+
+/**
+ * Ambil pesanan untuk percetakan dengan filter
+ */
+export async function ambilPesananPercetakan(status?: string) {
+  const response = await client.get("/percetakan/pesanan/percetakan", {
+    params: { status },
+  });
+  return response.data;
+}
+
 // ============= DEFAULT EXPORT =============
 // Export sebagai object untuk backward compatibility
 
@@ -215,6 +289,18 @@ const percetakanApi = {
   ambilDetailPembayaran,
   konfirmasiPembayaran,
   batalkanPembayaran,
+  
+  // Tarif (NEW)
+  buatTarif,
+  ambilSemuaTarif,
+  ambilTarifById,
+  perbaruiTarif,
+  hapusTarif,
+  
+  // Kalkulasi & Pesanan Baru (NEW)
+  kalkulasiOpsiHarga,
+  buatPesananBaru,
+  ambilPesananPercetakan,
 };
 
 export default percetakanApi;

@@ -361,4 +361,126 @@ export class PercetakanController {
   ) {
     return this.percetakanService.buatPengiriman(id, idPercetakan, dto);
   }
+
+  /**
+   * ============================================
+   * TARIF PERCETAKAN ENDPOINTS
+   * ============================================
+   */
+
+  /**
+   * Buat tarif percetakan baru
+   */
+  @Post('tarif')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Buat tarif percetakan baru' })
+  @ApiResponse({ status: 201, description: 'Tarif berhasil dibuat' })
+  async buatTarif(
+    @PenggunaSaatIni('id') idPercetakan: string,
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.buatTarif(idPercetakan, dto);
+  }
+
+  /**
+   * Ambil semua tarif percetakan
+   */
+  @Get('tarif')
+  @Public()
+  @ApiOperation({ summary: 'Ambil semua tarif percetakan' })
+  @ApiQuery({ name: 'idPercetakan', required: false })
+  @ApiQuery({ name: 'aktif', required: false, type: Boolean })
+  async ambilSemuaTarif(
+    @Query('idPercetakan') idPercetakan?: string,
+    @Query('aktif') aktif?: string,
+  ) {
+    return this.percetakanService.ambilSemuaTarif(
+      idPercetakan,
+      aktif ? aktif === 'true' : undefined,
+    );
+  }
+
+  /**
+   * Ambil tarif by ID
+   */
+  @Get('tarif/:id')
+  @Public()
+  @ApiOperation({ summary: 'Ambil detail tarif' })
+  @ApiParam({ name: 'id', description: 'ID tarif' })
+  async ambilTarifById(@Param('id') id: string) {
+    return this.percetakanService.ambilTarifById(id);
+  }
+
+  /**
+   * Perbarui tarif
+   */
+  @Put('tarif/:id')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Perbarui tarif percetakan' })
+  @ApiParam({ name: 'id', description: 'ID tarif' })
+  async perbaruiTarif(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPercetakan: string,
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.perbaruiTarif(id, idPercetakan, dto);
+  }
+
+  /**
+   * Hapus tarif
+   */
+  @Put('tarif/:id/hapus')
+  @Peran('percetakan')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Hapus tarif percetakan' })
+  @ApiParam({ name: 'id', description: 'ID tarif' })
+  async hapusTarif(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPercetakan: string,
+  ) {
+    return this.percetakanService.hapusTarif(id, idPercetakan);
+  }
+
+  /**
+   * ============================================
+   * KALKULASI & PESANAN BARU
+   * ============================================
+   */
+
+  /**
+   * Kalkulasi opsi harga dari berbagai percetakan
+   */
+  @Post('kalkulasi-harga')
+  @Peran('penulis')
+  @ApiOperation({ summary: 'Kalkulasi estimasi harga dari berbagai percetakan' })
+  async kalkulasiOpsiHarga(@Body() dto: any) {
+    return this.percetakanService.kalkulasiOpsiHarga(dto);
+  }
+
+  /**
+   * Buat pesanan baru dengan snapshot pattern
+   */
+  @Post('pesanan/baru')
+  @Peran('penulis')
+  @ApiOperation({ summary: 'Buat pesanan cetak baru' })
+  async buatPesananBaru(
+    @PenggunaSaatIni('id') idPenulis: string,
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.buatPesananBaru(idPenulis, dto);
+  }
+
+  /**
+   * Ambil pesanan untuk percetakan dengan filter
+   */
+  @Get('pesanan/percetakan')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Ambil pesanan untuk percetakan' })
+  @ApiQuery({ name: 'status', required: false, description: 'baru | produksi | pengiriman | selesai' })
+  async ambilPesananPercetakan(
+    @PenggunaSaatIni('id') idPercetakan: string,
+    @Query('status') status?: string,
+  ) {
+    return this.percetakanService.ambilPesananPercetakan(idPercetakan, status);
+  }
 }
