@@ -78,6 +78,13 @@ export default function CetakFisikPage() {
         setIsLoading(true);
         const response = await ambilNaskahById(params.id);
         
+        // Validasi ownership - pastikan naskah milik user yang login
+        if (pengguna && response.data.penulis?.id !== pengguna.id) {
+          toast.error("Anda hanya dapat mencetak naskah milik sendiri");
+          router.push("/dashboard/buku-terbit");
+          return;
+        }
+        
         // Validasi status naskah harus diterbitkan
         if (response.data.status !== "diterbitkan") {
           toast.error("Hanya naskah yang sudah diterbitkan yang dapat dicetak");
@@ -103,9 +110,18 @@ export default function CetakFisikPage() {
             teleponPenerima: pengguna.telepon || '',
           }));
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching naskah:", error);
-        toast.error("Gagal memuat data naskah");
+        
+        // Handle specific error cases
+        if (error.response?.status === 403) {
+          toast.error("Anda tidak memiliki akses ke naskah ini");
+        } else if (error.response?.status === 404) {
+          toast.error("Naskah tidak ditemukan");
+        } else {
+          toast.error(error.response?.data?.pesan || "Gagal memuat data naskah");
+        }
+        
         router.push("/dashboard/buku-terbit");
       } finally {
         setIsLoading(false);
