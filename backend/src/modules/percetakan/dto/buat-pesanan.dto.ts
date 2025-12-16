@@ -11,6 +11,11 @@ export const BuatPesananSchema = z.object({
     .uuid('ID naskah harus berupa UUID yang valid')
     .describe('ID naskah yang akan dicetak'),
 
+  idPercetakan: z
+    .string()
+    .uuid('ID percetakan harus berupa UUID yang valid')
+    .describe('ID percetakan yang dipilih untuk mencetak'),
+
   jumlah: z
     .number()
     .int('Jumlah harus berupa bilangan bulat')
@@ -19,15 +24,15 @@ export const BuatPesananSchema = z.object({
     .describe('Jumlah eksemplar yang dicetak'),
 
   formatKertas: z
-    .enum(['A4', 'A5', 'B5', 'Letter', 'Custom'])
+    .enum(['A4', 'A5', 'B5'])
     .describe('Format/ukuran kertas cetak'),
 
   jenisKertas: z
-    .enum(['HVS 70gr', 'HVS 80gr', 'Art Paper 120gr', 'Art Paper 150gr', 'Bookpaper'])
+    .enum(['HVS', 'BOOKPAPER', 'ART_PAPER'])
     .describe('Jenis kertas yang digunakan'),
 
   jenisCover: z
-    .enum(['Soft Cover', 'Hard Cover', 'Board Cover'])
+    .enum(['SOFTCOVER', 'HARDCOVER'])
     .describe('Jenis cover/jilid buku'),
 
   finishingTambahan: z
@@ -51,11 +56,6 @@ export const BuatPesananSchema = z.object({
     .max(1000, 'Catatan maksimal 1000 karakter')
     .optional()
     .describe('Catatan tambahan untuk pesanan'),
-
-  hargaTotal: z
-    .number()
-    .positive('Harga total harus lebih dari 0')
-    .describe('Total harga pesanan cetak'),
 
   alamatPengiriman: z
     .string()
@@ -81,13 +81,20 @@ export type BuatPesananDto = z.infer<typeof BuatPesananSchema>;
 /**
  * Class untuk Swagger documentation
  */
-export class BuatPesananDtoClass implements BuatPesananDto {
+export class BuatPesananDtoClass {
   @ApiProperty({
     description: 'ID naskah yang akan dicetak (harus berstatus diterbitkan)',
     example: '123e4567-e89b-12d3-a456-426614174000',
     format: 'uuid',
   })
   idNaskah!: string;
+
+  @ApiProperty({
+    description: 'ID percetakan yang dipilih',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
+  })
+  idPercetakan!: string;
 
   @ApiProperty({
     description: 'Jumlah eksemplar yang dicetak',
@@ -99,24 +106,24 @@ export class BuatPesananDtoClass implements BuatPesananDto {
 
   @ApiProperty({
     description: 'Format/ukuran kertas',
-    enum: ['A4', 'A5', 'B5', 'Letter', 'Custom'],
+    enum: ['A4', 'A5', 'B5'],
     example: 'A5',
   })
-  formatKertas!: 'A4' | 'A5' | 'B5' | 'Letter' | 'Custom';
+  formatKertas!: 'A4' | 'A5' | 'B5';
 
   @ApiProperty({
     description: 'Jenis kertas yang digunakan',
-    enum: ['HVS 70gr', 'HVS 80gr', 'Art Paper 120gr', 'Art Paper 150gr', 'Bookpaper'],
-    example: 'HVS 80gr',
+    enum: ['HVS', 'BOOKPAPER', 'ART_PAPER'],
+    example: 'HVS',
   })
-  jenisKertas!: 'HVS 70gr' | 'HVS 80gr' | 'Art Paper 120gr' | 'Art Paper 150gr' | 'Bookpaper';
+  jenisKertas!: 'HVS' | 'BOOKPAPER' | 'ART_PAPER';
 
   @ApiProperty({
     description: 'Jenis cover/jilid buku',
-    enum: ['Soft Cover', 'Hard Cover', 'Board Cover'],
-    example: 'Soft Cover',
+    enum: ['SOFTCOVER', 'HARDCOVER'],
+    example: 'SOFTCOVER',
   })
-  jenisCover!: 'Soft Cover' | 'Hard Cover' | 'Board Cover';
+  jenisCover!: 'SOFTCOVER' | 'HARDCOVER';
 
   @ApiProperty({
     description: 'Finishing tambahan untuk cover',

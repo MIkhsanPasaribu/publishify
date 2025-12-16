@@ -37,6 +37,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { ValidasiZodPipe } from '@/common/pipes/validasi-zod.pipe';
 import {
   BuatPesananSchema,
+  BuatPesananDto,
   PerbaruiPesananSchema,
   FilterPesananSchema,
   UpdateStatusSchema,
@@ -76,12 +77,93 @@ export class PercetakanController {
   }
 
   /**
-   * Buat pesanan cetak baru
+   * Ambil daftar percetakan yang tersedia dengan info tarif
+   * Untuk ditampilkan saat penulis akan membuat pesanan cetak
+   */
+  @Get('daftar')
+  @Peran('penulis', 'admin')
+  @ApiOperation({ summary: 'Ambil daftar percetakan yang tersedia dengan tarif aktif' })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar percetakan berhasil diambil',
+    schema: {
+      example: {
+        sukses: true,
+        pesan: 'Daftar percetakan berhasil diambil',
+        data: [
+          {
+            id: 'uuid-percetakan',
+            nama: 'Percetakan ABC',
+            alamat: 'Jl. Example No. 123',
+            kota: 'Jakarta',
+            tarifAktif: {
+              id: 'uuid-tarif',
+              namaKombinasi: 'Tarif Standar',
+              hargaKertasA4: 500,
+              hargaKertasA5: 350,
+              hargaSoftcover: 5000,
+              hargaHardcover: 15000,
+              biayaJilid: 3000,
+              minimumPesanan: 10,
+            },
+          },
+        ],
+        total: 1,
+      },
+    },
+  })
+  async ambilDaftarPercetakan() {
+    return this.percetakanService.ambilDaftarPercetakan();
+  }
+
+  /**
+   * Ambil detail tarif percetakan tertentu
+   * Untuk kalkulasi harga sebelum buat pesanan
+   */
+  @Get('tarif/:id')
+  @Peran('penulis', 'admin')
+  @ApiOperation({ summary: 'Ambil detail tarif percetakan tertentu' })
+  @ApiParam({ name: 'id', description: 'ID percetakan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tarif percetakan berhasil diambil',
+    schema: {
+      example: {
+        sukses: true,
+        pesan: 'Tarif percetakan berhasil diambil',
+        data: {
+          percetakan: {
+            id: 'uuid-percetakan',
+            nama: 'Percetakan ABC',
+          },
+          tarif: {
+            id: 'uuid-tarif',
+            namaKombinasi: 'Tarif Standar',
+            deskripsi: 'Tarif standar untuk pesanan reguler',
+            hargaKertasA4: 500,
+            hargaKertasA5: 350,
+            hargaKertasB5: 400,
+            hargaSoftcover: 5000,
+            hargaHardcover: 15000,
+            biayaJilid: 3000,
+            minimumPesanan: 10,
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Percetakan tidak ditemukan atau belum ada tarif aktif' })
+  async ambilTarifPercetakan(@Param('id') idPercetakan: string) {
+    return this.percetakanService.ambilTarifPercetakan(idPercetakan);
+  }
+
+  /**
+   * Buat pesanan cetak baru dengan pilihan percetakan dan kalkulasi harga otomatis
    * Hanya untuk penulis yang memiliki naskah dengan status 'diterbitkan'
    */
-  @Post()
+  @Post('pesanan')
   @Peran('penulis')
-  @ApiOperation({ summary: 'Buat pesanan cetak baru' })
+  @ApiOperation({ summary: 'Buat pesanan cetak baru dengan pilihan percetakan' })
   @ApiResponse({
     status: 201,
     description: 'Pesanan cetak berhasil dibuat',
@@ -105,7 +187,7 @@ export class PercetakanController {
     @PenggunaSaatIni('id') idPemesan: string,
     @Body(new ValidasiZodPipe(BuatPesananSchema)) dto: BuatPesananDtoClass,
   ) {
-    return this.percetakanService.buatPesanan(idPemesan, dto);
+    return this.percetakanService.buatPesanan(idPemesan, dto as unknown as BuatPesananDto);
   }
 
   /**
