@@ -49,94 +49,7 @@ import {
 } from "@/components/ui/select";
 import { formatRupiah } from "@/lib/utils";
 
-// Dummy data
-const saldoData = {
-  tersedia: 12500000,
-  pending: 8562500,
-  totalPendapatan: 21062500,
-  totalDitarik: 5000000,
-};
-
-const rekeningBank = {
-  namaBank: "Bank Mandiri",
-  nomorRekening: "1234567890123",
-  atasNama: "Percetakan Publishify",
-};
-
-const dummyTransaksi = [
-  {
-    id: "1",
-    tanggal: new Date("2025-12-09"),
-    referensi: "PO-20251209-0001",
-    tipe: "pemasukan",
-    jumlah: 4687500,
-    status: "selesai",
-    keterangan: "Pembayaran pesanan Konspirasi Gedung Putih - 250 buku",
-  },
-  {
-    id: "2",
-    tanggal: new Date("2025-12-05"),
-    referensi: "WD-20251205-001",
-    tipe: "pengeluaran",
-    jumlah: 5000000,
-    status: "selesai",
-    keterangan: "Penarikan dana ke rekening Bank Mandiri",
-  },
-  {
-    id: "3",
-    tanggal: new Date("2025-12-01"),
-    referensi: "PO-20251201-0002",
-    tipe: "pemasukan",
-    jumlah: 3750000,
-    status: "pending",
-    keterangan: "Pesanan Jejak Sang Pemburu - 200 buku (dalam produksi)",
-  },
-  {
-    id: "4",
-    tanggal: new Date("2025-11-28"),
-    referensi: "PO-20251128-0003",
-    tipe: "pemasukan",
-    jumlah: 2625000,
-    status: "pending",
-    keterangan: "Pesanan Masa Depan Bumi 2150 - 150 buku (dalam produksi)",
-  },
-  {
-    id: "5",
-    tanggal: new Date("2025-11-25"),
-    referensi: "PO-20251125-0004",
-    tipe: "pemasukan",
-    jumlah: 1650000,
-    status: "pending",
-    keterangan: "Pesanan Perang Galaksi Terakhir - 100 buku (quality control)",
-  },
-  {
-    id: "6",
-    tanggal: new Date("2025-11-22"),
-    referensi: "PO-20251122-0005",
-    tipe: "pemasukan",
-    jumlah: 875000,
-    status: "pending",
-    keterangan: "Pesanan Misteri Rumah Tua - 50 buku (siap kirim)",
-  },
-  {
-    id: "7",
-    tanggal: new Date("2025-11-20"),
-    referensi: "PO-20251120-0006",
-    tipe: "pemasukan",
-    jumlah: 1225000,
-    status: "pending",
-    keterangan: "Pesanan Cinta di Ujung Senja - 75 buku (diterima)",
-  },
-  {
-    id: "8",
-    tanggal: new Date("2025-11-15"),
-    referensi: "PO-20251115-0007",
-    tipe: "pemasukan",
-    jumlah: 2525000,
-    status: "selesai",
-    keterangan: "Pembayaran 2 pesanan tertunda",
-  },
-];
+// Data akan diambil dari API
 
 const STATUS_CONFIG = {
   selesai: { label: "Selesai", color: "bg-green-100 text-green-800" },
@@ -156,6 +69,29 @@ export default function SaldoPercetakanPage() {
   const [filterTipe, setFilterTipe] = useState("semua");
   const [filterStatus, setFilterStatus] = useState("semua");
 
+  // State untuk data dari API
+  const [saldoData, setSaldoData] = useState({
+    tersedia: 0,
+    pending: 0,
+    totalPendapatan: 0,
+    totalDitarik: 0,
+  });
+
+  const [rekeningBank, setRekeningBank] = useState({
+    namaBank: "-",
+    nomorRekening: "-",
+    atasNama: "-",
+  });
+
+  const [transaksi, setTransaksi] = useState<any[]>([]);
+
+  // TODO: Fetch data dari API
+  // useEffect(() => {
+  //   fetchSaldoData();
+  //   fetchRekeningBank();
+  //   fetchTransaksi();
+  // }, []);
+
   const handleWithdraw = () => {
     // TODO: Implement withdraw logic
     console.log("Penarikan:", { jumlahPenarikan, keteranganPenarikan });
@@ -164,7 +100,7 @@ export default function SaldoPercetakanPage() {
     setKeteranganPenarikan("");
   };
 
-  const filteredTransaksi = dummyTransaksi.filter((t) => {
+  const filteredTransaksi = transaksi.filter((t) => {
     const tipeMatch = filterTipe === "semua" || t.tipe === filterTipe;
     const statusMatch = filterStatus === "semua" || t.status === filterStatus;
     return tipeMatch && statusMatch;

@@ -24,84 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Dummy Data Pembayaran
-const DUMMY_PEMBAYARAN = [
-  {
-    id: "1",
-    nomorPembayaran: "PAY-20251126-1234",
-    nomorPesanan: "PO-20251126-1234",
-    pemesan: "Ahmad Rudi",
-    judul: "Petualangan di Negeri Dongeng",
-    jumlah: 2500000,
-    metodePembayaran: "Transfer Bank",
-    bank: "BCA",
-    status: "berhasil",
-    tanggalBayar: "2025-11-26T10:30:00Z",
-    tanggalVerifikasi: "2025-11-26T11:00:00Z",
-  },
-  {
-    id: "2",
-    nomorPembayaran: "PAY-20251125-5678",
-    nomorPesanan: "PO-20251125-5678",
-    pemesan: "Siti Nurhaliza",
-    judul: "Panduan Lengkap Pemrograman Web",
-    jumlah: 3500000,
-    metodePembayaran: "E-Wallet",
-    bank: "GoPay",
-    status: "berhasil",
-    tanggalBayar: "2025-11-25T14:45:00Z",
-    tanggalVerifikasi: "2025-11-25T15:00:00Z",
-  },
-  {
-    id: "3",
-    nomorPembayaran: "PAY-20251124-9012",
-    nomorPesanan: "PO-20251124-9012",
-    pemesan: "Budi Santoso",
-    judul: "Resep Masakan Nusantara",
-    jumlah: 4800000,
-    metodePembayaran: "Transfer Bank",
-    bank: "Mandiri",
-    status: "berhasil",
-    tanggalBayar: "2025-11-24T09:15:00Z",
-    tanggalVerifikasi: "2025-11-24T10:00:00Z",
-  },
-  {
-    id: "4",
-    nomorPembayaran: "PAY-20251123-3456",
-    nomorPesanan: "PO-20251123-3456",
-    pemesan: "Dewi Lestari",
-    judul: "Kisah Inspiratif Para Pejuang",
-    jumlah: 4200000,
-    metodePembayaran: "Transfer Bank",
-    bank: "BNI",
-    status: "menunggu_verifikasi",
-    tanggalBayar: "2025-11-23T11:30:00Z",
-  },
-  {
-    id: "5",
-    nomorPembayaran: "PAY-20251122-7890",
-    nomorPesanan: "PO-20251122-7890",
-    pemesan: "Eko Prasetyo",
-    judul: "Belajar Bahasa Inggris dengan Mudah",
-    jumlah: 3200000,
-    metodePembayaran: "E-Wallet",
-    bank: "OVO",
-    status: "menunggu_verifikasi",
-    tanggalBayar: "2025-11-22T16:20:00Z",
-  },
-  {
-    id: "6",
-    nomorPembayaran: "PAY-20251121-2345",
-    nomorPesanan: "PO-20251121-2345",
-    pemesan: "Rina Kartika",
-    judul: "Panduan Bisnis Online",
-    jumlah: 2800000,
-    metodePembayaran: "Transfer Bank",
-    bank: "BRI",
-    status: "gagal",
-    tanggalBayar: "2025-11-21T13:00:00Z",
-  },
-];
+// Data pembayaran akan diambil dari API
 
 const STATUS_CONFIG = {
   berhasil: {
@@ -147,24 +70,32 @@ export default function PembayaranPercetakanPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("semua");
 
+  // State untuk data dari API
+  const [pembayaranData] = useState<any[]>([]);
+
+  // TODO: Fetch data dari API
+  // useEffect(() => {
+  //   fetchPembayaran();
+  // }, []);
+
   // Filter data
-  const filteredPembayaran = DUMMY_PEMBAYARAN.filter((bayar) => {
+  const filteredPembayaran = pembayaranData.filter((bayar) => {
     const matchSearch =
-      bayar.nomorPembayaran.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bayar.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bayar.pemesan.toLowerCase().includes(searchQuery.toLowerCase());
+      bayar.nomorPembayaran?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bayar.nomorPesanan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bayar.pemesan?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = filterStatus === "semua" || bayar.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   // Statistik
   const stats = {
-    totalPembayaran: DUMMY_PEMBAYARAN.length,
-    berhasil: DUMMY_PEMBAYARAN.filter((p) => p.status === "berhasil").length,
-    menunggu: DUMMY_PEMBAYARAN.filter((p) => p.status === "menunggu_verifikasi").length,
-    gagal: DUMMY_PEMBAYARAN.filter((p) => p.status === "gagal").length,
-    totalPendapatan: DUMMY_PEMBAYARAN.filter((p) => p.status === "berhasil").reduce(
-      (sum, p) => sum + p.jumlah,
+    totalPembayaran: pembayaranData.length,
+    berhasil: pembayaranData.filter((p) => p.status === "berhasil").length,
+    menunggu: pembayaranData.filter((p) => p.status === "menunggu_verifikasi").length,
+    gagal: pembayaranData.filter((p) => p.status === "gagal").length,
+    totalPendapatan: pembayaranData.filter((p) => p.status === "berhasil").reduce(
+      (sum, p) => sum + (p.jumlah || 0),
       0
     ),
   };

@@ -37,87 +37,40 @@ import {
 } from "@/components/ui/table";
 import { formatRupiah } from "@/lib/utils";
 
-// Dummy data untuk laporan
-const laporanBulanan = {
-  periode: "Desember 2025",
-  totalRevenue: 17337500,
-  totalPesanan: 8,
-  rataRataPesanan: 2167187,
-  pertumbuhanRevenue: 15.5,
-  pertumbuhanPesanan: 12.3,
-};
-
-const dataPerBulan = [
-  { bulan: "Jul 2025", revenue: 8500000, pesanan: 4 },
-  { bulan: "Agu 2025", revenue: 12300000, pesanan: 6 },
-  { bulan: "Sep 2025", revenue: 9800000, pesanan: 5 },
-  { bulan: "Okt 2025", revenue: 13500000, pesanan: 7 },
-  { bulan: "Nov 2025", revenue: 15000000, pesanan: 7 },
-  { bulan: "Des 2025", revenue: 17337500, pesanan: 8 },
-];
-
-const topNaskah = [
-  {
-    id: "1",
-    judul: "Konspirasi Gedung Putih",
-    penulis: "Ahmad Surya Wijaya",
-    jumlahCetak: 250,
-    revenue: 4687500,
-    persentase: 27.0,
-  },
-  {
-    id: "2",
-    judul: "Jejak Sang Pemburu",
-    penulis: "Ahmad Surya Wijaya",
-    jumlahCetak: 200,
-    revenue: 3750000,
-    persentase: 21.6,
-  },
-  {
-    id: "3",
-    judul: "Masa Depan Bumi 2150",
-    penulis: "Ahmad Surya Wijaya",
-    jumlahCetak: 150,
-    revenue: 2625000,
-    persentase: 15.1,
-  },
-  {
-    id: "4",
-    judul: "Komedi Keluarga Modern",
-    penulis: "Ahmad Surya Wijaya",
-    jumlahCetak: 100,
-    revenue: 1650000,
-    persentase: 9.5,
-  },
-  {
-    id: "5",
-    judul: "Perang Galaksi Terakhir",
-    penulis: "Ahmad Surya Wijaya",
-    jumlahCetak: 100,
-    revenue: 1650000,
-    persentase: 9.5,
-  },
-];
-
-const statusDistribusi = [
-  { status: "Terkirim", jumlah: 1, persentase: 12.5, color: "bg-green-500" },
-  { status: "Siap", jumlah: 1, persentase: 12.5, color: "bg-teal-500" },
-  { status: "Quality Control", jumlah: 1, persentase: 12.5, color: "bg-indigo-500" },
-  { status: "Dalam Produksi", jumlah: 2, persentase: 25.0, color: "bg-purple-500" },
-  { status: "Diterima", jumlah: 1, persentase: 12.5, color: "bg-blue-500" },
-  { status: "Tertunda", jumlah: 2, persentase: 25.0, color: "bg-yellow-500" },
-];
-
-const performanceMetrics = {
-  rataRataWaktuProduksi: 7.5,
-  tingkatKetepatan: 92.3,
-  tingkatKepuasan: 4.8,
-  jumlahRevisi: 3,
-};
+// Data akan diambil dari API
 
 export default function LaporanPercetakanPage() {
   const [periodeLaporan, setPeriodeLaporan] = useState("bulan-ini");
   const [jenisLaporan, setJenisLaporan] = useState("ringkasan");
+
+  // State untuk data dari API
+  const [laporanBulanan] = useState({
+    periode: "-",
+    totalRevenue: 0,
+    totalPesanan: 0,
+    rataRataPesanan: 0,
+    pertumbuhanRevenue: 0,
+    pertumbuhanPesanan: 0,
+  });
+
+  const [dataPerBulan] = useState<any[]>([]);
+  const [topNaskah] = useState<any[]>([]);
+  const [statusDistribusi] = useState<any[]>([]);
+  const [performanceMetrics] = useState({
+    rataRataWaktuProduksi: 0,
+    tingkatKetepatan: 0,
+    tingkatKepuasan: 0,
+    jumlahRevisi: 0,
+  });
+
+  // TODO: Fetch data dari API
+  // useEffect(() => {
+  //   fetchLaporanBulanan();
+  //   fetchDataPerBulan();
+  //   fetchTopNaskah();
+  //   fetchStatusDistribusi();
+  //   fetchPerformanceMetrics();
+  // }, [periodeLaporan, jenisLaporan]);
 
   const handleExportPDF = () => {
     console.log("Export to PDF");
