@@ -976,50 +976,18 @@ export class PercetakanService {
 
   /**
    * ============================================
-   * TARIF PERCETAKAN - CRUD Operations
+   * TARIF PERCETAKAN - CRUD Operations (DEPRECATED)
+   * Use buatKombinasiTarif instead
    * ============================================
    */
 
   /**
-   * Buat tarif percetakan baru
+   * @deprecated Use buatKombinasiTarif instead
    */
   async buatTarif(idPercetakan: string, dto: any) {
-    // Check if tarif sudah ada dengan kombinasi yang sama
-    const tarifExists = await this.prisma.tarifPercetakan.findUnique({
-      where: {
-        idPercetakan_formatBuku_jenisKertas_jenisCover: {
-          idPercetakan,
-          formatBuku: dto.formatBuku,
-          jenisKertas: dto.jenisKertas,
-          jenisCover: dto.jenisCover,
-        },
-      },
-    });
-
-    if (tarifExists) {
-      throw new BadRequestException(
-        'Tarif dengan kombinasi format, jenis kertas, dan cover ini sudah ada',
-      );
-    }
-
-    const tarif = await this.prisma.tarifPercetakan.create({
-      data: {
-        idPercetakan,
-        formatBuku: dto.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        hargaPerHalaman: new Decimal(dto.hargaPerHalaman),
-        biayaJilid: new Decimal(dto.biayaJilid),
-        minimumPesanan: dto.minimumPesanan || 1,
-        aktif: dto.aktif !== undefined ? dto.aktif : true,
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif percetakan berhasil dibuat',
-      data: tarif,
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use buatKombinasiTarif instead.',
+    );
   }
 
   /**
@@ -1028,50 +996,14 @@ export class PercetakanService {
   async ambilSemuaTarif(idPercetakan?: string, aktif?: boolean) {
     const where: any = {};
     
-    if (idPercetakan) {
-      where.idPercetakan = idPercetakan;
-    }
-    
-    if (aktif !== undefined) {
-      where.aktif = aktif;
-    }
-
-    const tarif = await this.prisma.tarifPercetakan.findMany({
-      where,
-      include: {
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: {
-              select: {
-                namaDepan: true,
-                namaBelakang: true,
-                namaTampilan: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: [
-        { formatBuku: 'asc' },
-        { jenisKertas: 'asc' },
-        { jenisCover: 'asc' },
-      ],
-    });
-
-    return {
-      sukses: true,
-      data: tarif,
-      total: tarif.length,
-    };
+    return this.ambilSemuaKombinasi(idPercetakan || '');
   }
 
   /**
-   * Ambil tarif by ID
+   * @deprecated Use parameterHargaPercetakan instead
    */
   async ambilTarifById(id: string) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
+    const tarif = await this.prisma.parameterHargaPercetakan.findUnique({
       where: { id },
       include: {
         percetakan: {
@@ -1095,67 +1027,19 @@ export class PercetakanService {
   }
 
   /**
-   * Perbarui tarif
+   * @deprecated Table tarifPercetakan removed
    */
   async perbaruiTarif(id: string, idPercetakan: string, dto: any) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
-      where: { id },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif tidak ditemukan');
-    }
-
-    // Validasi ownership
-    if (tarif.idPercetakan !== idPercetakan) {
-      throw new ForbiddenException('Anda tidak memiliki akses untuk mengubah tarif ini');
-    }
-
-    const updated = await this.prisma.tarifPercetakan.update({
-      where: { id },
-      data: {
-        ...(dto.formatBuku && { formatBuku: dto.formatBuku }),
-        ...(dto.jenisKertas && { jenisKertas: dto.jenisKertas }),
-        ...(dto.jenisCover && { jenisCover: dto.jenisCover }),
-        ...(dto.hargaPerHalaman && { hargaPerHalaman: new Decimal(dto.hargaPerHalaman) }),
-        ...(dto.biayaJilid && { biayaJilid: new Decimal(dto.biayaJilid) }),
-        ...(dto.minimumPesanan && { minimumPesanan: dto.minimumPesanan }),
-        ...(dto.aktif !== undefined && { aktif: dto.aktif }),
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif berhasil diperbarui',
-      data: updated,
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use buatKombinasiTarif to create new tariff schemes.',
+    );
   }
 
   /**
-   * Hapus tarif
+   * @deprecated Use hapusKombinasi instead
    */
   async hapusTarif(id: string, idPercetakan: string) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
-      where: { id },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif tidak ditemukan');
-    }
-
-    // Validasi ownership
-    if (tarif.idPercetakan !== idPercetakan) {
-      throw new ForbiddenException('Anda tidak memiliki akses untuk menghapus tarif ini');
-    }
-
-    await this.prisma.tarifPercetakan.delete({
-      where: { id },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif berhasil dihapus',
-    };
+    return this.hapusKombinasi(id);
   }
 
   /**
@@ -1165,209 +1049,19 @@ export class PercetakanService {
    */
 
   /**
-   * Kalkulasi opsi harga dari berbagai percetakan
-   * Dipanggil saat penulis memilih bahan di frontend
+   * @deprecated tarifPercetakan table removed. Use kalkulasiHargaOtomatis instead
    */
   async kalkulasiOpsiHarga(dto: any) {
-    // 1. Ambil data naskah
-    const naskah = await this.prisma.naskah.findUnique({
-      where: { id: dto.naskahId },
-      select: {
-        id: true,
-        judul: true,
-        formatBuku: true,
-        jumlahHalaman: true,
-        status: true,
-      },
-    });
-
-    if (!naskah) {
-      throw new NotFoundException('Naskah tidak ditemukan');
-    }
-
-    if (naskah.status !== 'diterbitkan') {
-      throw new BadRequestException('Hanya naskah yang sudah diterbitkan yang bisa dicetak');
-    }
-
-    if (!naskah.jumlahHalaman) {
-      throw new BadRequestException('Naskah belum memiliki data jumlah halaman');
-    }
-
-    // 2. Query tarif yang cocok
-    const tarifList = await this.prisma.tarifPercetakan.findMany({
-      where: {
-        formatBuku: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        aktif: true,
-      },
-      include: {
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: {
-              select: {
-                namaDepan: true,
-                namaBelakang: true,
-                namaTampilan: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (tarifList.length === 0) {
-      return {
-        sukses: true,
-        pesan: 'Tidak ada percetakan yang tersedia untuk kombinasi ini',
-        data: [],
-      };
-    }
-
-    // 3. Hitung estimasi harga untuk setiap percetakan
-    const opsiHarga = tarifList.map((tarif) => {
-      const jumlahHalaman = naskah.jumlahHalaman || 0;
-      const biayaCetak = tarif.hargaPerHalaman.toNumber() * jumlahHalaman;
-      const totalHarga = biayaCetak + tarif.biayaJilid.toNumber();
-
-      return {
-        percetakanId: tarif.idPercetakan,
-        namaPercetakan:
-          tarif.percetakan.profilPengguna?.namaTampilan ||
-          `${tarif.percetakan.profilPengguna?.namaDepan || ''} ${tarif.percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
-          tarif.percetakan.email,
-        tarifId: tarif.id,
-        formatBuku: tarif.formatBuku,
-        jenisKertas: tarif.jenisKertas,
-        jenisCover: tarif.jenisCover,
-        hargaPerHalaman: tarif.hargaPerHalaman.toNumber(),
-        biayaJilid: tarif.biayaJilid.toNumber(),
-        minimumPesanan: tarif.minimumPesanan,
-        estimasiHarga: totalHarga,
-        breakdown: {
-          biayaCetak,
-          biayaJilid: tarif.biayaJilid.toNumber(),
-          totalHarga,
-        },
-      };
-    });
-
-    // Sort by harga (termurah dulu)
-    opsiHarga.sort((a, b) => a.estimasiHarga - b.estimasiHarga);
-
-    return {
-      sukses: true,
-      pesan: `Ditemukan ${opsiHarga.length} percetakan`,
-      data: opsiHarga,
-      naskahInfo: {
-        id: naskah.id,
-        judul: naskah.judul,
-        formatBuku: naskah.formatBuku,
-        jumlahHalaman: naskah.jumlahHalaman,
-      },
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use kalkulasiHargaOtomatis instead.',
+    );
   }
 
   /**
-   * Buat pesanan baru dengan SNAPSHOT pattern
-   * Dipanggil saat penulis klik "Buat Pesanan"
+   * @deprecated Use buatPesanan instead
    */
   async buatPesananBaru(idPenulis: string, dto: any) {
-    // 1. Validasi naskah
-    const naskah = await this.prisma.naskah.findUnique({
-      where: { id: dto.naskahId },
-    });
-
-    if (!naskah) {
-      throw new NotFoundException('Naskah tidak ditemukan');
-    }
-
-    if (naskah.status !== 'diterbitkan') {
-      throw new BadRequestException('Hanya naskah yang sudah diterbitkan yang bisa dicetak');
-    }
-
-    if (naskah.idPenulis !== idPenulis) {
-      throw new ForbiddenException('Anda hanya dapat memesan cetak untuk naskah Anda sendiri');
-    }
-
-    // 2. Validasi tarif percetakan
-    const tarif = await this.prisma.tarifPercetakan.findFirst({
-      where: {
-        idPercetakan: dto.percetakanId,
-        formatBuku: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        aktif: true,
-      },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif percetakan tidak ditemukan atau tidak aktif');
-    }
-
-    if (dto.jumlahOrder < tarif.minimumPesanan) {
-      throw new BadRequestException(
-        `Jumlah order minimum adalah ${tarif.minimumPesanan} eksemplar`,
-      );
-    }
-
-    // 3. Hitung total harga
-    const biayaCetak = tarif.hargaPerHalaman.toNumber() * (naskah.jumlahHalaman || 0);
-    const totalHarga = (biayaCetak + tarif.biayaJilid.toNumber()) * dto.jumlahOrder;
-
-    // 4. Generate nomor pesanan
-    const tanggal = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const nomorPesanan = `PO-${tanggal}-${randomNum}`;
-
-    // 5. Buat pesanan dengan SNAPSHOT
-    const pesanan = await this.prisma.pesananCetak.create({
-      data: {
-        idNaskah: dto.naskahId,
-        idPemesan: idPenulis,
-        idPercetakan: dto.percetakanId,
-        nomorPesanan,
-        jumlah: dto.jumlahOrder,
-        
-        // SNAPSHOT: Copy data dari Naskah
-        judulSnapshot: naskah.judul,
-        formatSnapshot: naskah.formatBuku,
-        jumlahHalamanSnapshot: naskah.jumlahHalaman || 0,
-        
-        // Spesifikasi pesanan
-        formatKertas: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        finishingTambahan: [],
-        catatan: dto.catatan,
-        hargaTotal: new Decimal(totalHarga),
-        status: 'tertunda',
-      },
-      include: {
-        naskah: {
-          select: {
-            id: true,
-            judul: true,
-            urlSampul: true,
-          },
-        },
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: true,
-          },
-        },
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Pesanan berhasil dibuat',
-      data: pesanan,
-    };
+    return this.buatPesanan(idPenulis, dto);
   }
 
   /**
@@ -1436,14 +1130,14 @@ export class PercetakanService {
     console.log('🏢 ID Percetakan:', idPercetakan);
 
     // Check existing parameter
-    const existing = await this.prisma.parameterHargaPercetakan.findUnique({
+    const existing = await this.prisma.parameterHargaPercetakan.findFirst({
       where: { idPercetakan },
     });
 
     if (existing) {
       // Update existing parameter
       const updated = await this.prisma.parameterHargaPercetakan.update({
-        where: { idPercetakan },
+        where: { id: existing.id },
         data: {
           hargaKertasA4: new Decimal(dto.hargaKertasA4),
           hargaKertasA5: new Decimal(dto.hargaKertasA5),
@@ -1487,7 +1181,7 @@ export class PercetakanService {
    * Ambil parameter harga percetakan
    */
   async ambilParameterHarga(idPercetakan: string) {
-    const parameter = await this.prisma.parameterHargaPercetakan.findUnique({
+    const parameter = await this.prisma.parameterHargaPercetakan.findFirst({
       where: { idPercetakan },
       include: {
         percetakan: {
@@ -1521,80 +1215,37 @@ export class PercetakanService {
   // ============================================
 
   /**
-   * Buat kombinasi tarif baru dari parameter harga
-   * Hitung harga otomatis dari parameter
+   * Buat skema tarif baru
+   * Langsung save ke ParameterHargaPercetakan dengan semua komponen harga
    */
   async buatKombinasiTarif(idPercetakan: string, dto: any) {
-    console.log('\n🎯 [PERCETAKAN] Buat Kombinasi Tarif');
+    console.log('\n🎯 [PERCETAKAN] Buat Skema Tarif');
+    console.log('📝 Data:', JSON.stringify(dto, null, 2));
 
-    // Validasi parameter harga sudah ada
-    const parameter = await this.prisma.parameterHargaPercetakan.findUnique({
-      where: { idPercetakan },
-    });
-
-    if (!parameter) {
-      throw new BadRequestException(
-        'Parameter harga belum diatur. Silakan atur parameter harga terlebih dahulu.',
-      );
-    }
-
-    // Calculate harga dari parameter
-    let hargaPerHalaman: Decimal;
-    let biayaCover: Decimal;
-
-    // Harga kertas berdasarkan format
-    switch (dto.formatBuku) {
-      case 'A4':
-        hargaPerHalaman = parameter.hargaKertasA4;
-        break;
-      case 'A5':
-        hargaPerHalaman = parameter.hargaKertasA5;
-        break;
-      case 'B5':
-        hargaPerHalaman = parameter.hargaKertasB5;
-        break;
-      default:
-        throw new BadRequestException('Format buku tidak valid');
-    }
-
-    // Harga cover berdasarkan jenis
-    switch (dto.jenisCover) {
-      case 'SOFTCOVER':
-        biayaCover = parameter.hargaSoftcover;
-        break;
-      case 'HARDCOVER':
-        biayaCover = parameter.hargaHardcover;
-        break;
-      default:
-        throw new BadRequestException('Jenis cover tidak valid');
-    }
-
-    // Jika aktif = true, nonaktifkan kombinasi lain
-    if (dto.aktif === true) {
-      await this.prisma.kombinasiTarif.updateMany({
-        where: { idPercetakan },
+    // Jika aktif = true (default), nonaktifkan skema lain
+    if (dto.aktif !== false) {
+      await this.prisma.parameterHargaPercetakan.updateMany({
+        where: { idPercetakan, aktif: true },
         data: { aktif: false },
       });
     }
 
-    // Buat kombinasi tarif
-    const kombinasi = await this.prisma.kombinasiTarif.create({
+    // Buat skema tarif baru
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.create({
       data: {
         idPercetakan,
-        idParameter: parameter.id,
         namaKombinasi: dto.namaKombinasi,
         deskripsi: dto.deskripsi,
-        formatBuku: dto.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        hargaPerHalaman,
-        biayaCover,
-        biayaJilid: parameter.biayaJilid,
-        minimumPesanan: parameter.minimumPesanan,
-        aktif: dto.aktif === true,
+        hargaKertasA4: new Decimal(dto.hargaKertasA4),
+        hargaKertasA5: new Decimal(dto.hargaKertasA5),
+        hargaKertasB5: new Decimal(dto.hargaKertasB5 || 0),
+        hargaSoftcover: new Decimal(dto.hargaSoftcover),
+        hargaHardcover: new Decimal(dto.hargaHardcover),
+        biayaJilid: new Decimal(dto.biayaJilid),
+        minimumPesanan: dto.minimumPesanan,
+        aktif: dto.aktif !== false, // Default true
       },
       include: {
-        parameter: true,
         percetakan: {
           select: {
             id: true,
@@ -1605,21 +1256,22 @@ export class PercetakanService {
       },
     });
 
+    console.log('✅ Skema tarif berhasil dibuat:', skemaTarif.namaKombinasi);
+
     return {
       sukses: true,
-      pesan: 'Kombinasi tarif berhasil dibuat',
-      data: kombinasi,
+      pesan: 'Skema tarif berhasil dibuat',
+      data: skemaTarif,
     };
   }
 
   /**
-   * Ambil semua kombinasi tarif percetakan
+   * Ambil semua skema tarif percetakan
    */
   async ambilSemuaKombinasi(idPercetakan: string) {
-    const kombinasi = await this.prisma.kombinasiTarif.findMany({
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findMany({
       where: { idPercetakan },
       include: {
-        parameter: true,
         percetakan: {
           select: {
             id: true,
@@ -1636,39 +1288,39 @@ export class PercetakanService {
 
     return {
       sukses: true,
-      data: kombinasi,
-      total: kombinasi.length,
+      data: skemaTarif,
+      total: skemaTarif.length,
     };
   }
 
   /**
-   * Toggle status aktif kombinasi tarif
-   * Hanya 1 kombinasi yang boleh aktif
+   * Toggle status aktif skema tarif
+   * Hanya 1 skema yang boleh aktif per percetakan
    */
   async toggleAktifKombinasi(idKombinasi: string, aktif: boolean) {
-    console.log('\n🔄 [PERCETAKAN] Toggle Aktif Kombinasi');
+    console.log('\n🔄 [PERCETAKAN] Toggle Aktif Skema Tarif');
 
-    const kombinasi = await this.prisma.kombinasiTarif.findUnique({
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findUnique({
       where: { id: idKombinasi },
     });
 
-    if (!kombinasi) {
-      throw new NotFoundException('Kombinasi tarif tidak ditemukan');
+    if (!skemaTarif) {
+      throw new NotFoundException('Skema tarif tidak ditemukan');
     }
 
-    // Jika mau aktifkan, nonaktifkan kombinasi lain dulu
+    // Jika mau aktifkan, nonaktifkan skema lain dulu
     if (aktif) {
-      await this.prisma.kombinasiTarif.updateMany({
+      await this.prisma.parameterHargaPercetakan.updateMany({
         where: {
-          idPercetakan: kombinasi.idPercetakan,
+          idPercetakan: skemaTarif.idPercetakan,
           id: { not: idKombinasi },
         },
         data: { aktif: false },
       });
     }
 
-    // Update kombinasi ini
-    const updated = await this.prisma.kombinasiTarif.update({
+    // Update skema ini
+    const updated = await this.prisma.parameterHargaPercetakan.update({
       where: { id: idKombinasi },
       data: { aktif },
     });
@@ -1676,25 +1328,25 @@ export class PercetakanService {
     return {
       sukses: true,
       pesan: aktif
-        ? 'Kombinasi tarif berhasil diaktifkan'
-        : 'Kombinasi tarif berhasil dinonaktifkan',
+        ? 'Skema tarif berhasil diaktifkan'
+        : 'Skema tarif berhasil dinonaktifkan',
       data: updated,
     };
   }
 
   /**
-   * Hapus kombinasi tarif
+   * Hapus skema tarif
    */
   async hapusKombinasi(idKombinasi: string) {
-    const kombinasi = await this.prisma.kombinasiTarif.findUnique({
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findUnique({
       where: { id: idKombinasi },
     });
 
-    if (!kombinasi) {
-      throw new NotFoundException('Kombinasi tarif tidak ditemukan');
+    if (!skemaTarif) {
+      throw new NotFoundException('Skema tarif tidak ditemukan');
     }
 
-    await this.prisma.kombinasiTarif.delete({
+    await this.prisma.parameterHargaPercetakan.delete({
       where: { id: idKombinasi },
     });
 
@@ -1706,44 +1358,65 @@ export class PercetakanService {
 
   /**
    * Kalkulasi harga otomatis berdasarkan spesifikasi pesanan
-   * Menggunakan kombinasi tarif yang aktif dari percetakan
+   * Menggunakan skema tarif yang aktif dari percetakan
    */
   async kalkulasiHargaOtomatis(idPercetakan: string, dto: any) {
     console.log('\n💰 [PERCETAKAN] Kalkulasi Harga Otomatis');
 
-    // Cari kombinasi yang cocok dan aktif
-    const kombinasi = await this.prisma.kombinasiTarif.findFirst({
+    // Cari skema tarif yang aktif
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findFirst({
       where: {
         idPercetakan,
-        formatBuku: dto.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
         aktif: true,
       },
       include: {
-        parameter: true,
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: true,
+          },
+        },
       },
     });
 
-    if (!kombinasi) {
+    if (!skemaTarif) {
       throw new NotFoundException(
-        'Kombinasi tarif tidak ditemukan atau belum diaktifkan untuk spesifikasi ini',
+        'Skema tarif tidak ditemukan atau belum diaktifkan',
       );
     }
 
+    // Tentukan harga kertas berdasarkan format
+    let hargaKertasPerLembar = 0;
+    if (dto.formatBuku === 'A4') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasA4);
+    } else if (dto.formatBuku === 'A5') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasA5);
+    } else if (dto.formatBuku === 'B5') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasB5);
+    }
+
+    // Tentukan harga cover berdasarkan jenis
+    let hargaCoverPerUnit = 0;
+    if (dto.jenisCover === 'SOFTCOVER') {
+      hargaCoverPerUnit = Number(skemaTarif.hargaSoftcover);
+    } else if (dto.jenisCover === 'HARDCOVER') {
+      hargaCoverPerUnit = Number(skemaTarif.hargaHardcover);
+    }
+
     // Hitung total harga
-    const hargaKertas = Number(kombinasi.hargaPerHalaman) * dto.jumlahHalaman * dto.jumlahBuku;
-    const hargaCover = Number(kombinasi.biayaCover) * dto.jumlahBuku;
-    const hargaJilid = dto.denganJilid ? Number(kombinasi.biayaJilid) * dto.jumlahBuku : 0;
+    const hargaKertas = hargaKertasPerLembar * dto.jumlahHalaman * dto.jumlahBuku;
+    const hargaCover = hargaCoverPerUnit * dto.jumlahBuku;
+    const hargaJilid = dto.denganJilid ? Number(skemaTarif.biayaJilid) * dto.jumlahBuku : 0;
 
     const totalHarga = hargaKertas + hargaCover + hargaJilid;
 
     return {
       sukses: true,
       data: {
-        kombinasiTarif: {
-          id: kombinasi.id,
-          namaKombinasi: kombinasi.namaKombinasi,
+        skemaTarif: {
+          id: skemaTarif.id,
+          namaKombinasi: skemaTarif.namaKombinasi,
         },
         spesifikasi: {
           formatBuku: dto.formatBuku,
@@ -1754,15 +1427,15 @@ export class PercetakanService {
           denganJilid: dto.denganJilid,
         },
         rincianHarga: {
-          hargaKertasPerLembar: Number(kombinasi.hargaPerHalaman),
+          hargaKertasPerLembar,
           totalHargaKertas: hargaKertas,
-          hargaCoverPerUnit: Number(kombinasi.biayaCover),
+          hargaCoverPerUnit,
           totalHargaCover: hargaCover,
-          biayaJilidPerBuku: Number(kombinasi.biayaJilid),
+          biayaJilidPerBuku: Number(skemaTarif.biayaJilid),
           totalBiayaJilid: hargaJilid,
         },
         totalHarga,
-        minimumPesanan: kombinasi.minimumPesanan,
+        minimumPesanan: skemaTarif.minimumPesanan,
       },
     };
   }

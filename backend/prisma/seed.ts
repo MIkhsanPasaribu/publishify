@@ -648,25 +648,23 @@ async function main() {
     },
   ];
 
-  for (const tarif of tarifData) {
-    await prisma.tarifPercetakan.upsert({
-      where: {
-        idPercetakan_formatBuku_jenisKertas_jenisCover: {
-          idPercetakan: percetakan.id,
-          formatBuku: tarif.formatBuku,
-          jenisKertas: tarif.jenisKertas,
-          jenisCover: tarif.jenisCover,
-        },
-      },
-      update: {},
-      create: {
-        idPercetakan: percetakan.id,
-        ...tarif,
-        aktif: true,
-      },
-    });
-  }
-  console.log('✅ Tarif percetakan dibuat (5 kombinasi)');
+  // Create parameter harga percetakan (new single-table approach)
+  await prisma.parameterHargaPercetakan.create({
+    data: {
+      idPercetakan: percetakan.id,
+      namaKombinasi: 'Tarif Standar',
+      deskripsi: 'Tarif standar untuk pesanan reguler',
+      hargaKertasA4: 500,
+      hargaKertasA5: 350,
+      hargaKertasB5: 400,
+      hargaSoftcover: 5000,
+      hargaHardcover: 15000,
+      biayaJilid: 3000,
+      minimumPesanan: 10,
+      aktif: true,
+    },
+  });
+  console.log('✅ Parameter harga percetakan dibuat');
 
   // Ambil beberapa naskah published untuk pesanan
   const naskahPublished = await prisma.naskah.findMany({

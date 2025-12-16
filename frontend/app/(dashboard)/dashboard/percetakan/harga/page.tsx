@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Plus, Settings, TrendingUp } from "lucide-react";
 import {
-  simpanParameterHarga,
-  ambilParameterHarga,
   ambilSemuaKombinasi,
   buatKombinasiTarif,
   toggleAktifKombinasi,
@@ -41,7 +39,7 @@ export default function KelolaHargaPage() {
   const [isFormKombinasiOpen, setIsFormKombinasiOpen] = useState(false);
   const [isEditingParameter, setIsEditingParameter] = useState(false);
 
-  // State untuk form parameter harga
+  // State untuk form parameter harga dengan info skema
   const [formParameter, setFormParameter] = useState<FormParameterHarga>({
     hargaKertasA4: 0,
     hargaKertasA5: 0,
@@ -52,58 +50,57 @@ export default function KelolaHargaPage() {
     minimumPesanan: 1,
   });
 
-  // State untuk form kombinasi tarif
+  // State untuk info skema tarif (hanya nama dan deskripsi)
+  const [infoSkema, setInfoSkema] = useState({
+    namaSkema: "",
+    deskripsi: "",
+  });
+
+  // State untuk form kombinasi tarif (tidak digunakan lagi, tapi tetap ada untuk backward compatibility)
   const [formKombinasi, setFormKombinasi] = useState<FormKombinasiTarif>({
     namaKombinasi: "",
     deskripsi: "",
-    formatBuku: "A5",
-    jenisKertas: "HVS_80gr",
-    jenisCover: "SOFTCOVER",
+    hargaKertasA4: 0,
+    hargaKertasA5: 0,
+    hargaKertasB5: 0,
+    hargaSoftcover: 0,
+    hargaHardcover: 0,
+    biayaJilid: 0,
+    minimumPesanan: 1,
     aktif: false,
   });
 
-  // Query parameter harga
-  const { data: parameterData, isLoading: loadingParameter } = useQuery({
-    queryKey: ["parameter-harga"],
-    queryFn: ambilParameterHarga,
-  });
-
-  // Query kombinasi tarif
+  // Query kombinasi tarif (tidak perlu query parameter harga lagi)
   const { data: kombinasiData, isLoading: loadingKombinasi } = useQuery({
     queryKey: ["kombinasi-tarif"],
     queryFn: ambilSemuaKombinasi,
   });
 
-  // Mutation simpan parameter
-  const simpanParameterMutation = useMutation({
-    mutationFn: simpanParameterHarga,
-    onSuccess: (response) => {
-      toast.success(response.pesan || "Parameter harga berhasil disimpan");
-      queryClient.invalidateQueries({ queryKey: ["parameter-harga"] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.pesan || "Gagal menyimpan parameter harga");
-    },
-  });
+  // Tidak perlu mutation simpan parameter lagi (langsung buat kombinasi/skema)
 
-  // Mutation buat kombinasi
+  // Mutation buat kombinasi/skema tarif
   const buatKombinasiMutation = useMutation({
     mutationFn: buatKombinasiTarif,
-    onSuccess: (response) => {
-      toast.success(response.pesan || "Kombinasi tarif berhasil dibuat");
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kombinasi-tarif"] });
       setIsFormKombinasiOpen(false);
+      // Reset form kombinasi (untuk backward compatibility)
       setFormKombinasi({
         namaKombinasi: "",
         deskripsi: "",
-        formatBuku: "A5",
-        jenisKertas: "HVS_80gr",
-        jenisCover: "SOFTCOVER",
+        hargaKertasA4: 0,
+        hargaKertasA5: 0,
+        hargaKertasB5: 0,
+        hargaSoftcover: 0,
+        hargaHardcover: 0,
+        biayaJilid: 0,
+        minimumPesanan: 1,
         aktif: false,
       });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.pesan || "Gagal membuat kombinasi tarif");
+      toast.error(error.response?.data?.pesan || "Gagal membuat skema tarif");
+      throw error;
     },
   });
 
@@ -112,11 +109,11 @@ export default function KelolaHargaPage() {
     mutationFn: ({ id, aktif }: { id: string; aktif: boolean }) =>
       toggleAktifKombinasi(id, aktif),
     onSuccess: (response) => {
-      toast.success(response.pesan || "Status kombinasi berhasil diubah");
+      toast.success(response.pesan || "Status skema tarif berhasil diubah");
       queryClient.invalidateQueries({ queryKey: ["kombinasi-tarif"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.pesan || "Gagal mengubah status kombinasi");
+      toast.error(error.response?.data?.pesan || "Gagal mengubah status skema tarif");
     },
   });
 
@@ -124,50 +121,80 @@ export default function KelolaHargaPage() {
   const hapusKombinasiMutation = useMutation({
     mutationFn: hapusKombinasi,
     onSuccess: (response) => {
-      toast.success(response.pesan || "Kombinasi tarif berhasil dihapus");
+      toast.success(response.pesan || "Skema tarif berhasil dihapus");
       queryClient.invalidateQueries({ queryKey: ["kombinasi-tarif"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.pesan || "Gagal menghapus kombinasi tarif");
+      toast.error(error.response?.data?.pesan || "Gagal menghapus skema tarif");
     },
   });
 
-  // Load parameter harga ke form saat data tersedia
-  useState(() => {
-    if (parameterData?.data) {
-      setFormParameter({
-        hargaKertasA4: Number(parameterData.data.hargaKertasA4),
-        hargaKertasA5: Number(parameterData.data.hargaKertasA5),
-        hargaKertasB5: Number(parameterData.data.hargaKertasB5),
-        hargaSoftcover: Number(parameterData.data.hargaSoftcover),
-        hargaHardcover: Number(parameterData.data.hargaHardcover),
-        biayaJilid: Number(parameterData.data.biayaJilid),
-        minimumPesanan: parameterData.data.minimumPesanan,
-      });
-    }
-  });
 
-  const handleSimpanParameter = () => {
+
+  const handleSimpanParameter = async () => {
+    // Validasi nama skema
+    if (!infoSkema.namaSkema.trim()) {
+      toast.error("Nama skema tarif wajib diisi");
+      return;
+    }
+
+    // Validasi harga komponen
     if (formParameter.hargaKertasA4 <= 0 || formParameter.hargaKertasA5 <= 0) {
-      toast.error("Harga kertas A4 dan A5 harus diisi");
+      toast.error("Harga kertas A4 dan A5 wajib diisi dengan nilai yang valid");
       return;
     }
     if (formParameter.hargaSoftcover <= 0 || formParameter.hargaHardcover <= 0) {
-      toast.error("Harga softcover dan hardcover harus diisi");
+      toast.error("Harga softcover dan hardcover wajib diisi dengan nilai yang valid");
       return;
     }
     if (formParameter.biayaJilid <= 0) {
-      toast.error("Biaya jilid harus diisi");
+      toast.error("Biaya jilid wajib diisi dengan nilai yang valid");
       return;
     }
 
-    simpanParameterMutation.mutate(formParameter);
-    setIsEditingParameter(false);
+    // Gabungkan data skema + komponen harga
+    const dataSkemaTarif = {
+      namaKombinasi: infoSkema.namaSkema,
+      deskripsi: infoSkema.deskripsi,
+      hargaKertasA4: formParameter.hargaKertasA4,
+      hargaKertasA5: formParameter.hargaKertasA5,
+      hargaKertasB5: formParameter.hargaKertasB5,
+      hargaSoftcover: formParameter.hargaSoftcover,
+      hargaHardcover: formParameter.hargaHardcover,
+      biayaJilid: formParameter.biayaJilid,
+      minimumPesanan: formParameter.minimumPesanan,
+      aktif: true,
+    };
+
+    try {
+      // Buat skema tarif langsung (tidak ada pemisahan parameter dan kombinasi)
+      await buatKombinasiMutation.mutateAsync(dataSkemaTarif);
+
+      // Reset form
+      setFormParameter({
+        hargaKertasA4: 0,
+        hargaKertasA5: 0,
+        hargaKertasB5: 0,
+        hargaSoftcover: 0,
+        hargaHardcover: 0,
+        biayaJilid: 0,
+        minimumPesanan: 1,
+      });
+      setInfoSkema({
+        namaSkema: "",
+        deskripsi: "",
+      });
+      setIsEditingParameter(false);
+      
+      toast.success("Skema tarif berhasil dibuat dan diaktifkan");
+    } catch (error) {
+      // Error sudah ditangani oleh mutation
+    }
   };
 
   const handleBuatKombinasi = () => {
     if (!formKombinasi.namaKombinasi) {
-      toast.error("Nama kombinasi harus diisi");
+      toast.error("Nama skema tarif wajib diisi");
       return;
     }
 
@@ -181,9 +208,9 @@ export default function KelolaHargaPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Kelola Harga Cetak</h1>
+        <h1 className="text-3xl font-bold">Kelola Skema Tarif</h1>
         <p className="text-muted-foreground">
-          Atur parameter harga dan buat kombinasi tarif untuk pesanan cetak buku
+          Buat berbagai skema tarif dengan harga yang berbeda. Contoh: "Tarif Standar" dengan harga normal, "Tarif Diskon" dengan harga lebih murah.
         </p>
       </div>
 
@@ -194,138 +221,95 @@ export default function KelolaHargaPage() {
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Parameter Harga Komponen
+                Komponen Harga Dasar
               </CardTitle>
               <CardDescription>
                 {isEditingParameter 
-                  ? "Tentukan harga per komponen. Kombinasi tarif akan menggunakan harga ini."
-                  : "Harga dasar untuk setiap komponen cetak buku"
+                  ? "Buat skema tarif baru dengan nama dan harga komponen. Contoh: 'Tarif Standar' dengan harga normal, atau 'Tarif Diskon' dengan harga lebih murah."
+                  : "Setiap skema tarif memiliki nama dan komponen harga yang berbeda."
                 }
               </CardDescription>
             </div>
             {!isEditingParameter ? (
               <Button
                 onClick={() => setIsEditingParameter(true)}
-                variant={parameterData?.data ? "outline" : "default"}
+                size="lg"
               >
-                <Settings className="mr-2 h-4 w-4" />
-                {parameterData?.data ? "Edit Parameter" : "Atur Parameter Harga"}
+                <Plus className="mr-2 h-4 w-4" />
+                Buat Skema Tarif Baru
               </Button>
             ) : (
               <div className="flex gap-2">
                 <Button
-                  onClick={() => setIsEditingParameter(false)}
+                  onClick={() => {
+                    setIsEditingParameter(false);
+                    // Reset form
+                    setFormParameter({
+                      hargaKertasA4: 0,
+                      hargaKertasA5: 0,
+                      hargaKertasB5: 0,
+                      hargaSoftcover: 0,
+                      hargaHardcover: 0,
+                      biayaJilid: 0,
+                      minimumPesanan: 1,
+                    });
+                    setInfoSkema({
+                      namaSkema: "",
+                      deskripsi: "",
+                    });
+                  }}
                   variant="outline"
                 >
                   Batal
                 </Button>
                 <Button
                   onClick={handleSimpanParameter}
-                  disabled={simpanParameterMutation.isPending || loadingParameter}
+                  disabled={buatKombinasiMutation.isPending}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {simpanParameterMutation.isPending ? "Menyimpan..." : "Simpan"}
+                  {buatKombinasiMutation.isPending ? "Menyimpan..." : "Simpan & Aktifkan"}
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {!isEditingParameter && parameterData?.data ? (
-            // Preview Mode - Read Only
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Format Kertas (per lembar)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Kertas A4</Label>
-                    <p className="text-2xl font-bold">
-                      {formatRupiah(Number(parameterData.data.hargaKertasA4))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per lembar</p>
-                  </div>
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Kertas A5</Label>
-                    <p className="text-2xl font-bold">
-                      {formatRupiah(Number(parameterData.data.hargaKertasA5))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per lembar</p>
-                  </div>
-                  {parameterData.data.hargaKertasB5 && (
-                    <div className="space-y-2 p-4 bg-muted rounded-lg">
-                      <Label className="text-muted-foreground">Kertas B5</Label>
-                      <p className="text-2xl font-bold">
-                        {formatRupiah(Number(parameterData.data.hargaKertasB5))}
-                      </p>
-                      <p className="text-xs text-muted-foreground">per lembar</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Jenis Cover (per unit)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Softcover</Label>
-                    <p className="text-2xl font-bold">
-                      {formatRupiah(Number(parameterData.data.hargaSoftcover))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per unit</p>
-                  </div>
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Hardcover</Label>
-                    <p className="text-2xl font-bold">
-                      {formatRupiah(Number(parameterData.data.hargaHardcover))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per unit</p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Biaya Tambahan</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Biaya Jilid</Label>
-                    <p className="text-2xl font-bold">
-                      {formatRupiah(Number(parameterData.data.biayaJilid))}
-                    </p>
-                    <p className="text-xs text-muted-foreground">per buku</p>
-                  </div>
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <Label className="text-muted-foreground">Minimum Pesanan</Label>
-                    <p className="text-2xl font-bold">
-                      {parameterData.data.minimumPesanan} buku
-                    </p>
-                    <p className="text-xs text-muted-foreground">minimal order</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : !isEditingParameter && !parameterData?.data ? (
-            // Empty State
+          {!isEditingParameter ? (
+            // Info State - Tidak ada form yang terbuka
             <div className="py-12 text-center">
-              <Settings className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-semibold">Belum Ada Parameter Harga</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Atur parameter harga terlebih dahulu untuk mulai membuat kombinasi tarif
+              <Plus className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">Siap Membuat Skema Tarif?</h3>
+              <p className="mt-2 text-sm text-muted-foreground max-w-2xl mx-auto">
+                Klik tombol "Buat Skema Tarif Baru" di atas untuk memulai.<br />
+                Buat berbagai skema dengan harga berbeda, contoh:<br />
+                <span className="font-medium">"Tarif Standar"</span> (harga normal) atau <span className="font-medium">"Tarif Diskon"</span> (harga lebih murah).<br />
+                <span className="text-xs">Skema yang baru dibuat akan langsung aktif.</span>
               </p>
-              <Button
-                onClick={() => setIsEditingParameter(true)}
-                className="mt-6"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Atur Parameter Harga
-              </Button>
             </div>
           ) : (
             // Edit Form
             <>
+          {/* Informasi Skema Tarif */}
+          <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="space-y-2">
+              <Label htmlFor="namaSkema" className="text-base font-semibold">Nama Skema Tarif *</Label>
+              <Input
+                id="namaSkema"
+                placeholder="Contoh: Tarif Standar, Tarif Diskon, Tarif Premium"
+                value={infoSkema.namaSkema}
+                onChange={(e) =>
+                  setInfoSkema({ ...infoSkema, namaSkema: e.target.value })
+                }
+                className="text-lg"
+              />
+              <p className="text-xs text-muted-foreground">
+                Berikan nama yang jelas untuk membedakan skema tarif (contoh: "Tarif Standar" dengan harga normal, "Tarif Diskon" dengan harga lebih murah)
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Format Kertas */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Format Kertas (per lembar)</h3>
@@ -335,13 +319,13 @@ export default function KelolaHargaPage() {
                 <Input
                   id="hargaA4"
                   type="number"
-                  placeholder="150"
+                  placeholder="400"
                   value={formParameter.hargaKertasA4 || ""}
                   onChange={(e) =>
                     setFormParameter({ ...formParameter, hargaKertasA4: Number(e.target.value) })
                   }
                 />
-                <p className="text-xs text-muted-foreground">Contoh: Rp 150/lembar</p>
+                <p className="text-xs text-muted-foreground">Standar: 400 | Diskon: 100</p>
               </div>
 
               <div className="space-y-2">
@@ -349,13 +333,13 @@ export default function KelolaHargaPage() {
                 <Input
                   id="hargaA5"
                   type="number"
-                  placeholder="100"
+                  placeholder="250"
                   value={formParameter.hargaKertasA5 || ""}
                   onChange={(e) =>
                     setFormParameter({ ...formParameter, hargaKertasA5: Number(e.target.value) })
                   }
                 />
-                <p className="text-xs text-muted-foreground">Contoh: Rp 100/lembar</p>
+                <p className="text-xs text-muted-foreground">Standar: 250 | Diskon: 50</p>
               </div>
 
               <div className="space-y-2">
@@ -363,13 +347,13 @@ export default function KelolaHargaPage() {
                 <Input
                   id="hargaB5"
                   type="number"
-                  placeholder="125"
+                  placeholder="200"
                   value={formParameter.hargaKertasB5 || ""}
                   onChange={(e) =>
                     setFormParameter({ ...formParameter, hargaKertasB5: Number(e.target.value) })
                   }
                 />
-                <p className="text-xs text-muted-foreground">Contoh: Rp 125/lembar</p>
+                <p className="text-xs text-muted-foreground">Standar: 200 | Diskon: 75</p>
               </div>
             </div>
           </div>
@@ -457,183 +441,64 @@ export default function KelolaHargaPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              Kombinasi Tarif Aktif
+              Skema Tarif Aktif
             </CardTitle>
             <CardDescription>
-              Kombinasi ini digunakan untuk kalkulasi harga pesanan baru
+              Skema ini digunakan untuk perhitungan biaya pesanan cetak saat ini
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Nama Kombinasi</p>
-                <p className="font-semibold">{kombinasiAktif.namaKombinasi}</p>
+                <p className="text-sm text-muted-foreground">Nama Skema</p>
+                <p className="text-xl font-bold">{kombinasiAktif.namaKombinasi}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Spesifikasi</p>
-                <p className="font-semibold">
-                  {kombinasiAktif.formatBuku} · {kombinasiAktif.jenisKertas} · {kombinasiAktif.jenisCover}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Harga per Halaman</p>
-                <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.hargaPerHalaman))}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Biaya Cover</p>
-                <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.biayaCover))}</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Kertas A4</p>
+                  <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.hargaKertasA4))}/lembar</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Kertas A5</p>
+                  <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.hargaKertasA5))}/lembar</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Softcover</p>
+                  <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.hargaSoftcover))}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Hardcover</p>
+                  <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.hargaHardcover))}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Biaya Jilid</p>
+                  <p className="font-semibold">{formatRupiah(Number(kombinasiAktif.biayaJilid))}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Minimum Pesanan</p>
+                  <p className="font-semibold">{kombinasiAktif.minimumPesanan} buku</p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Daftar Kombinasi Tarif */}
+      {/* Daftar Skema Tarif */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Kombinasi Tarif</CardTitle>
+              <CardTitle>Riwayat Skema Tarif</CardTitle>
               <CardDescription>
-                Buat berbagai kombinasi harga. Hanya 1 kombinasi yang dapat diaktifkan.
+                Daftar semua skema tarif yang pernah dibuat. Klik toggle untuk mengaktifkan skema tertentu.
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setIsFormKombinasiOpen(!isFormKombinasiOpen)}
-              disabled={!parameterData?.data}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Buat Kombinasi
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!parameterData?.data && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Settings className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Silakan atur parameter harga terlebih dahulu</p>
-            </div>
-          )}
-
-          {/* Form Buat Kombinasi */}
-          {isFormKombinasiOpen && parameterData?.data && (
-            <Card className="border-dashed">
-              <CardHeader>
-                <CardTitle className="text-base">Buat Kombinasi Baru</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="namaKombinasi">Nama Kombinasi *</Label>
-                    <Input
-                      id="namaKombinasi"
-                      placeholder="Contoh: Harga Normal, Promo Desember"
-                      value={formKombinasi.namaKombinasi}
-                      onChange={(e) =>
-                        setFormKombinasi({ ...formKombinasi, namaKombinasi: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="formatBuku">Format Buku *</Label>
-                    <Select
-                      value={formKombinasi.formatBuku}
-                      onValueChange={(value: any) =>
-                        setFormKombinasi({ ...formKombinasi, formatBuku: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A4">A4 (21 × 29.7 cm)</SelectItem>
-                        <SelectItem value="A5">A5 (14.8 × 21 cm)</SelectItem>
-                        <SelectItem value="B5">B5 (17.6 × 25 cm)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jenisKertas">Jenis Kertas *</Label>
-                    <Select
-                      value={formKombinasi.jenisKertas}
-                      onValueChange={(value: any) =>
-                        setFormKombinasi({ ...formKombinasi, jenisKertas: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="HVS_70gr">HVS 70gr</SelectItem>
-                        <SelectItem value="HVS_80gr">HVS 80gr</SelectItem>
-                        <SelectItem value="BOOKPAPER">Bookpaper</SelectItem>
-                        <SelectItem value="ART_PAPER">Art Paper</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jenisCover">Jenis Cover *</Label>
-                    <Select
-                      value={formKombinasi.jenisCover}
-                      onValueChange={(value: any) =>
-                        setFormKombinasi({ ...formKombinasi, jenisCover: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SOFTCOVER">Softcover</SelectItem>
-                        <SelectItem value="HARDCOVER">Hardcover</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="deskripsi">Deskripsi (opsional)</Label>
-                    <Textarea
-                      id="deskripsi"
-                      placeholder="Contoh: Tarif standar untuk pesanan reguler"
-                      value={formKombinasi.deskripsi}
-                      onChange={(e) =>
-                        setFormKombinasi({ ...formKombinasi, deskripsi: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2 md:col-span-2">
-                    <Switch
-                      id="aktif"
-                      checked={formKombinasi.aktif}
-                      onCheckedChange={(checked: boolean) =>
-                        setFormKombinasi({ ...formKombinasi, aktif: checked })
-                      }
-                    />
-                    <Label htmlFor="aktif">Aktifkan kombinasi ini setelah dibuat</Label>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsFormKombinasiOpen(false)}
-                    disabled={buatKombinasiMutation.isPending}
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    onClick={handleBuatKombinasi}
-                    disabled={buatKombinasiMutation.isPending}
-                  >
-                    {buatKombinasiMutation.isPending ? "Membuat..." : "Buat Kombinasi"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Form kombinasi manual sudah tidak diperlukan - skema dibuat dari form utama di atas */}
 
           {/* List Kombinasi */}
           <div className="space-y-3">
@@ -662,26 +527,33 @@ export default function KelolaHargaPage() {
                         {kombinasi.deskripsi && (
                           <p className="text-sm text-muted-foreground">{kombinasi.deskripsi}</p>
                         )}
-                        <div className="flex flex-wrap gap-2 text-sm">
-                          <Badge variant="outline">{kombinasi.formatBuku}</Badge>
-                          <Badge variant="outline">{kombinasi.jenisKertas}</Badge>
-                          <Badge variant="outline">{kombinasi.jenisCover}</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm pt-2">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm pt-2 mt-3 border-t pt-3">
                           <div>
-                            <p className="text-muted-foreground">Per Halaman</p>
+                            <p className="text-muted-foreground text-xs">Kertas A4</p>
                             <p className="font-medium">
-                              {formatRupiah(Number(kombinasi.hargaPerHalaman))}
+                              {formatRupiah(Number(kombinasi.hargaKertasA4))}/lembar
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Cover</p>
+                            <p className="text-muted-foreground text-xs">Kertas A5</p>
                             <p className="font-medium">
-                              {formatRupiah(Number(kombinasi.biayaCover))}
+                              {formatRupiah(Number(kombinasi.hargaKertasA5))}/lembar
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Jilid</p>
+                            <p className="text-muted-foreground text-xs">Softcover</p>
+                            <p className="font-medium">
+                              {formatRupiah(Number(kombinasi.hargaSoftcover))}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Hardcover</p>
+                            <p className="font-medium">
+                              {formatRupiah(Number(kombinasi.hargaHardcover))}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Biaya Jilid</p>
                             <p className="font-medium">
                               {formatRupiah(Number(kombinasi.biayaJilid))}
                             </p>

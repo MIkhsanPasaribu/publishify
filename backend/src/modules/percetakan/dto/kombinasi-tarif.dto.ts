@@ -23,14 +23,14 @@ export enum JenisCover {
 
 export class BuatKombinasiTarifDto {
   @ApiProperty({
-    description: 'Nama kombinasi tarif (contoh: "Harga Normal", "Promo Desember")',
-    example: 'Harga Normal',
+    description: 'Nama skema tarif (contoh: "Tarif Standar", "Tarif Diskon", "Tarif Premium")',
+    example: 'Tarif Standar',
   })
   @IsString()
   namaKombinasi!: string;
 
   @ApiPropertyOptional({
-    description: 'Deskripsi kombinasi tarif',
+    description: 'Deskripsi skema tarif',
     example: 'Tarif standar untuk pesanan reguler',
   })
   @IsOptional()
@@ -38,32 +38,65 @@ export class BuatKombinasiTarifDto {
   deskripsi?: string;
 
   @ApiProperty({
-    description: 'Format buku',
-    enum: FormatBuku,
-    example: FormatBuku.A5,
+    description: 'Harga kertas A4 per lembar',
+    example: 500,
   })
-  @IsEnum(FormatBuku)
-  formatBuku!: FormatBuku;
+  @IsDecimal()
+  @Type(() => Number)
+  hargaKertasA4!: number;
 
   @ApiProperty({
-    description: 'Jenis kertas',
-    enum: JenisKertas,
-    example: JenisKertas.HVS_80gr,
+    description: 'Harga kertas A5 per lembar',
+    example: 350,
   })
-  @IsEnum(JenisKertas)
-  jenisKertas!: JenisKertas;
-
-  @ApiProperty({
-    description: 'Jenis cover',
-    enum: JenisCover,
-    example: JenisCover.SOFTCOVER,
-  })
-  @IsEnum(JenisCover)
-  jenisCover!: JenisCover;
+  @IsDecimal()
+  @Type(() => Number)
+  hargaKertasA5!: number;
 
   @ApiPropertyOptional({
-    description: 'Set kombinasi ini sebagai aktif (hanya 1 kombinasi aktif per percetakan)',
-    default: false,
+    description: 'Harga kertas B5 per lembar',
+    example: 400,
+  })
+  @IsOptional()
+  @IsDecimal()
+  @Type(() => Number)
+  hargaKertasB5?: number;
+
+  @ApiProperty({
+    description: 'Harga softcover per unit',
+    example: 5000,
+  })
+  @IsDecimal()
+  @Type(() => Number)
+  hargaSoftcover!: number;
+
+  @ApiProperty({
+    description: 'Harga hardcover per unit',
+    example: 15000,
+  })
+  @IsDecimal()
+  @Type(() => Number)
+  hargaHardcover!: number;
+
+  @ApiProperty({
+    description: 'Biaya jilid per buku',
+    example: 3000,
+  })
+  @IsDecimal()
+  @Type(() => Number)
+  biayaJilid!: number;
+
+  @ApiProperty({
+    description: 'Minimum pesanan (unit)',
+    example: 50,
+  })
+  @IsInt()
+  @Min(1)
+  minimumPesanan!: number;
+
+  @ApiPropertyOptional({
+    description: 'Set skema ini sebagai aktif (hanya 1 skema aktif per percetakan)',
+    default: true,
   })
   @IsOptional()
   @IsBoolean()
