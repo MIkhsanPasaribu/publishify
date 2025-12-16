@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, StatusPesanan } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -597,6 +597,278 @@ async function main() {
   console.log(`   - Status dalam_review: 1 naskah`);
   console.log(`   - Status draft: 1 naskah`);
   console.log(`   - Semua naskah published memiliki review dan revisi`);
+
+  // ============================================
+  // PERCETAKAN - TARIF & PESANAN DUMMY DATA
+  // ============================================
+  console.log('');
+  console.log('🖨️  Membuat data dummy untuk Percetakan...');
+
+  // Buat tarif percetakan
+  const tarifData = [
+    {
+      formatBuku: 'A5',
+      jenisKertas: 'HVS 70gr',
+      jenisCover: 'SOFTCOVER',
+      hargaPerHalaman: 350,
+      biayaJilid: 5000,
+      minimumPesanan: 10,
+    },
+    {
+      formatBuku: 'A5',
+      jenisKertas: 'HVS 80gr',
+      jenisCover: 'SOFTCOVER',
+      hargaPerHalaman: 400,
+      biayaJilid: 5500,
+      minimumPesanan: 10,
+    },
+    {
+      formatBuku: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'SOFTCOVER',
+      hargaPerHalaman: 450,
+      biayaJilid: 6000,
+      minimumPesanan: 10,
+    },
+    {
+      formatBuku: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'HARDCOVER',
+      hargaPerHalaman: 450,
+      biayaJilid: 12000,
+      minimumPesanan: 10,
+    },
+    {
+      formatBuku: 'A4',
+      jenisKertas: 'HVS 80gr',
+      jenisCover: 'SOFTCOVER',
+      hargaPerHalaman: 500,
+      biayaJilid: 7000,
+      minimumPesanan: 5,
+    },
+  ];
+
+  for (const tarif of tarifData) {
+    await prisma.tarifPercetakan.upsert({
+      where: {
+        idPercetakan_formatBuku_jenisKertas_jenisCover: {
+          idPercetakan: percetakan.id,
+          formatBuku: tarif.formatBuku,
+          jenisKertas: tarif.jenisKertas,
+          jenisCover: tarif.jenisCover,
+        },
+      },
+      update: {},
+      create: {
+        idPercetakan: percetakan.id,
+        ...tarif,
+        aktif: true,
+      },
+    });
+  }
+  console.log('✅ Tarif percetakan dibuat (5 kombinasi)');
+
+  // Ambil beberapa naskah published untuk pesanan
+  const naskahPublished = await prisma.naskah.findMany({
+    where: { status: 'diterbitkan' },
+    take: 8,
+  });
+
+  // Buat pesanan cetak dengan berbagai status
+  const pesananData = [
+    {
+      naskah: naskahPublished[0],
+      status: 'tertunda',
+      jumlah: 50,
+      formatKertas: 'A5',
+      jenisKertas: 'HVS 70gr',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 875000,
+      createdDaysAgo: 1,
+    },
+    {
+      naskah: naskahPublished[1],
+      status: 'tertunda',
+      jumlah: 100,
+      formatKertas: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 1650000,
+      createdDaysAgo: 2,
+    },
+    {
+      naskah: naskahPublished[2],
+      status: 'diterima',
+      jumlah: 75,
+      formatKertas: 'A5',
+      jenisKertas: 'HVS 80gr',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 1225000,
+      createdDaysAgo: 5,
+    },
+    {
+      naskah: naskahPublished[3],
+      status: 'dalam_produksi',
+      jumlah: 200,
+      formatKertas: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'HARDCOVER',
+      hargaTotal: 3750000,
+      createdDaysAgo: 8,
+    },
+    {
+      naskah: naskahPublished[4],
+      status: 'dalam_produksi',
+      jumlah: 150,
+      formatKertas: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 2625000,
+      createdDaysAgo: 10,
+    },
+    {
+      naskah: naskahPublished[5],
+      status: 'kontrol_kualitas',
+      jumlah: 100,
+      formatKertas: 'A5',
+      jenisKertas: 'HVS 80gr',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 1650000,
+      createdDaysAgo: 15,
+    },
+    {
+      naskah: naskahPublished[6],
+      status: 'siap',
+      jumlah: 50,
+      formatKertas: 'A5',
+      jenisKertas: 'HVS 70gr',
+      jenisCover: 'SOFTCOVER',
+      hargaTotal: 875000,
+      createdDaysAgo: 18,
+    },
+    {
+      naskah: naskahPublished[7],
+      status: 'terkirim',
+      jumlah: 250,
+      formatKertas: 'A5',
+      jenisKertas: 'BOOKPAPER',
+      jenisCover: 'HARDCOVER',
+      hargaTotal: 4687500,
+      createdDaysAgo: 30,
+      tanggalSelesai: 25,
+    },
+  ];
+
+  for (let i = 0; i < pesananData.length; i++) {
+    const data = pesananData[i];
+    const createdAt = new Date();
+    createdAt.setDate(createdAt.getDate() - data.createdDaysAgo);
+
+    const nomorPesanan = `PO-${createdAt.toISOString().slice(0, 10).replace(/-/g, '')}-${String(i + 1).padStart(4, '0')}`;
+
+    const pesanan = await prisma.pesananCetak.create({
+      data: {
+        idNaskah: data.naskah.id,
+        idPemesan: writerTest.id,
+        idPercetakan: percetakan.id,
+        nomorPesanan,
+        jumlah: data.jumlah,
+        formatKertas: data.formatKertas,
+        jenisKertas: data.jenisKertas,
+        jenisCover: data.jenisCover,
+        finishingTambahan: [],
+        catatan: `Pesanan untuk ${data.naskah.judul}. Mohon dikerjakan dengan kualitas terbaik.`,
+        hargaTotal: data.hargaTotal,
+        status: data.status as StatusPesanan,
+        judulSnapshot: data.naskah.judul,
+        formatSnapshot: data.formatKertas,
+        jumlahHalamanSnapshot: data.naskah.jumlahHalaman || 0,
+        tanggalPesan: createdAt,
+      },
+    });
+
+    // Buat log produksi untuk pesanan yang sudah dalam proses
+    if (['dalam_produksi', 'kontrol_kualitas', 'siap', 'terkirim'].includes(data.status)) {
+      await prisma.logProduksi.create({
+        data: {
+          idPesanan: pesanan.id,
+          tahapan: 'Diterima',
+          deskripsi: 'Pesanan diterima dan akan segera diproses',
+        },
+      });
+
+      await prisma.logProduksi.create({
+        data: {
+          idPesanan: pesanan.id,
+          tahapan: 'Dalam Produksi',
+          deskripsi: 'Proses pencetakan dimulai',
+        },
+      });
+    }
+
+    if (['kontrol_kualitas', 'siap', 'terkirim'].includes(data.status)) {
+      await prisma.logProduksi.create({
+        data: {
+          idPesanan: pesanan.id,
+          tahapan: 'Quality Control',
+          deskripsi: 'Melakukan quality control terhadap hasil cetak',
+        },
+      });
+    }
+
+    if (['siap', 'terkirim'].includes(data.status)) {
+      await prisma.logProduksi.create({
+        data: {
+          idPesanan: pesanan.id,
+          tahapan: 'Siap Kirim',
+          deskripsi: 'Pesanan siap untuk dikirim',
+        },
+      });
+    }
+
+    // Buat data pengiriman untuk pesanan yang terkirim
+    if (data.status === 'terkirim') {
+      const tanggalKirim = new Date(createdAt);
+      tanggalKirim.setDate(tanggalKirim.getDate() + (data.tanggalSelesai || 20));
+
+      await prisma.pengiriman.create({
+        data: {
+          idPesanan: pesanan.id,
+          namaEkspedisi: 'JNE Regular',
+          nomorResi: `JNE${Math.random().toString().slice(2, 14)}`,
+          biayaPengiriman: 25000,
+          estimasiTiba: new Date(tanggalKirim.getTime() + 3 * 24 * 60 * 60 * 1000),
+          alamatTujuan: 'Jl. Merdeka No. 123, Jakarta Pusat, DKI Jakarta 10110',
+          namaPenerima: 'Ahmad Surya Wijaya',
+          teleponPenerima: '081298765432',
+          status: 'terkirim',
+          tanggalKirim: tanggalKirim,
+          tanggalTiba: new Date(tanggalKirim.getTime() + 3 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      await prisma.logProduksi.create({
+        data: {
+          idPesanan: pesanan.id,
+          tahapan: 'Terkirim',
+          deskripsi: 'Pesanan telah dikirim dan diterima oleh pemesan',
+        },
+      });
+    }
+
+    console.log(`  ✅ Pesanan ${i + 1}/8: ${data.naskah.judul} - ${data.status} (${data.jumlah} buku)`);
+  }
+
+  console.log('');
+  console.log('✅ Data percetakan dummy completed!');
+  console.log(`   - Tarif percetakan: 5 kombinasi`);
+  console.log(`   - Total pesanan: 8 pesanan`);
+  console.log(`   - Status tertunda: 2 pesanan`);
+  console.log(`   - Status diterima: 1 pesanan`);
+  console.log(`   - Status dalam_produksi: 2 pesanan`);
+  console.log(`   - Status kontrol_kualitas: 1 pesanan`);
+  console.log(`   - Status siap: 1 pesanan`);
+  console.log(`   - Status terkirim: 1 pesanan`);
 
   console.log('');
   console.log('🎉 Seeding selesai!');

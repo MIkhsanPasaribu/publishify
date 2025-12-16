@@ -44,7 +44,7 @@ export default function AdminNaskahPage() {
   };
 
   const handleLihatDetail = (id: string) => {
-    router.push(`/dashboard/admin/naskah/${id}`);
+    router.push(`/admin/naskah/${id}`);
   };
 
   const getLabelStatus = (status: string) => {

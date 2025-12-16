@@ -2,6 +2,15 @@ import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
+ * Enum untuk format/ukuran buku
+ */
+export const FormatBukuEnum = z.enum(['A4', 'A5', 'B5'], {
+  errorMap: () => ({ message: 'Format buku harus A4, A5, atau B5' }),
+});
+
+export type FormatBuku = z.infer<typeof FormatBukuEnum>;
+
+/**
  * Schema Zod untuk membuat naskah baru
  */
 export const BuatNaskahSchema = z.object({
@@ -34,6 +43,8 @@ export const BuatNaskahSchema = z.object({
       required_error: 'Genre wajib dipilih',
     })
     .uuid('ID genre harus berupa UUID'),
+
+  formatBuku: FormatBukuEnum.default('A5').optional(),
 
   bahasaTulis: z
     .string()
@@ -111,6 +122,16 @@ export class BuatNaskahDtoClass {
     type: String,
   })
   idGenre!: string;
+
+  @ApiProperty({
+    description: 'Format/ukuran buku (A4, A5, atau B5)',
+    example: 'A5',
+    enum: ['A4', 'A5', 'B5'],
+    default: 'A5',
+    required: false,
+    type: String,
+  })
+  formatBuku?: 'A4' | 'A5' | 'B5';
 
   @ApiProperty({
     description: 'Bahasa tulisan (kode ISO 639-1)',

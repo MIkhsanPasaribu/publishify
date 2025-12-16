@@ -17,10 +17,10 @@ import {
   AlertCircle,
   BookOpen,
 } from "lucide-react";
-import type { StatistikDashboard, PesananCetak } from "@/types/percetakan";
+import type { StatistikDashboardPercetakan, PesananCetak } from "@/types/percetakan";
 
 export default function DashboardPercetakanPenulis() {
-  const [statistik, setStatistik] = useState<StatistikDashboard | null>(null);
+  const [statistik, setStatistik] = useState<StatistikDashboardPercetakan | null>(null);
   const [pesananTerbaru, setPesananTerbaru] = useState<PesananCetak[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,16 +37,14 @@ export default function DashboardPercetakanPenulis() {
       // Dummy data untuk development
       setStatistik({
         totalPesanan: 12,
+        pesananBaru: 2,
         pesananAktif: 5,
         pesananSelesai: 7,
-        totalRevenue: "15000000",
+        totalRevenue: 15000000,
         statusBreakdown: {
           tertunda: 2,
           diterima: 1,
           dalam_produksi: 1,
-          kontrol_kualitas: 0,
-          siap: 1,
-          dikirim: 0,
           terkirim: 7,
           dibatalkan: 0,
         },

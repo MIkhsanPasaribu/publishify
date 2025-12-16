@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { FormatBukuEnum } from './buat-naskah.dto';
 
 /**
  * Schema Zod untuk Admin terbitkan naskah
- * Admin mengisi ISBN dan biaya produksi
+ * Admin mengisi ISBN, format buku, dan jumlah halaman
+ * Biaya produksi ditentukan oleh mitra percetakan, bukan admin
  */
 export const TerbitkanNaskahSchema = z.object({
   isbn: z
@@ -13,12 +15,14 @@ export const TerbitkanNaskahSchema = z.object({
     .min(1, 'ISBN tidak boleh kosong')
     .trim(),
 
-  biayaProduksi: z
+  formatBuku: FormatBukuEnum.optional(),
+
+  jumlahHalaman: z
     .number({
-      required_error: 'Biaya produksi wajib diisi',
+      required_error: 'Jumlah halaman wajib diisi',
     })
-    .positive('Biaya produksi harus lebih dari 0')
-    .min(0, 'Biaya produksi minimal 0'),
+    .int('Jumlah halaman harus bilangan bulat')
+    .min(1, 'Jumlah halaman minimal 1'),
 });
 
 /**
@@ -38,9 +42,18 @@ export class TerbitkanNaskahDtoClass {
   isbn!: string;
 
   @ApiProperty({
-    description: 'Biaya produksi untuk cetak buku (dalam Rupiah)',
-    example: 30000,
+    description: 'Format/ukuran buku (A4, A5, atau B5)',
+    example: 'A5',
+    enum: ['A4', 'A5', 'B5'],
+    required: false,
+    type: String,
+  })
+  formatBuku?: 'A4' | 'A5' | 'B5';
+
+  @ApiProperty({
+    description: 'Jumlah halaman buku setelah final layout',
+    example: 250,
     type: Number,
   })
-  biayaProduksi!: number;
+  jumlahHalaman!: number;
 }

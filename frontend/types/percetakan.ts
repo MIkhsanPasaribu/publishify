@@ -35,31 +35,28 @@ export interface PesananCetak {
   idPercetakan: string | null;
   nomorPesanan: string;
   
-  // Spesifikasi cetak
-  jumlahCetak: number; // Changed from 'jumlah'
-  ukuranKertas: string; // Changed from 'formatKertas'
-  jenisKertas: string;
-  jenisCover: string;
-  finishing: string; // Changed from 'finishingTambahan'
-  warnaCetak: string; // Added
-  catatanTambahan: string | null; // Changed from 'catatan'
+  // Snapshot data (saved at order time)
+  judulSnapshot: string;
+  formatSnapshot: string;
+  jumlahHalamanSnapshot: number;
   
-  // Informasi pemesan
-  namaPemesan: string;
-  teleponPemesan: string;
-  alamatPengiriman: string;
+  // Spesifikasi cetak (sesuai schema database)
+  jumlah: number; // Database field name
+  formatKertas: string; // Database field name (A5, A4, dll)
+  jenisKertas: string; // HVS, Art Paper, dll
+  jenisCover: string; // Soft Cover, Hard Cover
+  finishingTambahan: string[] | null; // Array of finishing options
+  catatan: string | null; // Database field name
   
   // Pricing
-  hargaPerUnit: number; // Added
-  totalHarga: number; // Changed from 'hargaTotal'
+  hargaTotal: number; // Database field name (Decimal/numeric in DB)
   
-  // Status & dates
+  // Status & dates (sesuai schema database)
   status: StatusPesanan;
-  dibuatPada: string; // Changed from 'tanggalPesan'
-  tanggalDiterima: string | null; // Added
-  estimasiSelesai: string | null;
-  tanggalSelesai: string | null;
-  diperbaruiPada: string;
+  tanggalPesan: string; // Database field name (timestamp)
+  estimasiSelesai: string | null; // timestamp
+  tanggalSelesai: string | null; // timestamp
+  diperbaruiPada: string; // timestamp
   
   // Relations (jika di-include dari API)
   naskah?: {
@@ -189,8 +186,9 @@ export interface UpdateStatusPesananDto {
 
 export interface KonfirmasiPesananDto {
   diterima: boolean;
-  catatan?: string;
+  hargaTotal?: number;
   estimasiSelesai?: string;
+  catatan?: string;
 }
 
 export interface BuatPengirimanDto {
@@ -261,4 +259,143 @@ export interface FilterPesanan {
   cari?: string;
   halaman?: number;
   limit?: number;
+}
+
+// ============================================
+// TARIF PERCETAKAN (NEW)
+// ============================================
+
+export type JenisKertas = 'HVS' | 'BOOKPAPER' | 'ART_PAPER';
+export type JenisCover = 'SOFTCOVER' | 'HARDCOVER';
+export type FormatBuku = 'A4' | 'A5' | 'B5';
+
+export interface TarifPercetakan {
+  id: string;
+  idPercetakan: string;
+  formatBuku: string;
+  jenisKertas: string;
+  jenisCover: string;
+  hargaPerHalaman: number;
+  biayaJilid: number;
+  minimumPesanan: number;
+  aktif: boolean;
+  dibuatPada: string;
+  diperbaruiPada: string;
+  percetakan?: {
+    id: string;
+    email: string;
+    profilPengguna?: {
+      namaDepan?: string;
+      namaBelakang?: string;
+      namaTampilan?: string;
+    };
+  };
+}
+
+export interface BuatTarifDto {
+  formatBuku: string;
+  jenisKertas: string;
+  jenisCover: string;
+  hargaPerHalaman: number;
+  biayaJilid: number;
+  minimumPesanan?: number;
+  aktif?: boolean;
+}
+
+export interface PerbaruiTarifDto extends Partial<BuatTarifDto> {}
+
+// ============================================
+// KALKULASI HARGA (NEW)
+// ============================================
+
+export interface KalkulasiHargaDto {
+  naskahId: string;
+  jenisKertas: string;
+  jenisCover: string;
+}
+
+export interface OpsiHarga {
+  percetakanId: string;
+  namaPercetakan: string;
+  tarifId: string;
+  formatBuku: string;
+  jenisKertas: string;
+  jenisCover: string;
+  hargaPerHalaman: number;
+  biayaJilid: number;
+  minimumPesanan: number;
+  estimasiHarga: number;
+  breakdown: {
+    biayaCetak: number;
+    biayaJilid: number;
+    totalHarga: number;
+  };
+}
+
+export interface KalkulasiHargaResponse {
+  sukses: boolean;
+  pesan: string;
+  data: OpsiHarga[];
+  naskahInfo: {
+    id: string;
+    judul: string;
+    formatBuku: string;
+    jumlahHalaman: number;
+  };
+}
+
+// ============================================
+// PESANAN BARU DENGAN SNAPSHOT (NEW)
+// ============================================
+
+export interface BuatPesananBaruDto {
+  naskahId: string;
+  percetakanId: string;
+  jenisKertas: string;
+  jenisCover: string;
+  jumlahOrder: number;
+  catatan?: string;
+}
+
+// ============================================
+// DASHBOARD & LAPORAN (NEW)
+// ============================================
+
+export interface StatistikDashboardPercetakan {
+  totalPesanan: number;
+  pesananBaru: number;
+  pesananAktif: number;
+  pesananSelesai: number;
+  totalRevenue: number;
+  statusBreakdown: Record<string, number>;
+}
+
+export interface LaporanKeuangan {
+  periode: string;
+  totalPendapatan: number;
+  totalPesanan: number;
+  rataRataPesanan: number;
+  transaksi: {
+    id: string;
+    nomorPesanan: string;
+    judulNaskah: string;
+    jumlah: number;
+    total: number;
+    tanggal: string;
+    status: string;
+  }[];
+}
+
+export interface SaldoPercetakan {
+  saldoAktif: number;
+  saldoDitarik: number;
+  totalPendapatan: number;
+  menungguPembayaran: number;
+  riwayatPenarikan: {
+    id: string;
+    jumlah: number;
+    tanggal: string;
+    status: string;
+    nomorRekening: string;
+  }[];
 }

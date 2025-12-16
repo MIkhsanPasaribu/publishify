@@ -13,7 +13,11 @@ import {
   Edit,
   Printer,
   AlertCircle,
+  Check,
+  Play,
 } from "lucide-react";
+import { KonfirmasiPesananDialog } from "@/components/percetakan/konfirmasi-pesanan-dialog";
+import { UpdateStatusDialog } from "@/components/percetakan/update-status-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,88 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Dummy Data - Pesanan yang perlu dikelola oleh percetakan
-const DUMMY_PESANAN = [
-  {
-    id: "1",
-    nomorPesanan: "PO-20251126-1234",
-    judul: "Petualangan di Negeri Dongeng",
-    pemesan: "Ahmad Rudi",
-    email: "ahmad.rudi@email.com",
-    jumlah: 100,
-    formatKertas: "A5",
-    jenisKertas: "Bookpaper",
-    jenisCover: "Soft Cover",
-    hargaTotal: 2500000,
-    status: "dalam_produksi",
-    tanggalPesan: "2025-11-26T10:00:00Z",
-    estimasiSelesai: "2025-12-03T10:00:00Z",
-    progress: 45,
-  },
-  {
-    id: "2",
-    nomorPesanan: "PO-20251125-5678",
-    judul: "Panduan Lengkap Pemrograman Web",
-    pemesan: "Siti Nurhaliza",
-    email: "siti.nur@email.com",
-    jumlah: 50,
-    formatKertas: "A4",
-    jenisKertas: "HVS 80gr",
-    jenisCover: "Hard Cover",
-    hargaTotal: 3500000,
-    status: "kontrol_kualitas",
-    tanggalPesan: "2025-11-25T14:30:00Z",
-    estimasiSelesai: "2025-11-30T10:00:00Z",
-    progress: 85,
-  },
-  {
-    id: "3",
-    nomorPesanan: "PO-20251124-9012",
-    judul: "Resep Masakan Nusantara",
-    pemesan: "Budi Santoso",
-    email: "budi.santoso@email.com",
-    jumlah: 200,
-    formatKertas: "A5",
-    jenisKertas: "Art Paper 120gr",
-    jenisCover: "Soft Cover",
-    hargaTotal: 4800000,
-    status: "siap",
-    tanggalPesan: "2025-11-24T09:00:00Z",
-    estimasiSelesai: "2025-11-29T10:00:00Z",
-    progress: 100,
-  },
-  {
-    id: "4",
-    nomorPesanan: "PO-20251123-3456",
-    judul: "Kisah Inspiratif Para Pejuang",
-    pemesan: "Dewi Lestari",
-    email: "dewi.l@email.com",
-    jumlah: 75,
-    formatKertas: "B5",
-    jenisKertas: "Bookpaper",
-    jenisCover: "Hard Cover",
-    hargaTotal: 4200000,
-    status: "tertunda",
-    tanggalPesan: "2025-11-23T11:00:00Z",
-    progress: 0,
-  },
-  {
-    id: "5",
-    nomorPesanan: "PO-20251122-7890",
-    judul: "Belajar Bahasa Inggris dengan Mudah",
-    pemesan: "Eko Prasetyo",
-    email: "eko.p@email.com",
-    jumlah: 150,
-    formatKertas: "A5",
-    jenisKertas: "HVS 70gr",
-    jenisCover: "Soft Cover",
-    hargaTotal: 3200000,
-    status: "diterima",
-    tanggalPesan: "2025-11-22T16:00:00Z",
-    estimasiSelesai: "2025-11-29T10:00:00Z",
-    progress: 15,
-  },
-];
+// Data pesanan akan diambil dari API
 
 const STATUS_CONFIG = {
   tertunda: {
@@ -175,23 +98,41 @@ export default function DaftarPesananPercetakanPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("semua");
 
+  // State untuk data dari API
+  const [pesananData] = useState<any[]>([]);
+
+  // State untuk dialog
+  const [selectedPesanan, setSelectedPesanan] = useState<any>(null);
+  const [showKonfirmasiDialog, setShowKonfirmasiDialog] = useState(false);
+  const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
+
+  // TODO: Fetch data dari API
+  // useEffect(() => {
+  //   fetchPesanan();
+  // }, []);
+
+  const handleRefresh = () => {
+    // TODO: Re-fetch data
+    console.log("Refresh data");
+  };
+
   // Filter data
-  const filteredPesanan = DUMMY_PESANAN.filter((pesanan) => {
+  const filteredPesanan = pesananData.filter((pesanan) => {
     const matchSearch =
-      pesanan.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pesanan.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pesanan.pemesan.toLowerCase().includes(searchQuery.toLowerCase());
+      pesanan.nomorPesanan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pesanan.judul?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pesanan.pemesan?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = filterStatus === "semua" || pesanan.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   // Statistik
   const stats = {
-    total: DUMMY_PESANAN.length,
-    tertunda: DUMMY_PESANAN.filter((p) => p.status === "tertunda").length,
-    produksi: DUMMY_PESANAN.filter((p) => p.status === "dalam_produksi").length,
-    qc: DUMMY_PESANAN.filter((p) => p.status === "kontrol_kualitas").length,
-    siap: DUMMY_PESANAN.filter((p) => p.status === "siap").length,
+    total: pesananData.length,
+    tertunda: pesananData.filter((p) => p.status === "tertunda").length,
+    produksi: pesananData.filter((p) => p.status === "dalam_produksi").length,
+    qc: pesananData.filter((p) => p.status === "kontrol_kualitas").length,
+    siap: pesananData.filter((p) => p.status === "siap").length,
   };
 
   return (
@@ -366,6 +307,38 @@ export default function DaftarPesananPercetakanPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Tombol Konfirmasi untuk status tertunda */}
+                            {pesanan.status === "tertunda" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPesanan(pesanan);
+                                  setShowKonfirmasiDialog(true);
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Check className="h-3.5 w-3.5 mr-1" />
+                                Konfirmasi
+                              </Button>
+                            )}
+                            
+                            {/* Tombol Update Status untuk status lainnya */}
+                            {pesanan.status !== "tertunda" && 
+                             pesanan.status !== "terkirim" && 
+                             pesanan.status !== "dibatalkan" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPesanan(pesanan);
+                                  setShowUpdateStatusDialog(true);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Play className="h-3.5 w-3.5 mr-1" />
+                                Update Status
+                              </Button>
+                            )}
+                            
                             <Button
                               size="sm"
                               variant="outline"
@@ -373,13 +346,6 @@ export default function DaftarPesananPercetakanPage() {
                             >
                               <Eye className="h-3.5 w-3.5 mr-1" />
                               Detail
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-slate-700 hover:bg-slate-800"
-                            >
-                              <Edit className="h-3.5 w-3.5 mr-1" />
-                              Update
                             </Button>
                           </div>
                         </td>
@@ -392,6 +358,30 @@ export default function DaftarPesananPercetakanPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog Konfirmasi Pesanan */}
+      {selectedPesanan && (
+        <KonfirmasiPesananDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          judul={selectedPesanan.judul}
+          open={showKonfirmasiDialog}
+          onOpenChange={setShowKonfirmasiDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {/* Dialog Update Status */}
+      {selectedPesanan && (
+        <UpdateStatusDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          statusSaatIni={selectedPesanan.status}
+          open={showUpdateStatusDialog}
+          onOpenChange={setShowUpdateStatusDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }

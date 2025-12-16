@@ -3,8 +3,25 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/use-auth-store";
+import { ambilPesananPercetakan } from "@/lib/api/percetakan";
+
+// Menu Item Types
+type MenuDivider = {
+  isDivider: true;
+  label: string;
+};
+
+type MenuItem = {
+  isDivider?: false;
+  label: string;
+  icon: React.ReactElement;
+  href: string;
+  badge?: number;
+};
+
+type MenuItemOrDivider = MenuItem | MenuDivider;
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -114,10 +131,29 @@ export function Sidebar() {
     },
   ];
 
-  // Menu untuk Percetakan
+  // State untuk notification badge pesanan baru
+  const [pesananBaruCount, setPesananBaruCount] = useState(0);
+
+  // Fetch pesanan baru count untuk percetakan
+  useEffect(() => {
+    if (hasRole("percetakan")) {
+      ambilPesananPercetakan("baru")
+        .then((response) => {
+          if (response.sukses) {
+            setPesananBaruCount(response.total || 0);
+          }
+        })
+        .catch(() => {
+          // Silent fail
+        });
+    }
+  }, [pengguna]);
+
+  // Menu untuk Percetakan - Struktur Baru dengan 5 Groups
   const menuPercetakan = [
+    // GROUP 1: UTAMA (Overview)
     {
-      label: "Dashboard Percetakan",
+      label: "Overview",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -125,23 +161,99 @@ export function Sidebar() {
       ),
       href: "/dashboard/percetakan",
     },
+    // GROUP 2: FULFILLMENT - Divider
     {
-      label: "Daftar Pesanan",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      href: "/dashboard/percetakan/pesanan",
+      isDivider: true,
+      label: "FULFILLMENT",
     },
     {
-      label: "Pembayaran",
+      label: "Pesanan Baru",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
         </svg>
       ),
-      href: "/dashboard/percetakan/pembayaran",
+      href: "/dashboard/percetakan/pesanan/baru",
+      badge: pesananBaruCount,
+    },
+    {
+      label: "Dalam Produksi",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/pesanan/produksi",
+    },
+    {
+      label: "Pengiriman",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/pesanan/pengiriman",
+    },
+    {
+      label: "Riwayat Selesai",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/pesanan/riwayat",
+    },
+    // GROUP 3: LAYANAN & HARGA - Divider
+    {
+      isDivider: true,
+      label: "LAYANAN & HARGA",
+    },
+    {
+      label: "Kelola Tarif",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/tarif",
+    },
+    // GROUP 4: KEUANGAN - Divider
+    {
+      isDivider: true,
+      label: "KEUANGAN",
+    },
+    {
+      label: "Saldo & Penarikan",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/keuangan/saldo",
+    },
+    {
+      label: "Laporan Penghasilan",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/keuangan/laporan",
+    },
+    // GROUP 5: PENGATURAN - Divider
+    {
+      isDivider: true,
+      label: "PENGATURAN",
+    },
+    {
+      label: "Store Profile",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      ),
+      href: "/dashboard/percetakan/settings/profile",
     },
   ];
 
@@ -154,7 +266,7 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       ),
-      href: "/dashboard/admin",
+      href: "/admin",
     },
     {
       label: "Semua Naskah",
@@ -163,7 +275,7 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      href: "/dashboard/admin/review",
+      href: "/admin/review",
     },
     {
       label: "Antrian Review",
@@ -172,16 +284,7 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      href: "/dashboard/admin/antrian-review",
-    },
-    {
-      label: "Kelola Naskah",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      href: "/dashboard/admin/kelola-naskah",
+      href: "/admin/antrian-review",
     },
     {
       label: "Kelola Pengguna",
@@ -190,7 +293,7 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       ),
-      href: "/dashboard/admin/pengguna",
+      href: "/admin/pengguna",
     },
     {
       label: "Monitoring Review",
@@ -199,7 +302,7 @@ export function Sidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
         </svg>
       ),
-      href: "/dashboard/admin/monitoring",
+      href: "/admin/monitoring",
     },
   ];
 
@@ -274,21 +377,47 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-6 px-3">
           <ul className="space-y-2">
             {menuItems.map((item, index) => {
-              const isActive = pathname === item.href;
+              // Render divider with type guard
+              if ("isDivider" in item && item.isDivider) {
+                return (
+                  <li key={index} className="pt-4 pb-2">
+                    {!isCollapsed && (
+                      <div className="px-4">
+                        <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                          {item.label}
+                        </p>
+                      </div>
+                    )}
+                    {isCollapsed && (
+                      <div className="border-t border-white/20 mx-2"></div>
+                    )}
+                  </li>
+                );
+              }
+
+              // Render normal menu item
+              const menuItem = item as MenuItem;
+              const isActive = pathname === menuItem.href;
               return (
                 <li key={index}>
                   <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    href={menuItem.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                       isActive
                         ? "bg-[#14b8a6] text-white shadow-lg"
                         : "hover:bg-white/10 text-white/80 hover:text-white"
                     } ${isCollapsed ? "justify-center" : ""}`}
-                    title={isCollapsed ? item.label : ""}
+                    title={isCollapsed ? menuItem.label : ""}
                   >
-                    {item.icon}
+                    {menuItem.icon}
                     {!isCollapsed && (
-                      <span className="font-medium">{item.label}</span>
+                      <span className="font-medium flex-1">{menuItem.label}</span>
+                    )}
+                    {/* Notification Badge */}
+                    {menuItem.badge && menuItem.badge > 0 && (
+                      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                        {menuItem.badge > 99 ? "99+" : menuItem.badge}
+                      </span>
                     )}
                   </Link>
                 </li>

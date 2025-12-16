@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { FormatBukuEnum } from './buat-naskah.dto';
 
 /**
  * Schema Zod untuk update naskah
@@ -25,6 +26,8 @@ export const PerbaruiNaskahSchema = z.object({
   idKategori: z.string().uuid('ID kategori harus berupa UUID').optional(),
 
   idGenre: z.string().uuid('ID genre harus berupa UUID').optional(),
+
+  formatBuku: FormatBukuEnum.optional(),
 
   bahasaTulis: z.string().length(2, 'Kode bahasa harus 2 karakter (ISO 639-1)').optional(),
 
@@ -97,6 +100,15 @@ export class PerbaruiNaskahDtoClass {
     type: String,
   })
   idGenre?: string;
+
+  @ApiProperty({
+    description: 'Format/ukuran buku (A4, A5, atau B5)',
+    example: 'A5',
+    enum: ['A4', 'A5', 'B5'],
+    required: false,
+    type: String,
+  })
+  formatBuku?: 'A4' | 'A5' | 'B5';
 
   @ApiProperty({
     description: 'Bahasa tulisan (kode ISO 639-1)',

@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 // Konfigurasi
 import databaseConfig from './config/database.config';
@@ -62,6 +64,15 @@ import { AppController } from './app.controller';
 
     // Scheduler
     ScheduleModule.forRoot(),
+
+    // Serve Static Files (uploads folder)
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+      serveStaticOptions: {
+        index: false,
+      },
+    }),
 
     // Prisma
     PrismaModule,

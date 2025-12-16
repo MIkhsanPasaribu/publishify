@@ -72,8 +72,22 @@ api.interceptors.response.use(
         fullURL: `${error.config?.baseURL}${error.config?.url}`,
       });
       
-      // Log full error for debugging
-      console.error("Full error object:", error);
+      // Special handling untuk Network Error
+      if (error.message === "Network Error") {
+        console.error("❌ BACKEND TIDAK DAPAT DIAKSES!");
+        console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.error("🔍 Kemungkinan penyebab:");
+        console.error("  1. Backend tidak running (jalankan: cd backend && npm run start:dev)");
+        console.error("  2. Backend crash atau error");
+        console.error("  3. Port 4000 sudah digunakan aplikasi lain");
+        console.error("  4. Firewall memblokir koneksi");
+        console.error("");
+        console.error("🛠️  Solusi:");
+        console.error("  1. Pastikan backend berjalan di http://localhost:4000");
+        console.error("  2. Cek terminal backend untuk error");
+        console.error("  3. Test dengan: curl http://localhost:4000/api/health");
+        console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+      }
     }
     
     const originalRequest = error.config as any;

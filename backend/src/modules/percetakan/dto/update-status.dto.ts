@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsString, IsOptional, IsDateString, MaxLength } from 'class-validator';
 
 /**
  * DTO untuk update status pesanan cetak
@@ -34,6 +35,9 @@ export class UpdateStatusDtoClass implements UpdateStatusDto {
     enum: ['diterima', 'dalam_produksi', 'kontrol_kualitas', 'siap', 'dikirim', 'terkirim'],
     example: 'dalam_produksi',
   })
+  @IsEnum(['diterima', 'dalam_produksi', 'kontrol_kualitas', 'siap', 'dikirim', 'terkirim'], {
+    message: 'Status harus salah satu dari: diterima, dalam_produksi, kontrol_kualitas, siap, dikirim, terkirim',
+  })
   status!: 'diterima' | 'dalam_produksi' | 'kontrol_kualitas' | 'siap' | 'dikirim' | 'terkirim';
 
   @ApiProperty({
@@ -42,6 +46,9 @@ export class UpdateStatusDtoClass implements UpdateStatusDto {
     required: false,
     maxLength: 500,
   })
+  @IsOptional()
+  @IsString({ message: 'Catatan harus berupa string' })
+  @MaxLength(500, { message: 'Catatan maksimal 500 karakter' })
   catatan?: string;
 
   @ApiProperty({
@@ -50,5 +57,7 @@ export class UpdateStatusDtoClass implements UpdateStatusDto {
     format: 'date-time',
     required: false,
   })
+  @IsOptional()
+  @IsDateString({}, { message: 'Format tanggal harus ISO 8601' })
   estimasiSelesai?: string;
 }
