@@ -13,7 +13,11 @@ import {
   Edit,
   Printer,
   AlertCircle,
+  Check,
+  Play,
 } from "lucide-react";
+import { KonfirmasiPesananDialog } from "@/components/percetakan/konfirmasi-pesanan-dialog";
+import { UpdateStatusDialog } from "@/components/percetakan/update-status-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,10 +101,20 @@ export default function DaftarPesananPercetakanPage() {
   // State untuk data dari API
   const [pesananData] = useState<any[]>([]);
 
+  // State untuk dialog
+  const [selectedPesanan, setSelectedPesanan] = useState<any>(null);
+  const [showKonfirmasiDialog, setShowKonfirmasiDialog] = useState(false);
+  const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
+
   // TODO: Fetch data dari API
   // useEffect(() => {
   //   fetchPesanan();
   // }, []);
+
+  const handleRefresh = () => {
+    // TODO: Re-fetch data
+    console.log("Refresh data");
+  };
 
   // Filter data
   const filteredPesanan = pesananData.filter((pesanan) => {
@@ -293,6 +307,38 @@ export default function DaftarPesananPercetakanPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Tombol Konfirmasi untuk status tertunda */}
+                            {pesanan.status === "tertunda" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPesanan(pesanan);
+                                  setShowKonfirmasiDialog(true);
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Check className="h-3.5 w-3.5 mr-1" />
+                                Konfirmasi
+                              </Button>
+                            )}
+                            
+                            {/* Tombol Update Status untuk status lainnya */}
+                            {pesanan.status !== "tertunda" && 
+                             pesanan.status !== "terkirim" && 
+                             pesanan.status !== "dibatalkan" && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPesanan(pesanan);
+                                  setShowUpdateStatusDialog(true);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Play className="h-3.5 w-3.5 mr-1" />
+                                Update Status
+                              </Button>
+                            )}
+                            
                             <Button
                               size="sm"
                               variant="outline"
@@ -300,13 +346,6 @@ export default function DaftarPesananPercetakanPage() {
                             >
                               <Eye className="h-3.5 w-3.5 mr-1" />
                               Detail
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-slate-700 hover:bg-slate-800"
-                            >
-                              <Edit className="h-3.5 w-3.5 mr-1" />
-                              Update
                             </Button>
                           </div>
                         </td>
@@ -319,6 +358,30 @@ export default function DaftarPesananPercetakanPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog Konfirmasi Pesanan */}
+      {selectedPesanan && (
+        <KonfirmasiPesananDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          judul={selectedPesanan.judul}
+          open={showKonfirmasiDialog}
+          onOpenChange={setShowKonfirmasiDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {/* Dialog Update Status */}
+      {selectedPesanan && (
+        <UpdateStatusDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          statusSaatIni={selectedPesanan.status}
+          open={showUpdateStatusDialog}
+          onOpenChange={setShowUpdateStatusDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }

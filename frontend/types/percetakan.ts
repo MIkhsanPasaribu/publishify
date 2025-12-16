@@ -186,8 +186,9 @@ export interface UpdateStatusPesananDto {
 
 export interface KonfirmasiPesananDto {
   diterima: boolean;
-  catatan?: string;
+  hargaTotal?: number;
   estimasiSelesai?: string;
+  catatan?: string;
 }
 
 export interface BuatPengirimanDto {

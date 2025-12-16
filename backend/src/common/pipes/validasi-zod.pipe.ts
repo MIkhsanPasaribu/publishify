@@ -21,16 +21,12 @@ export class ValidasiZodPipe implements PipeTransform {
       return result;
     } catch (error: any) {
       console.error('❌ [ValidasiZodPipe] Validation error:', error.errors);
+      console.error('❌ [ValidasiZodPipe] Full error:', JSON.stringify(error, null, 2));
       
-      const errors = error.errors?.map((err: any) => ({
-        field: err.path.join('.'),
-        message: err.message,
-      }));
+      // Extract error messages untuk user-friendly response
+      const errorMessages = error.errors?.map((err: any) => err.message) || [];
 
-      throw new BadRequestException({
-        message: 'Validasi gagal',
-        errors,
-      });
+      throw new BadRequestException(errorMessages);
     }
   }
 }

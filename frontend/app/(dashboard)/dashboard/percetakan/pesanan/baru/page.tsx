@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, CheckCircle, XCircle, Eye } from "lucide-react";
-import { ambilPesananPercetakan, konfirmasiPesanan } from "@/lib/api/percetakan";
+import { useQuery } from "@tanstack/react-query";
+import { Download, FileText, CheckCircle, Eye } from "lucide-react";
+import { ambilPesananPercetakan } from "@/lib/api/percetakan";
+import { KonfirmasiPesananDialog } from "@/components/percetakan/konfirmasi-pesanan-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,7 +40,7 @@ export default function PesananBaruPage() {
     null
   );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [showKonfirmasiDialog, setShowKonfirmasiDialog] = useState(false);
 
   // Fetch pesanan baru
   const { data, isLoading, refetch } = useQuery({
@@ -48,45 +49,13 @@ export default function PesananBaruPage() {
     refetchInterval: 30000, // Refresh setiap 30 detik
   });
 
-  // Konfirmasi mutation
-  const konfirmasiMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      konfirmasiPesanan(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pesanan-baru"] });
-      toast.success("Pesanan berhasil dikonfirmasi");
-      setIsDetailOpen(false);
-    },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.pesan || "Gagal mengkonfirmasi pesanan"
-      );
-    },
-  });
-
-  const handleTerima = (pesanan: PesananCetak) => {
-    if (
-      confirm(
-        `Terima pesanan ${pesanan.nomorPesanan}?\n\nAnda akan bertanggung jawab untuk mencetak ${pesanan.jumlah} eksemplar.`
-      )
-    ) {
-      konfirmasiMutation.mutate({
-        id: pesanan.id,
-        data: { konfirmasi: true },
-      });
-    }
+  const handleKonfirmasiClick = (pesanan: PesananCetak) => {
+    setSelectedPesanan(pesanan);
+    setShowKonfirmasiDialog(true);
   };
 
-  const handleTolak = (pesanan: PesananCetak) => {
-    const alasan = prompt(
-      "Masukkan alasan penolakan (akan dikirim ke penulis):"
-    );
-    if (alasan) {
-      konfirmasiMutation.mutate({
-        id: pesanan.id,
-        data: { konfirmasi: false, alasan },
-      });
-    }
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handleDownloadPDF = (pesanan: PesananCetak) => {
@@ -262,26 +231,14 @@ export default function PesananBaruPage() {
                             Detail
                           </Button>
                           {pesanan.status === "tertunda" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={() => handleTerima(pesanan)}
-                                disabled={konfirmasiMutation.isPending}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Terima
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleTolak(pesanan)}
-                                disabled={konfirmasiMutation.isPending}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Tolak
-                              </Button>
-                            </>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleKonfirmasiClick(pesanan)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Konfirmasi
+                            </Button>
                           )}
                           {pesanan.naskah?.urlFile && (
                             <Button
@@ -398,29 +355,16 @@ export default function PesananBaruPage() {
 
               {/* Actions */}
               {selectedPesanan.status === "tertunda" && (
-                <div className="border-t pt-4 flex gap-3">
+                <div className="border-t pt-4">
                   <Button
-                    className="flex-1"
+                    className="w-full"
                     onClick={() => {
-                      handleTerima(selectedPesanan);
+                      handleKonfirmasiClick(selectedPesanan);
                       setIsDetailOpen(false);
                     }}
-                    disabled={konfirmasiMutation.isPending}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Terima Pesanan
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => {
-                      handleTolak(selectedPesanan);
-                      setIsDetailOpen(false);
-                    }}
-                    disabled={konfirmasiMutation.isPending}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Tolak Pesanan
+                    Konfirmasi Pesanan
                   </Button>
                 </div>
               )}
@@ -428,6 +372,18 @@ export default function PesananBaruPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Konfirmasi Pesanan Dialog */}
+      {selectedPesanan && (
+        <KonfirmasiPesananDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          judul={selectedPesanan.naskah?.judul || ""}
+          open={showKonfirmasiDialog}
+          onOpenChange={setShowKonfirmasiDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }

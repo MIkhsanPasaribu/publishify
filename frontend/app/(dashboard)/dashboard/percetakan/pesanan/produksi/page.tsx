@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import {
@@ -13,6 +13,7 @@ import {
   Printer,
   AlertCircle,
   Clock,
+  Play,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,41 +27,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
 import Link from "next/link";
-import {
-  ambilPesananPercetakan,
-  perbaruiStatusPesanan,
-} from "@/lib/api/percetakan";
-import type { PesananCetak, StatusPesanan } from "@/types/percetakan";
+import { ambilPesananPercetakan } from "@/lib/api/percetakan";
+import { UpdateStatusDialog } from "@/components/percetakan/update-status-dialog";
+import type { PesananCetak } from "@/types/percetakan";
 import { formatRupiah } from "@/lib/utils";
 
 export default function DalamProduksiPage() {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPesanan, setSelectedPesanan] = useState<PesananCetak | null>(
     null
   );
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-  const [statusBaru, setStatusBaru] = useState<StatusPesanan>("dalam_produksi");
+  const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
 
   // Fetch pesanan dalam produksi
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["pesanan-produksi"],
     queryFn: () => ambilPesananPercetakan("produksi"),
     refetchInterval: 30000, // Refetch setiap 30 detik
@@ -90,39 +71,13 @@ export default function DalamProduksiPage() {
     siap: pesananList.filter((p: PesananCetak) => p.status === "siap").length,
   };
 
-  // Mutation untuk update status
-  const updateStatusMutation = useMutation({
-    mutationFn: ({
-      idPesanan,
-      status,
-    }: {
-      idPesanan: string;
-      status: StatusPesanan;
-    }) => perbaruiStatusPesanan(idPesanan, { status }),
-    onSuccess: () => {
-      toast.success("Status pesanan berhasil diperbarui");
-      queryClient.invalidateQueries({ queryKey: ["pesanan-produksi"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-percetakan"] });
-      setUpdateDialogOpen(false);
-      setSelectedPesanan(null);
-    },
-    onError: () => {
-      toast.error("Gagal memperbarui status pesanan");
-    },
-  });
-
-  const handleUpdateStatus = () => {
-    if (!selectedPesanan) return;
-    updateStatusMutation.mutate({
-      idPesanan: selectedPesanan.id,
-      status: statusBaru,
-    });
+  const handleUpdateStatusClick = (pesanan: PesananCetak) => {
+    setSelectedPesanan(pesanan);
+    setShowUpdateStatusDialog(true);
   };
 
-  const openUpdateDialog = (pesanan: PesananCetak) => {
-    setSelectedPesanan(pesanan);
-    setStatusBaru(pesanan.status);
-    setUpdateDialogOpen(true);
+  const handleRefresh = () => {
+    refetch();
   };
 
   if (isLoading) {
@@ -310,9 +265,9 @@ export default function DalamProduksiPage() {
                     <TableCell>
                       <Button
                         size="sm"
-                        onClick={() => openUpdateDialog(pesanan)}
-                        disabled={updateStatusMutation.isPending}
+                        onClick={() => handleUpdateStatusClick(pesanan)}
                       >
+                        <Play className="w-4 h-4 mr-1" />
                         Update Status
                       </Button>
                     </TableCell>
@@ -325,86 +280,16 @@ export default function DalamProduksiPage() {
       </Card>
 
       {/* Update Status Dialog */}
-      <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Status Pesanan</DialogTitle>
-            <DialogDescription>
-              Perbarui status produksi untuk pesanan{" "}
-              {selectedPesanan?.nomorPesanan}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedPesanan && (
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Judul:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.naskah?.judul || "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Jumlah:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.jumlah} eksemplar
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Status Saat Ini:</span>
-                  <Badge>
-                    {selectedPesanan.status === "dalam_produksi"
-                      ? "Dalam Produksi"
-                      : selectedPesanan.status === "kontrol_kualitas"
-                        ? "Kontrol Kualitas"
-                        : "Siap Kirim"}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status Baru</label>
-                <Select
-                  value={statusBaru}
-                  onValueChange={(value) => setStatusBaru(value as StatusPesanan)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dalam_produksi">
-                      Dalam Produksi
-                    </SelectItem>
-                    <SelectItem value="kontrol_kualitas">
-                      Kontrol Kualitas
-                    </SelectItem>
-                    <SelectItem value="siap">Siap Kirim</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setUpdateDialogOpen(false)}
-              disabled={updateStatusMutation.isPending}
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleUpdateStatus}
-              disabled={updateStatusMutation.isPending}
-            >
-              {updateStatusMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Update Status
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {selectedPesanan && (
+        <UpdateStatusDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          statusSaatIni={selectedPesanan.status}
+          open={showUpdateStatusDialog}
+          onOpenChange={setShowUpdateStatusDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import {
@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   MapPin,
   Calendar,
+  Play,
+  Send,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,37 +28,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 import Link from "next/link";
-import {
-  ambilPesananPercetakan,
-  perbaruiStatusPesanan,
-} from "@/lib/api/percetakan";
+import { ambilPesananPercetakan } from "@/lib/api/percetakan";
+import { BuatPengirimanDialog } from "@/components/percetakan/buat-pengiriman-dialog";
+import { UpdateStatusDialog } from "@/components/percetakan/update-status-dialog";
 import type { PesananCetak } from "@/types/percetakan";
 import { formatRupiah } from "@/lib/utils";
 
 export default function PengirimanPage() {
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPesanan, setSelectedPesanan] = useState<PesananCetak | null>(
     null
   );
-  const [kirimDialogOpen, setKirimDialogOpen] = useState(false);
-  const [nomorResi, setNomorResi] = useState("");
-  const [catatanPengiriman, setCatatanPengiriman] = useState("");
+  const [showBuatPengirimanDialog, setShowBuatPengirimanDialog] = useState(false);
+  const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
 
   // Fetch pesanan untuk pengiriman
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["pesanan-pengiriman"],
     queryFn: () => ambilPesananPercetakan("pengiriman"),
     refetchInterval: 30000, // Refetch setiap 30 detik
@@ -85,70 +73,18 @@ export default function PengirimanPage() {
       .length,
   };
 
-  // Mutation untuk kirim pesanan
-  const kirimPesananMutation = useMutation({
-    mutationFn: async ({
-      idPesanan,
-      nomorResi,
-      catatan,
-    }: {
-      idPesanan: string;
-      nomorResi: string;
-      catatan: string;
-    }) => {
-      // Update status ke dikirim dengan catatan resi
-      return perbaruiStatusPesanan(idPesanan, {
-        status: "dikirim",
-        catatan: `Resi: ${nomorResi}. ${catatan}`,
-      });
-    },
-    onSuccess: () => {
-      toast.success("Pesanan berhasil dikirim");
-      queryClient.invalidateQueries({ queryKey: ["pesanan-pengiriman"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-percetakan"] });
-      setKirimDialogOpen(false);
-      setSelectedPesanan(null);
-      setNomorResi("");
-      setCatatanPengiriman("");
-    },
-    onError: () => {
-      toast.error("Gagal mengirim pesanan");
-    },
-  });
-
-  // Mutation untuk konfirmasi terkirim
-  const konfirmasiTerkirimMutation = useMutation({
-    mutationFn: (idPesanan: string) =>
-      perbaruiStatusPesanan(idPesanan, {
-        status: "terkirim",
-      }),
-    onSuccess: () => {
-      toast.success("Pesanan dikonfirmasi terkirim");
-      queryClient.invalidateQueries({ queryKey: ["pesanan-pengiriman"] });
-      queryClient.invalidateQueries({ queryKey: ["stats-percetakan"] });
-    },
-    onError: () => {
-      toast.error("Gagal konfirmasi pengiriman");
-    },
-  });
-
-  const handleKirimPesanan = () => {
-    if (!selectedPesanan || !nomorResi.trim()) {
-      toast.error("Nomor resi wajib diisi");
-      return;
-    }
-    kirimPesananMutation.mutate({
-      idPesanan: selectedPesanan.id,
-      nomorResi: nomorResi.trim(),
-      catatan: catatanPengiriman.trim(),
-    });
+  const handleBuatPengiriman = (pesanan: PesananCetak) => {
+    setSelectedPesanan(pesanan);
+    setShowBuatPengirimanDialog(true);
   };
 
-  const openKirimDialog = (pesanan: PesananCetak) => {
+  const handleUpdateStatus = (pesanan: PesananCetak) => {
     setSelectedPesanan(pesanan);
-    setNomorResi(pesanan.pengiriman?.nomorResi || "");
-    setCatatanPengiriman("");
-    setKirimDialogOpen(true);
+    setShowUpdateStatusDialog(true);
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   if (isLoading) {
@@ -333,30 +269,30 @@ export default function PengirimanPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {pesanan.status === "siap" ? (
-                        <Button
-                          size="sm"
-                          onClick={() => openKirimDialog(pesanan)}
-                          disabled={kirimPesananMutation.isPending}
-                        >
-                          <Truck className="mr-2 h-4 w-4" />
-                          Kirim
-                        </Button>
-                      ) : pesanan.status === "dikirim" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            konfirmasiTerkirimMutation.mutate(pesanan.id)
-                          }
-                          disabled={konfirmasiTerkirimMutation.isPending}
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Konfirmasi Terkirim
-                        </Button>
-                      ) : (
-                        <Badge variant="secondary">Selesai</Badge>
-                      )}
+                      <div className="flex gap-2">
+                        {pesanan.status === "siap" && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleBuatPengiriman(pesanan)}
+                          >
+                            <Send className="mr-2 h-4 w-4" />
+                            Buat Pengiriman
+                          </Button>
+                        )}
+                        {pesanan.status === "dikirim" && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleUpdateStatus(pesanan)}
+                          >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Konfirmasi Terkirim
+                          </Button>
+                        )}
+                        {pesanan.status === "terkirim" && (
+                          <Badge variant="secondary">Selesai</Badge>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -366,96 +302,31 @@ export default function PengirimanPage() {
         </CardContent>
       </Card>
 
-      {/* Kirim Pesanan Dialog */}
-      <Dialog open={kirimDialogOpen} onOpenChange={setKirimDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Kirim Pesanan</DialogTitle>
-            <DialogDescription>
-              Input nomor resi dan detail pengiriman untuk pesanan{" "}
-              {selectedPesanan?.nomorPesanan}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Buat Pengiriman Dialog */}
+      {selectedPesanan && (
+        <BuatPengirimanDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          defaultAlamat={selectedPesanan.pengiriman?.alamatTujuan}
+          defaultNama={selectedPesanan.pemesan?.profilPengguna?.namaTampilan || selectedPesanan.pemesan?.email || ""}
+          defaultTelepon={selectedPesanan.pemesan?.telepon || undefined}
+          open={showBuatPengirimanDialog}
+          onOpenChange={setShowBuatPengirimanDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
 
-          {selectedPesanan && (
-            <div className="space-y-4">
-              {/* Info Pesanan */}
-              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Judul:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.naskah?.judul || "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Jumlah:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.jumlah} eksemplar
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Pemesan:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.pemesan?.profilPengguna?.namaTampilan ||
-                      selectedPesanan.pemesan?.email}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1 text-sm">
-                  <span className="text-gray-600">Alamat Pengiriman:</span>
-                  <span className="font-medium">
-                    {selectedPesanan.pengiriman?.alamatTujuan || "-"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Form Input */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nomorResi">
-                    Nomor Resi <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="nomorResi"
-                    placeholder="Contoh: JNE123456789"
-                    value={nomorResi}
-                    onChange={(e) => setNomorResi(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="catatan">Catatan Pengiriman (Opsional)</Label>
-                  <Textarea
-                    id="catatan"
-                    placeholder="Tambahkan catatan pengiriman jika diperlukan..."
-                    value={catatanPengiriman}
-                    onChange={(e) => setCatatanPengiriman(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setKirimDialogOpen(false)}
-              disabled={kirimPesananMutation.isPending}
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleKirimPesanan}
-              disabled={kirimPesananMutation.isPending}
-            >
-              {kirimPesananMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Kirim Pesanan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Update Status Dialog */}
+      {selectedPesanan && (
+        <UpdateStatusDialog
+          pesananId={selectedPesanan.id}
+          nomorPesanan={selectedPesanan.nomorPesanan}
+          statusSaatIni={selectedPesanan.status}
+          open={showUpdateStatusDialog}
+          onOpenChange={setShowUpdateStatusDialog}
+          onSuccess={handleRefresh}
+        />
+      )}
     </div>
   );
 }
