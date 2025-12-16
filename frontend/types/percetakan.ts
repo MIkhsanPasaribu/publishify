@@ -35,31 +35,28 @@ export interface PesananCetak {
   idPercetakan: string | null;
   nomorPesanan: string;
   
-  // Spesifikasi cetak
-  jumlahCetak: number; // Changed from 'jumlah'
-  ukuranKertas: string; // Changed from 'formatKertas'
-  jenisKertas: string;
-  jenisCover: string;
-  finishing: string; // Changed from 'finishingTambahan'
-  warnaCetak: string; // Added
-  catatanTambahan: string | null; // Changed from 'catatan'
+  // Snapshot data (saved at order time)
+  judulSnapshot: string;
+  formatSnapshot: string;
+  jumlahHalamanSnapshot: number;
   
-  // Informasi pemesan
-  namaPemesan: string;
-  teleponPemesan: string;
-  alamatPengiriman: string;
+  // Spesifikasi cetak (sesuai schema database)
+  jumlah: number; // Database field name
+  formatKertas: string; // Database field name (A5, A4, dll)
+  jenisKertas: string; // HVS, Art Paper, dll
+  jenisCover: string; // Soft Cover, Hard Cover
+  finishingTambahan: string[] | null; // Array of finishing options
+  catatan: string | null; // Database field name
   
   // Pricing
-  hargaPerUnit: number; // Added
-  totalHarga: number; // Changed from 'hargaTotal'
+  hargaTotal: number; // Database field name (Decimal/numeric in DB)
   
-  // Status & dates
+  // Status & dates (sesuai schema database)
   status: StatusPesanan;
-  dibuatPada: string; // Changed from 'tanggalPesan'
-  tanggalDiterima: string | null; // Added
-  estimasiSelesai: string | null;
-  tanggalSelesai: string | null;
-  diperbaruiPada: string;
+  tanggalPesan: string; // Database field name (timestamp)
+  estimasiSelesai: string | null; // timestamp
+  tanggalSelesai: string | null; // timestamp
+  diperbaruiPada: string; // timestamp
   
   // Relations (jika di-include dari API)
   naskah?: {

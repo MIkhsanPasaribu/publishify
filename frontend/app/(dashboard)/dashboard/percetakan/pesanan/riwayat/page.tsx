@@ -87,7 +87,7 @@ export default function RiwayatPesananPage() {
     }
 
     return pesananList.filter((p: PesananCetak) => {
-      const tanggal = p.tanggalSelesai || p.diperbaruiPada || p.dibuatPada;
+      const tanggal = p.tanggalSelesai || p.diperbaruiPada || p.tanggalPesan;
       return new Date(tanggal) >= startDate;
     });
   };
@@ -107,7 +107,7 @@ export default function RiwayatPesananPage() {
 
   // Stats
   const totalRevenue = filteredPesanan.reduce(
-    (sum: number, p: PesananCetak) => sum + parseFloat(p.totalHarga?.toString() || "0"),
+    (sum: number, p: PesananCetak) => sum + parseFloat(p.hargaTotal?.toString() || "0"),
     0
   );
 
@@ -281,9 +281,9 @@ export default function RiwayatPesananPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
+                    <TableCell>{pesanan.jumlah} eks</TableCell>
                     <TableCell className="font-semibold">
-                      {formatRupiah(parseFloat(pesanan.totalHarga?.toString() || "0"))}
+                      {formatRupiah(parseFloat(pesanan.hargaTotal?.toString() || "0"))}
                     </TableCell>
                     <TableCell>
                       {pesanan.pengiriman?.nomorResi ? (
@@ -345,7 +345,7 @@ export default function RiwayatPesananPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Format:</span>
                     <span className="font-medium">
-                      {selectedPesanan.ukuranKertas}
+                      {selectedPesanan.formatKertas}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -372,7 +372,7 @@ export default function RiwayatPesananPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Jumlah Cetak:</span>
                     <span className="font-medium">
-                      {selectedPesanan.jumlahCetak} eksemplar
+                      {selectedPesanan.jumlah} eksemplar
                     </span>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export default function RiwayatPesananPage() {
                   <div className="flex flex-col gap-1">
                     <span className="text-gray-600">Alamat:</span>
                     <span className="font-medium">
-                      {selectedPesanan.alamatPengiriman || "-"}
+                      {selectedPesanan.pengiriman?.alamatTujuan || "-"}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -417,7 +417,7 @@ export default function RiwayatPesananPage() {
                     <span className="text-gray-600">Total Harga:</span>
                     <span className="font-bold text-lg text-green-600">
                       {formatRupiah(
-                        parseFloat(selectedPesanan.totalHarga?.toString() || "0")
+                        parseFloat(selectedPesanan.hargaTotal?.toString() || "0")
                       )}
                     </span>
                   </div>

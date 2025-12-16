@@ -279,7 +279,7 @@ export default function DashboardPercetakanPage() {
                           <div className="flex items-center gap-4 text-xs text-gray-600">
                             <span className="flex items-center gap-1">
                               <Package className="h-3 w-3" />
-                              {pesanan.jumlahCetak} eks
+                              {pesanan.jumlah} eks
                             </span>
                             <span>
                               {pesanan.pemesan?.profilPengguna?.namaTampilan ||
@@ -288,11 +288,11 @@ export default function DashboardPercetakanPage() {
                             </span>
                           </div>
                           <span className="text-xs text-gray-500">
-                            {format(
-                              new Date(pesanan.dibuatPada),
+                            {pesanan.tanggalPesan ? format(
+                              new Date(pesanan.tanggalPesan),
                               "dd MMM yyyy",
                               { locale: id }
-                            )}
+                            ) : "-"}
                           </span>
                         </div>
                       </div>

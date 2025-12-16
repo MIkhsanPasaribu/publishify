@@ -271,11 +271,11 @@ export default function DalamProduksiPage() {
                         pesanan.pemesan?.email ||
                         "-"}
                     </TableCell>
-                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
+                    <TableCell>{pesanan.jumlah} eks</TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-600">
                         <div>
-                          {pesanan.ukuranKertas} •{" "}
+                          {pesanan.formatKertas} •{" "}
                           {pesanan.jenisKertas}
                         </div>
                         <div>{pesanan.jenisCover}</div>
@@ -299,9 +299,9 @@ export default function DalamProduksiPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {pesanan.tanggalDiterima
+                      {pesanan.estimasiSelesai
                         ? format(
-                            new Date(pesanan.tanggalDiterima),
+                            new Date(pesanan.estimasiSelesai),
                             "dd MMM yyyy",
                             { locale: id }
                           )
@@ -347,7 +347,7 @@ export default function DalamProduksiPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Jumlah:</span>
                   <span className="font-medium">
-                    {selectedPesanan.jumlahCetak} eksemplar
+                    {selectedPesanan.jumlah} eksemplar
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

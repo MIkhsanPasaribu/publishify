@@ -28,6 +28,11 @@ export class PercetakanService {
    * Validasi: naskah harus berstatus 'diterbitkan'
    */
   async buatPesanan(idPemesan: string, dto: BuatPesananDto) {
+    console.log('\n🎯 [PERCETAKAN] Membuat Pesanan Baru');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('👤 ID Pemesan:', idPemesan);
+    console.log('📝 DTO:', JSON.stringify(dto, null, 2));
+
     // Validasi naskah exists dan status diterbitkan
     const naskah = await this.prisma.naskah.findUnique({
       where: { id: dto.idNaskah },
@@ -40,6 +45,8 @@ export class PercetakanService {
         },
       },
     });
+
+    console.log('📖 Naskah:', naskah ? `${naskah.judul} (${naskah.status})` : 'Tidak ditemukan');
 
     if (!naskah) {
       throw new NotFoundException('Naskah tidak ditemukan');
@@ -149,6 +156,13 @@ export class PercetakanService {
       },
     });
 
+    console.log('\n✅ Pesanan berhasil dibuat!');
+    console.log('  - ID Pesanan:', pesanan.id);
+    console.log('  - Nomor Pesanan:', nomorPesanan);
+    console.log('  - Total Harga:', hargaTotal);
+    console.log('  - Status:', pesanan.status);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
     return {
       sukses: true,
       pesan: 'Pesanan cetak berhasil dibuat',
@@ -161,6 +175,12 @@ export class PercetakanService {
    * Admin: lihat semua, Percetakan: lihat yang ditugaskan, Penulis: lihat milik sendiri
    */
   async ambilSemuaPesanan(filter: FilterPesananDto, idPengguna?: string, peran?: string) {
+    console.log('\n📋 [PERCETAKAN] Mengambil Daftar Pesanan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('👤 ID Pengguna:', idPengguna || 'N/A');
+    console.log('🎭 Peran:', peran || 'N/A');
+    console.log('🔍 Filter:', JSON.stringify(filter, null, 2));
+
     const { halaman, limit, urutkan, arah, ...filterLainnya } = filter;
     const skip = (halaman - 1) * limit;
 
@@ -174,6 +194,8 @@ export class PercetakanService {
       where.idPercetakan = idPengguna;
     }
     // Admin bisa lihat semua
+
+    console.log('🔎 Where Clause (before filters):', JSON.stringify(where, null, 2));
 
     // Apply filters
     if (filterLainnya.status) {
@@ -263,6 +285,12 @@ export class PercetakanService {
       this.prisma.pesananCetak.count({ where }),
     ]);
 
+    console.log('\n✅ Query berhasil!');
+    console.log('  - Total data:', total);
+    console.log('  - Data diambil:', pesanan.length);
+    console.log('  - Halaman:', halaman, '/', Math.ceil(total / limit));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
     return {
       sukses: true,
       data: pesanan,
@@ -279,6 +307,12 @@ export class PercetakanService {
    * Ambil detail pesanan by ID
    */
   async ambilPesananById(id: string, idPengguna?: string, peran?: string) {
+    console.log('\n🔍 [PERCETAKAN] Mengambil Detail Pesanan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🏷️  ID Pesanan:', id);
+    console.log('👤 ID Pengguna:', idPengguna || 'N/A');
+    console.log('🎭 Peran:', peran || 'N/A');
+
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
       include: {
@@ -350,12 +384,20 @@ export class PercetakanService {
    * Perbarui detail pesanan (hanya untuk status tertunda)
    */
   async perbaruiPesanan(id: string, idPemesan: string, dto: PerbaruiPesananDto) {
+    console.log('\n✏️  [PERCETAKAN] Memperbarui Pesanan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🏷️  ID Pesanan:', id);
+    console.log('👤 ID Pemesan:', idPemesan);
+    console.log('📝 Update Data:', JSON.stringify(dto, null, 2));
+
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
       include: {
         naskah: true,
       },
     });
+
+    console.log('📦 Pesanan Lama:', pesanan ? `Status: ${pesanan.status}, Total: ${pesanan.hargaTotal}` : 'Tidak ditemukan');
 
     if (!pesanan) {
       throw new NotFoundException('Pesanan tidak ditemukan');
@@ -490,6 +532,13 @@ export class PercetakanService {
       },
     });
 
+    console.log('\n✅ Konfirmasi pesanan berhasil!');
+    console.log('  - Pesanan:', pesanan.nomorPesanan);
+    console.log('  - Keputusan:', dto.diterima ? 'DITERIMA' : 'DITOLAK');
+    console.log('  - Status Baru:', pesananUpdated.status);
+    console.log('  - Estimasi:', pesananUpdated.estimasiSelesai || '-');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
     return {
       sukses: true,
       pesan: dto.diterima ? 'Pesanan berhasil dikonfirmasi' : 'Pesanan ditolak',
@@ -501,6 +550,12 @@ export class PercetakanService {
    * Batalkan pesanan (hanya oleh pemesan, status harus tertunda)
    */
   async batalkanPesanan(id: string, idPemesan: string, alasan?: string) {
+    console.log('\n❌ [PERCETAKAN] Membatalkan Pesanan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🏷️  ID Pesanan:', id);
+    console.log('👤 ID Pemesan:', idPemesan);
+    console.log('📝 Alasan:', alasan || 'Tidak ada');
+
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
     });
@@ -508,6 +563,8 @@ export class PercetakanService {
     if (!pesanan) {
       throw new NotFoundException('Pesanan tidak ditemukan');
     }
+
+    console.log('📦 Pesanan:', `${pesanan.nomorPesanan} - Status: ${pesanan.status}`);
 
     if (pesanan.idPemesan !== idPemesan) {
       throw new ForbiddenException('Anda tidak memiliki akses untuk membatalkan pesanan ini');
@@ -526,6 +583,9 @@ export class PercetakanService {
           : pesanan.catatan,
       },
     });
+
+    console.log('✅ Pesanan berhasil dibatalkan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Log aktivitas
     await this.prisma.logAktivitas.create({
@@ -641,6 +701,13 @@ export class PercetakanService {
    * Status pesanan harus 'siap' atau 'dikirim'
    */
   async buatPengiriman(id: string, idPercetakan: string, dto: BuatPengirimanDto) {
+    console.log('\n🚚 [PERCETAKAN] Membuat Data Pengiriman');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🏷️  ID Pesanan:', id);
+    console.log('🏭 ID Percetakan:', idPercetakan);
+    console.log('📦 Ekspedisi:', dto.namaEkspedisi);
+    console.log('📝 Nomor Resi:', dto.nomorResi || 'Belum ada');
+
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
       include: {
@@ -651,6 +718,9 @@ export class PercetakanService {
     if (!pesanan) {
       throw new NotFoundException('Pesanan tidak ditemukan');
     }
+
+    console.log('📦 Status Pesanan:', pesanan.status);
+    console.log('📍 Pengiriman Existing:', pesanan.pengiriman ? 'Sudah ada' : 'Belum ada');
 
     if (pesanan.idPercetakan !== idPercetakan) {
       throw new ForbiddenException('Anda tidak memiliki akses untuk pesanan ini');
@@ -846,7 +916,7 @@ export class PercetakanService {
           status: {
             not: 'dibatalkan',
           },
-          dibuatPada: {
+          tanggalPesan: {
             gte: startOfMonth,
           },
         },
@@ -859,7 +929,7 @@ export class PercetakanService {
       this.prisma.pesananCetak.count({
         where: {
           ...where,
-          dibuatPada: {
+          tanggalPesan: {
             gte: startOfMonth,
           },
         },
@@ -872,6 +942,22 @@ export class PercetakanService {
 
     // Hitung rata-rata waktu produksi (placeholder - bisa ditingkatkan dengan data real)
     const rataRataWaktuProduksi = 5; // 5 hari (default)
+
+    // Console log detail untuk debugging
+    console.log('\n🖨️  [PERCETAKAN] Statistik Pesanan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 Filter Query:', JSON.stringify(where, null, 2));
+    console.log('📅 Start of Month:', startOfMonth.toISOString());
+    console.log('\n📈 Hasil Query:');
+    console.log('  - Total Pesanan:', totalPesanan);
+    console.log('  - Pesanan Tertunda:', pesananTertunda);
+    console.log('  - Pesanan Dalam Produksi:', pesananDalamProduksi);
+    console.log('  - Pesanan Selesai:', pesananSelesai);
+    console.log('  - Revenue Bulan Ini:', revenueBulanIni._sum.hargaTotal || 0);
+    console.log('  - Pesanan Bulan Ini:', pesananBulanIni);
+    console.log('  - Tingkat Penyelesaian:', tingkatPenyelesaian + '%');
+    console.log('  - Rata-rata Waktu Produksi:', rataRataWaktuProduksi, 'hari');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     return {
       sukses: true,

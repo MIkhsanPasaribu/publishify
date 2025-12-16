@@ -67,7 +67,7 @@ export default function PesananBaruPage() {
   const handleTerima = (pesanan: PesananCetak) => {
     if (
       confirm(
-        `Terima pesanan ${pesanan.nomorPesanan}?\n\nAnda akan bertanggung jawab untuk mencetak ${pesanan.jumlahCetak} eksemplar.`
+        `Terima pesanan ${pesanan.nomorPesanan}?\n\nAnda akan bertanggung jawab untuk mencetak ${pesanan.jumlah} eksemplar.`
       )
     ) {
       konfirmasiMutation.mutate({
@@ -217,13 +217,13 @@ export default function PesananBaruPage() {
                           "-"}
                       </TableCell>
                       <TableCell className="text-center font-semibold">
-                        {pesanan.jumlahCetak} eks
+                        {pesanan.jumlah} eks
                       </TableCell>
                       <TableCell>
                         <div className="text-sm space-y-1">
                           <div>
                             <span className="text-gray-500">Format:</span>{" "}
-                            {pesanan.ukuranKertas}
+                            {pesanan.formatKertas}
                           </div>
                           <div>
                             <span className="text-gray-500">Kertas:</span>{" "}
@@ -236,7 +236,7 @@ export default function PesananBaruPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono font-semibold">
-                        {formatRupiah(pesanan.totalHarga || 0)}
+                        {formatRupiah(pesanan.hargaTotal || 0)}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
@@ -328,7 +328,7 @@ export default function PesananBaruPage() {
                   <p className="text-sm text-gray-500">Tanggal Pesan</p>
                   <p className="font-medium">
                     {format(
-                      new Date(selectedPesanan.dibuatPada),
+                      new Date(selectedPesanan.tanggalPesan),
                       "dd MMMM yyyy, HH:mm",
                       { locale: id }
                     )}
@@ -349,7 +349,7 @@ export default function PesananBaruPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Format</p>
-                      <p>{selectedPesanan.ukuranKertas}</p>
+                      <p>{selectedPesanan.formatKertas}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Jumlah Halaman</p>
@@ -374,24 +374,24 @@ export default function PesananBaruPage() {
                   <div>
                     <p className="text-sm text-gray-500">Jumlah Cetak</p>
                     <p className="font-medium text-lg">
-                      {selectedPesanan.jumlahCetak} eksemplar
+                      {selectedPesanan.jumlah} eksemplar
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Total Harga</p>
                     <p className="font-mono font-bold text-lg text-primary">
-                      {formatRupiah(selectedPesanan.totalHarga || 0)}
+                      {formatRupiah(selectedPesanan.hargaTotal || 0)}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Catatan */}
-              {selectedPesanan.catatanTambahan && (
+              {selectedPesanan.catatan && (
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-2">Catatan Pemesan</h3>
                   <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
-                    {selectedPesanan.catatanTambahan}
+                    {selectedPesanan.catatan}
                   </p>
                 </div>
               )}

@@ -302,10 +302,10 @@ export default function PengirimanPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-600 max-w-xs">
-                        {pesanan.alamatPengiriman || "-"}
+                        {pesanan.pengiriman?.alamatTujuan || "-"}
                       </div>
                     </TableCell>
-                    <TableCell>{pesanan.jumlahCetak} eks</TableCell>
+                    <TableCell>{pesanan.jumlah} eks</TableCell>
                     <TableCell>
                       <Badge
                         className={
@@ -390,7 +390,7 @@ export default function PengirimanPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Jumlah:</span>
                   <span className="font-medium">
-                    {selectedPesanan.jumlahCetak} eksemplar
+                    {selectedPesanan.jumlah} eksemplar
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -403,7 +403,7 @@ export default function PengirimanPage() {
                 <div className="flex flex-col gap-1 text-sm">
                   <span className="text-gray-600">Alamat Pengiriman:</span>
                   <span className="font-medium">
-                    {selectedPesanan.alamatPengiriman || "-"}
+                    {selectedPesanan.pengiriman?.alamatTujuan || "-"}
                   </span>
                 </div>
               </div>
