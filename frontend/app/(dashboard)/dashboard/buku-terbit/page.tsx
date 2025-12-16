@@ -107,43 +107,40 @@ export default function BukuTerbitPage() {
 
   const onSubmit = async (v: z.infer<typeof FormPesanCetakSchema>) => {
     if (!bukuTerpilih) return;
+    
+    // DEPRECATED: Modal quick order ini sudah diganti dengan halaman cetak lengkap
+    // Redirect user ke halaman cetak proper
+    toast.info("Mengalihkan ke halaman pemesanan lengkap...");
+    window.location.href = `/dashboard/buku-terbit/${bukuTerpilih.id}/cetak`;
+    return;
+
+    /* FLOW LAMA - DEPRECATED
     setProses(true);
     try {
-      // Gabungkan alamat menjadi string lengkap
       const alamatLengkap = `${v.alamat}, ${v.kota}, ${v.provinsi} ${v.kodePos}`;
-      
       const payload: BuatPesananCetakPayload = {
         idNaskah: bukuTerpilih.id,
+        idPercetakan: "", // Sekarang wajib diisi
         jumlah: Number(v.jumlah),
-        // Format default untuk pesanan cetak
         formatKertas: "A5",
-        jenisKertas: "HVS 80gsm",
-        jenisCover: "Soft Cover",
+        jenisKertas: "HVS",
+        jenisCover: "SOFTCOVER",
         finishingTambahan: [],
-        hargaTotal: ringkasan.total,
-        // Alamat pengiriman sebagai string
         alamatPengiriman: alamatLengkap,
         namaPenerima: v.penerima,
         teleponPenerima: v.telepon,
         catatan: v.catatan,
       };
 
-      // Coba kirim ke backend; jika endpoint belum tersedia, tetap tampilkan sukses demo
-      try {
-        await percetakanApi.buatPesananCetak(payload);
-        toast.success("Pesanan cetak berhasil dibuat");
-      } catch (err: any) {
-        // Demo fallback
-        console.warn("Gagal memanggil API percetakan, menampilkan sukses demo", err?.response?.data);
-        toast.success("Pesanan cetak berhasil dibuat (demo)");
-      }
-
+      await percetakanApi.buatPesananCetak(payload);
+      toast.success("Pesanan cetak berhasil dibuat");
       tutupModal();
     } catch (e: any) {
       toast.error(e?.message || "Gagal membuat pesanan cetak");
     } finally {
       setProses(false);
     }
+    */
   };
 
   return (

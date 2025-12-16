@@ -308,11 +308,11 @@ export default function DetailPesananPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jumlah Eksemplar</p>
-                <p className="font-medium text-gray-900">{pesanan.jumlahCetak} pcs</p>
+                <p className="font-medium text-gray-900">{pesanan.jumlah} pcs</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Format Kertas</p>
-                <p className="font-medium text-gray-900">{pesanan.ukuranKertas}</p>
+                <p className="font-medium text-gray-900">{pesanan.formatKertas}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jenis Kertas</p>
@@ -322,10 +322,10 @@ export default function DetailPesananPage() {
                 <p className="text-sm text-gray-500 mb-1">Jenis Cover</p>
                 <p className="font-medium text-gray-900">{pesanan.jenisCover}</p>
               </div>
-              {pesanan.catatanTambahan && (
+              {pesanan.catatan && (
                 <div className="col-span-2">
                   <p className="text-sm text-gray-500 mb-1">Catatan</p>
-                  <p className="font-medium text-gray-900">{pesanan.catatanTambahan}</p>
+                  <p className="font-medium text-gray-900">{pesanan.catatan}</p>
                 </div>
               )}
             </div>
@@ -426,20 +426,20 @@ export default function DetailPesananPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Harga Satuan:</span>
                 <span className="font-medium text-teal-900">
-                  {formatRupiah(Number(pesanan.totalHarga) / pesanan.jumlahCetak)}
+                  {formatRupiah(Number(pesanan.hargaTotal) / pesanan.jumlah)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Jumlah:</span>
                 <span className="font-medium text-teal-900">
-                  {pesanan.jumlahCetak} pcs
+                  {pesanan.jumlah} pcs
                 </span>
               </div>
               <div className="h-px bg-teal-200"></div>
               <div className="flex justify-between">
                 <span className="font-semibold text-teal-900">Total:</span>
                 <span className="text-xl font-bold text-teal-600">
-                  {formatRupiah(pesanan.totalHarga)}
+                  {formatRupiah(pesanan.hargaTotal)}
                 </span>
               </div>
             </div>
@@ -451,14 +451,14 @@ export default function DetailPesananPage() {
               <div>
                 <p className="text-gray-500">Tanggal Pesanan</p>
                 <p className="font-medium text-gray-900">
-                  {formatTanggal(pesanan.dibuatPada)}
+                  {formatTanggal(pesanan.tanggalPesan)}
                 </p>
               </div>
-              {pesanan.tanggalSelesai && (
+              {pesanan.estimasiSelesai && (
                 <div>
-                  <p className="text-gray-500">Target Selesai</p>
+                  <p className="text-gray-500">Estimasi Selesai</p>
                   <p className="font-medium text-gray-900">
-                    {formatTanggal(pesanan.tanggalSelesai)}
+                    {formatTanggal(pesanan.estimasiSelesai)}
                   </p>
                 </div>
               )}

@@ -19,6 +19,10 @@ import type {
   LogProduksi,
   TambahLogProduksiDto,
 } from "@/types/percetakan";
+import type {
+  PercetakanDenganTarif,
+  DetailTarifPercetakan,
+} from "@/types/tarif";
 
 // Re-export types untuk backward compatibility
 export type { 
@@ -30,15 +34,47 @@ export type {
 // Alias untuk backward compatibility
 export type BuatPesananCetakPayload = BuatPesananCetakDto;
 
+// ============= PERCETAKAN & TARIF =============
+
+/**
+ * Ambil daftar percetakan yang tersedia dengan tarif aktif
+ * Untuk ditampilkan saat penulis akan membuat pesanan cetak
+ */
+export async function ambilDaftarPercetakan(): Promise<{
+  sukses: boolean;
+  pesan: string;
+  data: PercetakanDenganTarif[];
+  total: number;
+}> {
+  const response = await client.get("/percetakan/daftar");
+  return response.data;
+}
+
+/**
+ * Ambil detail tarif percetakan tertentu
+ * Untuk kalkulasi harga sebelum buat pesanan
+ */
+export async function ambilTarifPercetakan(
+  idPercetakan: string
+): Promise<{
+  sukses: boolean;
+  pesan: string;
+  data: DetailTarifPercetakan;
+}> {
+  const response = await client.get(`/percetakan/tarif/${idPercetakan}`);
+  return response.data;
+}
+
 // ============= PESANAN CETAK =============
 
 /**
- * Buat pesanan cetak baru
+ * Buat pesanan cetak baru dengan pilihan percetakan
+ * Endpoint baru: POST /percetakan/pesanan
  */
 export async function buatPesananCetak(
   dto: BuatPesananCetakDto
 ): Promise<ResponsePesananDetail> {
-  const response = await client.post("/percetakan", dto);
+  const response = await client.post("/percetakan/pesanan", dto);
   return response.data;
 }
 

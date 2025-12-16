@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Book, Package, MapPin, CreditCard, Loader2 } from "lucide-react";
+import { ArrowLeft, Book, Package, MapPin, CreditCard, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,30 +15,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { ambilNaskahById } from "@/lib/api/naskah";
 import { buatPesananCetak } from "@/lib/api/percetakan";
+import { PilihPercetakan } from "@/components/percetakan/pilih-percetakan";
+import { useKalkulasiHarga } from "@/lib/hooks/use-kalkulasi-harga";
 import type { Naskah } from "@/lib/api/naskah";
+import type { PercetakanDenganTarif } from "@/types/tarif";
 import { formatRupiah } from "@/lib/utils";
-
-// Konstanta Harga
-const HARGA_PER_HALAMAN = 150;
-const BIAYA_JILID_SOFTCOVER = 20000;
-const BIAYA_JILID_HARDCOVER = 50000;
-const MARGIN_PLATFORM = 0.1; // 10%
-const ESTIMASI_ONGKIR = 15000;
-const BERAT_PER_BUKU = 300; // gram
+import { toast } from "sonner";
 
 interface FormData {
+  idPercetakan: string;
   jumlahEksemplar: number;
-  ukuran: string;
-  jenisKertas: string;
-  jenisCover: string;
+  ukuran: "A4" | "A5" | "B5";
+  jenisKertas: "HVS" | "BOOKPAPER" | "ART_PAPER";
+  jenisCover: "SOFTCOVER" | "HARDCOVER";
   finishing: string[];
   alamatLengkap: string;
   namaPenerima: string;
   teleponPenerima: string;
-  kurir: string;
 }
 
 export default function CetakFisikPage() {
@@ -49,17 +46,27 @@ export default function CetakFisikPage() {
   const [naskah, setNaskah] = useState<Naskah | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPercetakan, setSelectedPercetakan] = useState<PercetakanDenganTarif | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
-    jumlahEksemplar: 1,
+    idPercetakan: "",
+    jumlahEksemplar: 10,
     ukuran: "A5",
-    jenisKertas: "Bookpaper",
-    jenisCover: "Soft Cover",
+    jenisKertas: "HVS",
+    jenisCover: "SOFTCOVER",
     finishing: [],
     alamatLengkap: "",
     namaPenerima: "",
     teleponPenerima: "",
-    kurir: "JNE",
+  });
+
+  // Hook untuk kalkulasi harga otomatis
+  const { estimasi, minimumPesanan, loading: loadingHarga } = useKalkulasiHarga({
+    idPercetakan: formData.idPercetakan,
+    formatKertas: formData.ukuran,
+    jenisCover: formData.jenisCover,
+    jumlahHalaman: naskah?.jumlahHalaman || 100,
+    jumlahBuku: formData.jumlahEksemplar,
   });
 
   // Fetch data naskah
@@ -73,15 +80,32 @@ export default function CetakFisikPage() {
         
         // Validasi status naskah harus diterbitkan
         if (response.data.status !== "diterbitkan") {
-          alert("Hanya naskah yang sudah diterbitkan yang dapat dicetak");
+          toast.error("Hanya naskah yang sudah diterbitkan yang dapat dicetak");
           router.push("/dashboard/buku-terbit");
           return;
         }
 
         setNaskah(response.data);
+        
+        // Auto-fill data penerima dari profil
+        if (pengguna?.profilPengguna) {
+          const profil = pengguna.profilPengguna;
+          setFormData(prev => ({
+            ...prev,
+            namaPenerima: profil.namaTampilan || 
+                         `${profil.namaDepan || ''} ${profil.namaBelakang || ''}`.trim(),
+            alamatLengkap: profil.alamat || '',
+          }));
+        }
+        if (pengguna?.telepon) {
+          setFormData(prev => ({
+            ...prev,
+            teleponPenerima: pengguna.telepon || '',
+          }));
+        }
       } catch (error) {
         console.error("Error fetching naskah:", error);
-        alert("Gagal memuat data naskah");
+        toast.error("Gagal memuat data naskah");
         router.push("/dashboard/buku-terbit");
       } finally {
         setIsLoading(false);
@@ -89,48 +113,53 @@ export default function CetakFisikPage() {
     };
 
     fetchNaskah();
-  }, [params.id, router]);
+  }, [params.id, router, pengguna]);
 
-  // Kalkulator Harga Real-time
-  const hitungBiaya = () => {
-    if (!naskah?.jumlahHalaman) return { biayaCetak: 0, biayaJilid: 0, biayaLayanan: 0, ongkir: 0, total: 0 };
-
-    const biayaCetakPerBuku = naskah.jumlahHalaman * HARGA_PER_HALAMAN;
-    const biayaJilidPerBuku = formData.jenisCover === "Hard Cover" ? BIAYA_JILID_HARDCOVER : BIAYA_JILID_SOFTCOVER;
-    const subtotalPerBuku = biayaCetakPerBuku + biayaJilidPerBuku;
-    
-    const biayaCetak = subtotalPerBuku * formData.jumlahEksemplar;
-    const biayaJilid = biayaJilidPerBuku * formData.jumlahEksemplar;
-    const biayaLayanan = biayaCetak * MARGIN_PLATFORM;
-    const ongkir = ESTIMASI_ONGKIR;
-    const total = biayaCetak + biayaLayanan + ongkir;
-
-    return { biayaCetak, biayaJilid, biayaLayanan, ongkir, total };
+  // Handle pilih percetakan
+  const handleSelectPercetakan = (percetakan: PercetakanDenganTarif) => {
+    setSelectedPercetakan(percetakan);
+    setFormData(prev => ({
+      ...prev,
+      idPercetakan: percetakan.id,
+      jumlahEksemplar: Math.max(
+        prev.jumlahEksemplar,
+        percetakan.tarifAktif?.minimumPesanan || 1
+      ),
+    }));
   };
-
-  const biaya = hitungBiaya();
-  const beratTotal = formData.jumlahEksemplar * BERAT_PER_BUKU;
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validasi
-    if (!naskah) return;
-    if (formData.jumlahEksemplar < 1) {
-      alert("Jumlah eksemplar minimal 1");
+    if (!naskah) {
+      toast.error("Data naskah tidak ditemukan");
       return;
     }
+
+    if (!formData.idPercetakan) {
+      toast.error("Pilih percetakan terlebih dahulu");
+      return;
+    }
+
+    if (formData.jumlahEksemplar < minimumPesanan) {
+      toast.error(`Jumlah pesanan minimal ${minimumPesanan} eksemplar`);
+      return;
+    }
+
     if (!formData.alamatLengkap.trim()) {
-      alert("Alamat lengkap harus diisi");
+      toast.error("Alamat pengiriman harus diisi");
       return;
     }
+
     if (!formData.namaPenerima.trim()) {
-      alert("Nama penerima harus diisi");
+      toast.error("Nama penerima harus diisi");
       return;
     }
+
     if (!formData.teleponPenerima.trim()) {
-      alert("Nomor telepon harus diisi");
+      toast.error("Nomor telepon harus diisi");
       return;
     }
 
@@ -139,14 +168,13 @@ export default function CetakFisikPage() {
 
       const payload = {
         idNaskah: naskah.id,
+        idPercetakan: formData.idPercetakan,
         jumlah: formData.jumlahEksemplar,
         formatKertas: formData.ukuran,
         jenisKertas: formData.jenisKertas,
         jenisCover: formData.jenisCover,
-        finishingTambahan: formData.finishing,
-        catatan: `Pengiriman via ${formData.kurir}`,
-        hargaTotal: biaya.total,
-        // Data pengiriman
+        finishingTambahan: formData.finishing.length > 0 ? formData.finishing : undefined,
+        catatan: undefined,
         alamatPengiriman: formData.alamatLengkap,
         namaPenerima: formData.namaPenerima,
         teleponPenerima: formData.teleponPenerima,
@@ -155,12 +183,12 @@ export default function CetakFisikPage() {
       const response = await buatPesananCetak(payload);
 
       if (response.sukses) {
-        alert("Pesanan cetak berhasil dibuat!");
+        toast.success("Pesanan cetak berhasil dibuat!");
         router.push("/dashboard/pesanan");
       }
     } catch (error: any) {
       console.error("Error creating order:", error);
-      alert(error.response?.data?.pesan || "Gagal membuat pesanan cetak");
+      toast.error(error.response?.data?.pesan || "Gagal membuat pesanan cetak");
     } finally {
       setIsSubmitting(false);
     }
@@ -200,265 +228,295 @@ export default function CetakFisikPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Cetak Fisik Buku</h1>
-            <p className="text-gray-600 mt-1">Atur spesifikasi dan buat pesanan cetak</p>
+            <p className="text-gray-600 mt-1">{naskah.judul}</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Kolom Kiri - Formulir (2 kolom) */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Card Spesifikasi Cetak */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-[#0d7377]" />
-                    Spesifikasi Cetak
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Jumlah Eksemplar */}
-                    <div>
-                      <Label htmlFor="jumlah">Jumlah Eksemplar *</Label>
-                      <Input
-                        id="jumlah"
-                        type="number"
-                        min="1"
-                        value={formData.jumlahEksemplar}
-                        onChange={(e) => setFormData({ ...formData, jumlahEksemplar: parseInt(e.target.value) || 1 })}
-                        className="mt-1"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Estimasi berat total: {beratTotal}g ({(beratTotal / 1000).toFixed(1)} kg)
-                      </p>
-                    </div>
+        <div className="space-y-6">
+          {/* Step 1: Pilih Percetakan */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-[#0d7377]" />
+                Langkah 1: Pilih Percetakan
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Pilih percetakan untuk melihat harga dan membuat pesanan
+              </p>
+            </CardHeader>
+            <CardContent>
+              <PilihPercetakan
+                onSelect={handleSelectPercetakan}
+                selectedId={formData.idPercetakan}
+              />
+            </CardContent>
+          </Card>
 
-                    {/* Ukuran Kertas */}
-                    <div>
-                      <Label htmlFor="ukuran">Ukuran Kertas *</Label>
-                      <Select
-                        value={formData.ukuran}
-                        onValueChange={(value) => setFormData({ ...formData, ukuran: value })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Pilih ukuran" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="A5">A5 (14.8 x 21 cm)</SelectItem>
-                          <SelectItem value="A4">A4 (21 x 29.7 cm)</SelectItem>
-                          <SelectItem value="B5">B5 (17.6 x 25 cm)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+          {/* Show form only if percetakan selected */}
+          {formData.idPercetakan && selectedPercetakan && (
+            <form onSubmit={handleSubmit}>
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Kolom Kiri - Formulir (2 kolom) */}
+                <div className="md:col-span-2 space-y-6">
+                  {/* Card Spesifikasi Cetak */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Book className="h-5 w-5 text-[#0d7377]" />
+                        Langkah 2: Spesifikasi Cetak
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Alert Minimum Pesanan */}
+                      {minimumPesanan > 1 && (
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Minimum Pesanan</p>
+                            <p className="text-sm">
+                              Percetakan {selectedPercetakan.nama} memiliki minimum pesanan {minimumPesanan} eksemplar
+                            </p>
+                          </div>
+                        </Alert>
+                      )}
 
-                    {/* Jenis Kertas */}
-                    <div>
-                      <Label htmlFor="kertas">Jenis Kertas Isi *</Label>
-                      <Select
-                        value={formData.jenisKertas}
-                        onValueChange={(value) => setFormData({ ...formData, jenisKertas: value })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Pilih jenis kertas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Bookpaper">Bookpaper</SelectItem>
-                          <SelectItem value="HVS 70gr">HVS 70gr</SelectItem>
-                          <SelectItem value="HVS 80gr">HVS 80gr</SelectItem>
-                          <SelectItem value="Art Paper 120gr">Art Paper 120gr</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Jumlah Eksemplar */}
+                        <div>
+                          <Label htmlFor="jumlah">Jumlah Eksemplar *</Label>
+                          <Input
+                            id="jumlah"
+                            type="number"
+                            min={minimumPesanan}
+                            value={formData.jumlahEksemplar}
+                            onChange={(e) => {
+                              const nilai = parseInt(e.target.value) || minimumPesanan;
+                              setFormData({ ...formData, jumlahEksemplar: Math.max(nilai, minimumPesanan) });
+                            }}
+                            className="mt-1"
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Minimal {minimumPesanan} eksemplar
+                          </p>
+                        </div>
 
-                    {/* Jenis Jilid */}
-                    <div>
-                      <Label htmlFor="jilid">Jenis Jilid/Cover *</Label>
-                      <Select
-                        value={formData.jenisCover}
-                        onValueChange={(value) => setFormData({ ...formData, jenisCover: value })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Pilih jilid" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Soft Cover">Soft Cover (+{formatRupiah(BIAYA_JILID_SOFTCOVER)})</SelectItem>
-                          <SelectItem value="Hard Cover">Hard Cover (+{formatRupiah(BIAYA_JILID_HARDCOVER)})</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                        {/* Ukuran Kertas */}
+                        <div>
+                          <Label htmlFor="ukuran">Ukuran Kertas *</Label>
+                          <Select
+                            value={formData.ukuran}
+                            onValueChange={(value) => setFormData({ ...formData, ukuran: value as "A4" | "A5" | "B5" })}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Pilih ukuran" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="A5">A5 (14.8 x 21 cm)</SelectItem>
+                              <SelectItem value="A4">A4 (21 x 29.7 cm)</SelectItem>
+                              <SelectItem value="B5">B5 (17.6 x 25 cm)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                    <p className="text-sm text-teal-800">
-                      <strong>Catatan:</strong> Spesifikasi di atas adalah standar untuk hasil optimal. 
-                      Jumlah halaman buku Anda: <strong>{naskah.jumlahHalaman} halaman</strong>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                        {/* Jenis Kertas */}
+                        <div>
+                          <Label htmlFor="kertas">Jenis Kertas Isi *</Label>
+                          <Select
+                            value={formData.jenisKertas}
+                            onValueChange={(value) => 
+                              setFormData({ ...formData, jenisKertas: value as "HVS" | "BOOKPAPER" | "ART_PAPER" })}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Pilih jenis kertas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="BOOKPAPER">Bookpaper</SelectItem>
+                              <SelectItem value="HVS">HVS</SelectItem>
+                              <SelectItem value="ART_PAPER">Art Paper</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-              {/* Card Pengiriman */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-[#0d7377]" />
-                    Informasi Pengiriman
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="namaPenerima">Nama Penerima *</Label>
-                    <Input
-                      id="namaPenerima"
-                      value={formData.namaPenerima}
-                      onChange={(e) => setFormData({ ...formData, namaPenerima: e.target.value })}
-                      placeholder="Nama lengkap penerima"
-                      className="mt-1"
-                      required
-                    />
-                  </div>
+                        {/* Jenis Cover */}
+                        <div>
+                          <Label htmlFor="jilid">Jenis Cover *</Label>
+                          <Select
+                            value={formData.jenisCover}
+                            onValueChange={(value) => 
+                              setFormData({ ...formData, jenisCover: value as "SOFTCOVER" | "HARDCOVER" })}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Pilih jenis cover" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SOFTCOVER">Soft Cover</SelectItem>
+                              <SelectItem value="HARDCOVER">Hard Cover</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
 
-                  <div>
-                    <Label htmlFor="telepon">Nomor Telepon *</Label>
-                    <Input
-                      id="telepon"
-                      type="tel"
-                      value={formData.teleponPenerima}
-                      onChange={(e) => setFormData({ ...formData, teleponPenerima: e.target.value })}
-                      placeholder="08xxx"
-                      className="mt-1"
-                      required
-                    />
-                  </div>
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                        <p className="text-sm text-teal-800">
+                          <strong>Info Naskah:</strong> Jumlah halaman {naskah.jumlahHalaman} halaman
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                  <div>
-                    <Label htmlFor="alamat">Alamat Lengkap *</Label>
-                    <Textarea
-                      id="alamat"
-                      value={formData.alamatLengkap}
-                      onChange={(e) => setFormData({ ...formData, alamatLengkap: e.target.value })}
-                      placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
-                      className="mt-1"
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="kurir">Pilih Kurir *</Label>
-                    <Select
-                      value={formData.kurir}
-                      onValueChange={(value) => setFormData({ ...formData, kurir: value })}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Pilih kurir" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="JNE">JNE - Reguler</SelectItem>
-                        <SelectItem value="J&T">J&T Express</SelectItem>
-                        <SelectItem value="SiCepat">SiCepat</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Estimasi ongkir: {formatRupiah(ESTIMASI_ONGKIR)} (akan dikonfirmasi setelah pesanan)
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Kolom Kanan - Ringkasan (Sticky) */}
-            <div className="md:col-span-1">
-              <div className="sticky top-8 space-y-6">
-                {/* Card Info Buku */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Book className="h-5 w-5 text-[#0d7377]" />
-                      Informasi Buku
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {naskah.urlSampul && (
-                      <div className="aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-100">
-                        <img
-                          src={naskah.urlSampul}
-                          alt={naskah.judul}
-                          className="h-full w-full object-cover"
+                  {/* Card Pengiriman */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-[#0d7377]" />
+                        Langkah 3: Informasi Pengiriman
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="namaPenerima">Nama Penerima *</Label>
+                        <Input
+                          id="namaPenerima"
+                          value={formData.namaPenerima}
+                          onChange={(e) => setFormData({ ...formData, namaPenerima: e.target.value })}
+                          placeholder="Nama lengkap penerima"
+                          className="mt-1"
+                          required
                         />
                       </div>
-                    )}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 line-clamp-2">{naskah.judul}</h3>
-                      {naskah.isbn && (
-                        <p className="text-sm text-muted-foreground mt-1">ISBN: {naskah.isbn}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        {naskah.jumlahHalaman} halaman
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Card Ringkasan Harga */}
-                <Card className="border-[#0d7377] border-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <CreditCard className="h-5 w-5 text-[#0d7377]" />
-                      Ringkasan Pembayaran
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Biaya Cetak ({formData.jumlahEksemplar}x)</span>
-                        <span className="font-medium">{formatRupiah(biaya.biayaCetak)}</span>
+                      <div>
+                        <Label htmlFor="telepon">Nomor Telepon *</Label>
+                        <Input
+                          id="telepon"
+                          type="tel"
+                          value={formData.teleponPenerima}
+                          onChange={(e) => setFormData({ ...formData, teleponPenerima: e.target.value })}
+                          placeholder="08xxx"
+                          className="mt-1"
+                          required
+                        />
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Estimasi Ongkir</span>
-                        <span className="font-medium">{formatRupiah(biaya.ongkir)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Biaya Layanan (10%)</span>
-                        <span className="font-medium">{formatRupiah(biaya.biayaLayanan)}</span>
-                      </div>
-                    </div>
 
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold">Total Bayar</span>
-                        <span className="text-2xl font-bold text-[#0d7377]">
-                          {formatRupiah(biaya.total)}
-                        </span>
+                      <div>
+                        <Label htmlFor="alamat">Alamat Lengkap *</Label>
+                        <Textarea
+                          id="alamat"
+                          value={formData.alamatLengkap}
+                          onChange={(e) => setFormData({ ...formData, alamatLengkap: e.target.value })}
+                          placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
+                          className="mt-1"
+                          rows={4}
+                          required
+                        />
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-gradient-to-r from-[#0d7377] to-[#0a5c5f] hover:from-[#0a5c5f] hover:to-[#084a4c] text-white font-semibold py-6 text-lg"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Memproses...
-                        </>
-                      ) : (
-                        "Buat Pesanan Cetak"
-                      )}
-                    </Button>
+                {/* Kolom Kanan - Ringkasan (Sticky) */}
+                <div className="md:col-span-1">
+                  <div className="sticky top-8 space-y-6">
+                    {/* Card Info Buku */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Book className="h-5 w-5 text-[#0d7377]" />
+                          Informasi Buku
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {naskah.urlSampul && (
+                          <div className="aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-100">
+                            <img
+                              src={naskah.urlSampul}
+                              alt={naskah.judul}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold text-gray-900 line-clamp-2">{naskah.judul}</h3>
+                          {naskah.isbn && (
+                            <p className="text-sm text-muted-foreground mt-1">ISBN: {naskah.isbn}</p>
+                          )}
+                          <p className="text-sm text-muted-foreground">
+                            {naskah.jumlahHalaman} halaman
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                    <p className="text-xs text-center text-muted-foreground">
-                      Dengan membuat pesanan, Anda menyetujui syarat dan ketentuan yang berlaku
-                    </p>
-                  </CardContent>
-                </Card>
+                    {/* Card Ringkasan Harga */}
+                    <Card className="border-[#0d7377] border-2">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <CreditCard className="h-5 w-5 text-[#0d7377]" />
+                          Estimasi Harga
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {loadingHarga ? (
+                          <div className="text-center py-4">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#0d7377]" />
+                            <p className="text-sm text-muted-foreground mt-2">Menghitung harga...</p>
+                          </div>
+                        ) : estimasi ? (
+                          <>
+                            <div className="space-y-2 text-sm">
+                              {estimasi.breakdown.map((item) => (
+                                <div key={item.label} className="flex justify-between">
+                                  <span className="text-muted-foreground">{item.label}</span>
+                                  <span className="font-medium">{formatRupiah(item.nilai)}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="border-t pt-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-lg font-semibold">Total Harga</span>
+                                <span className="text-2xl font-bold text-[#0d7377]">
+                                  {formatRupiah(estimasi.totalHarga)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <Button
+                              type="submit"
+                              disabled={isSubmitting || formData.jumlahEksemplar < minimumPesanan}
+                              className="w-full bg-gradient-to-r from-[#0d7377] to-[#0a5c5f] hover:from-[#0a5c5f] hover:to-[#084a4c] text-white font-semibold py-6 text-lg"
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                  Memproses...
+                                </>
+                              ) : (
+                                "Buat Pesanan Cetak"
+                              )}
+                            </Button>
+
+                            <p className="text-xs text-center text-muted-foreground">
+                              Harga sudah termasuk biaya cetak dan jilid
+                            </p>
+                          </>
+                        ) : (
+                          <div className="text-center py-4">
+                            <AlertCircle className="h-6 w-6 mx-auto text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Pilih spesifikasi untuk melihat estimasi harga
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </form>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
