@@ -238,7 +238,67 @@ export async function hapusTarif(id: string) {
 }
 
 // ============================================
-// KALKULASI & PESANAN BARU (NEW)
+// PARAMETER HARGA & KOMBINASI TARIF (NEW SYSTEM)
+// ============================================
+
+/**
+ * Simpan parameter harga percetakan (create/update)
+ */
+export async function simpanParameterHarga(dto: any) {
+  const response = await client.post("/percetakan/parameter-harga", dto);
+  return response.data;
+}
+
+/**
+ * Ambil parameter harga percetakan
+ */
+export async function ambilParameterHarga() {
+  const response = await client.get("/percetakan/parameter-harga");
+  return response.data;
+}
+
+/**
+ * Buat kombinasi tarif baru
+ */
+export async function buatKombinasiTarif(dto: any) {
+  const response = await client.post("/percetakan/kombinasi-tarif", dto);
+  return response.data;
+}
+
+/**
+ * Ambil semua kombinasi tarif percetakan
+ */
+export async function ambilSemuaKombinasi() {
+  const response = await client.get("/percetakan/kombinasi-tarif");
+  return response.data;
+}
+
+/**
+ * Toggle status aktif kombinasi tarif
+ */
+export async function toggleAktifKombinasi(id: string, aktif: boolean) {
+  const response = await client.put(`/percetakan/kombinasi-tarif/${id}/toggle-aktif`, { aktif });
+  return response.data;
+}
+
+/**
+ * Hapus kombinasi tarif
+ */
+export async function hapusKombinasi(id: string) {
+  const response = await client.put(`/percetakan/kombinasi-tarif/${id}/hapus`);
+  return response.data;
+}
+
+/**
+ * Kalkulasi harga otomatis dari kombinasi aktif
+ */
+export async function kalkulasiHargaOtomatis(dto: any) {
+  const response = await client.post("/percetakan/kalkulasi-harga-otomatis", dto);
+  return response.data;
+}
+
+// ============================================
+// KALKULASI & PESANAN BARU (OLD SYSTEM)
 // ============================================
 
 /**
@@ -295,14 +355,23 @@ const percetakanApi = {
   konfirmasiPembayaran,
   batalkanPembayaran,
   
-  // Tarif (NEW)
+  // Tarif (OLD SYSTEM - Deprecated)
   buatTarif,
   ambilSemuaTarif,
   ambilTarifById,
   perbaruiTarif,
   hapusTarif,
   
-  // Kalkulasi & Pesanan Baru (NEW)
+  // Parameter Harga & Kombinasi Tarif (NEW SYSTEM)
+  simpanParameterHarga,
+  ambilParameterHarga,
+  buatKombinasiTarif,
+  ambilSemuaKombinasi,
+  toggleAktifKombinasi,
+  hapusKombinasi,
+  kalkulasiHargaOtomatis,
+  
+  // Kalkulasi & Pesanan Baru (OLD SYSTEM)
   kalkulasiOpsiHarga,
   buatPesananBaru,
   ambilPesananPercetakan,

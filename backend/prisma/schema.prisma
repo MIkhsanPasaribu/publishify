@@ -175,7 +175,11 @@ model Pengguna {
   logAktivitas     LogAktivitas[]
   tokenRefresh     TokenRefresh[]
   file             File[]
-  tarifPercetakan  TarifPercetakan[]
+  
+  // Tarif system relations
+  parameterHarga   ParameterHargaPercetakan?  @relation("ParameterHarga")
+  kombinasiTarif   KombinasiTarif[]           @relation("KombinasiTarif")
+  tarifPercetakan  TarifPercetakan[]          @relation("TarifLama")  // Deprecated
 
   @@index([googleId], map: "idx_pengguna_google_id")
   @@index([provider], map: "idx_pengguna_provider")
@@ -492,12 +496,79 @@ model TrackingLog {
   @@map("tracking_log")
 }
 
+// Parameter harga individual untuk percetakan
+// Percetakan set harga per komponen, lalu kombinasikan
+model ParameterHargaPercetakan {
+  id                String   @id @default(uuid())
+  idPercetakan      String   @unique  // 1 percetakan hanya punya 1 set parameter
+  
+  // Harga format kertas per lembar
+  hargaKertasA4     Decimal  @db.Decimal(10, 2)
+  hargaKertasA5     Decimal  @db.Decimal(10, 2)
+  hargaKertasB5     Decimal  @default(0) @db.Decimal(10, 2)
+  
+  // Harga jenis cover per unit
+  hargaSoftcover    Decimal  @db.Decimal(10, 2)
+  hargaHardcover    Decimal  @db.Decimal(10, 2)
+  
+  // Biaya tambahan
+  biayaJilid        Decimal  @db.Decimal(10, 2)
+  minimumPesanan    Int      @default(1)
+  
+  dibuatPada        DateTime @default(now())
+  diperbaruiPada    DateTime @updatedAt
+
+  percetakan        Pengguna @relation("ParameterHarga", fields: [idPercetakan], references: [id], onDelete: Cascade)
+  kombinasiTarif    KombinasiTarif[]
+
+  @@index([idPercetakan])
+  @@map("parameter_harga_percetakan")
+}
+
+// Kombinasi tarif yang dibuat dari parameter harga
+// Percetakan bisa buat multiple kombinasi (harga normal, harga promo, dll)
+// Hanya 1 kombinasi yang aktif dalam satu waktu
+model KombinasiTarif {
+  id                String   @id @default(uuid())
+  idPercetakan      String
+  idParameter       String
+  namaKombinasi     String   // "Harga Normal", "Promo Desember", "Harga Hemat"
+  deskripsi         String?  @db.Text
+  
+  // Kombinasi spesifik untuk harga ini
+  formatBuku        String   // A4, A5, B5
+  jenisKertas       String   // HVS_70gr, HVS_80gr, BOOKPAPER, ART_PAPER
+  jenisCover        String   // SOFTCOVER, HARDCOVER
+  
+  // Harga calculated dari parameter (bisa override jika perlu)
+  hargaPerHalaman   Decimal  @db.Decimal(10, 2)  // hargaKertas dari parameter
+  biayaCover        Decimal  @db.Decimal(10, 2)  // hargaSoftcover/Hardcover dari parameter
+  biayaJilid        Decimal  @db.Decimal(10, 2)  // dari parameter
+  minimumPesanan    Int      @default(1)         // dari parameter
+  
+  // Status aktif - HANYA 1 yang boleh aktif per percetakan
+  aktif             Boolean  @default(false)
+  dibuatPada        DateTime @default(now())
+  diperbaruiPada    DateTime @updatedAt
+
+  percetakan        Pengguna @relation("KombinasiTarif", fields: [idPercetakan], references: [id], onDelete: Cascade)
+  parameter         ParameterHargaPercetakan @relation(fields: [idParameter], references: [id], onDelete: Cascade)
+
+  @@unique([idPercetakan, formatBuku, jenisKertas, jenisCover, namaKombinasi])
+  @@index([idPercetakan])
+  @@index([aktif])
+  @@index([idPercetakan, aktif])  // Query kombinasi aktif per percetakan
+  @@map("kombinasi_tarif")
+}
+
+// DEPRECATED: Old model - will be migrated
+// Keep for backward compatibility during migration
 model TarifPercetakan {
   id                String   @id @default(uuid())
   idPercetakan      String
-  formatBuku        String   // A4, A5, B5
-  jenisKertas       String   // HVS, BOOKPAPER, ART_PAPER
-  jenisCover        String   // SOFTCOVER, HARDCOVER
+  formatBuku        String
+  jenisKertas       String
+  jenisCover        String
   hargaPerHalaman   Decimal  @db.Decimal(10, 2)
   biayaJilid        Decimal  @db.Decimal(10, 2)
   minimumPesanan    Int      @default(1)
@@ -505,12 +576,12 @@ model TarifPercetakan {
   dibuatPada        DateTime @default(now())
   diperbaruiPada    DateTime @updatedAt
 
-  percetakan Pengguna @relation(fields: [idPercetakan], references: [id], onDelete: Cascade)
+  percetakan Pengguna @relation("TarifLama", fields: [idPercetakan], references: [id], onDelete: Cascade)
 
   @@unique([idPercetakan, formatBuku, jenisKertas, jenisCover])
   @@index([idPercetakan])
   @@index([aktif])
-  @@map("tarif_percetakan")
+  @@map("tarif_percetakan_old")
 }
 
 // ============================================

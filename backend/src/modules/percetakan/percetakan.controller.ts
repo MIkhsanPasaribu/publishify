@@ -27,6 +27,8 @@ import {
   BuatPengirimanDtoClass,
   KonfirmasiPesananDtoClass,
 } from './dto';
+import { BuatTarifDto } from './dto/buat-tarif.dto';
+import { PerbaruiTarifDto } from './dto/perbarui-tarif.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
@@ -220,49 +222,7 @@ export class PercetakanController {
     return this.percetakanService.ambilStatistikPesanan(idPengguna, peran);
   }
 
-  /**
-   * Ambil detail pesanan by ID
-   */
-  @Get(':id')
-  @Peran('penulis', 'percetakan', 'admin')
-  @ApiOperation({ summary: 'Ambil detail pesanan by ID' })
-  @ApiParam({ name: 'id', description: 'ID pesanan' })
-  @ApiResponse({
-    status: 200,
-    description: 'Detail pesanan berhasil diambil',
-  })
-  @ApiResponse({ status: 404, description: 'Pesanan tidak ditemukan' })
-  @ApiResponse({ status: 403, description: 'Tidak memiliki akses ke pesanan ini' })
-  async ambilPesananById(
-    @Param('id') id: string,
-    @PenggunaSaatIni('id') idPengguna: string,
-    @PenggunaSaatIni('peran') peran: string,
-  ) {
-    return this.percetakanService.ambilPesananById(id, idPengguna, peran);
-  }
 
-  /**
-   * Perbarui detail pesanan
-   * Hanya untuk status 'tertunda'
-   */
-  @Put(':id')
-  @Peran('penulis')
-  @ApiOperation({ summary: 'Perbarui detail pesanan (hanya status tertunda)' })
-  @ApiParam({ name: 'id', description: 'ID pesanan' })
-  @ApiResponse({
-    status: 200,
-    description: 'Pesanan berhasil diperbarui',
-  })
-  @ApiResponse({ status: 400, description: 'Status pesanan tidak tertunda' })
-  @ApiResponse({ status: 404, description: 'Pesanan tidak ditemukan' })
-  @ApiResponse({ status: 403, description: 'Tidak memiliki akses' })
-  async perbaruiPesanan(
-    @Param('id') id: string,
-    @PenggunaSaatIni('id') idPemesan: string,
-    @Body(new ValidasiZodPipe(PerbaruiPesananSchema)) dto: PerbaruiPesananDtoClass,
-  ) {
-    return this.percetakanService.perbaruiPesanan(id, idPemesan, dto);
-  }
 
   /**
    * Konfirmasi pesanan oleh percetakan
@@ -371,7 +331,7 @@ export class PercetakanController {
   @ApiResponse({ status: 201, description: 'Tarif berhasil dibuat' })
   async buatTarif(
     @PenggunaSaatIni('id') idPercetakan: string,
-    @Body() dto: any,
+    @Body() dto: BuatTarifDto,
   ) {
     return this.percetakanService.buatTarif(idPercetakan, dto);
   }
@@ -379,8 +339,8 @@ export class PercetakanController {
   /**
    * Ambil semua tarif percetakan
    */
-  @Get('tarif')
   @Public()
+  @Get('tarif')
   @ApiOperation({ summary: 'Ambil semua tarif percetakan' })
   @ApiQuery({ name: 'idPercetakan', required: false })
   @ApiQuery({ name: 'aktif', required: false, type: Boolean })
@@ -397,8 +357,8 @@ export class PercetakanController {
   /**
    * Ambil tarif by ID
    */
-  @Get('tarif/:id')
   @Public()
+  @Get('tarif/:id')
   @ApiOperation({ summary: 'Ambil detail tarif' })
   @ApiParam({ name: 'id', description: 'ID tarif' })
   async ambilTarifById(@Param('id') id: string) {
@@ -415,7 +375,7 @@ export class PercetakanController {
   async perbaruiTarif(
     @Param('id') id: string,
     @PenggunaSaatIni('id') idPercetakan: string,
-    @Body() dto: any,
+    @Body() dto: PerbaruiTarifDto,
   ) {
     return this.percetakanService.perbaruiTarif(id, idPercetakan, dto);
   }
@@ -433,6 +393,144 @@ export class PercetakanController {
     @PenggunaSaatIni('id') idPercetakan: string,
   ) {
     return this.percetakanService.hapusTarif(id, idPercetakan);
+  }
+
+  /**
+   * ============================================
+   * PARAMETER HARGA & KOMBINASI TARIF (NEW SYSTEM)
+   * ============================================
+   */
+
+  /**
+   * Simpan parameter harga percetakan
+   * Create jika belum ada, Update jika sudah ada
+   */
+  @Post('parameter-harga')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Simpan parameter harga percetakan (create/update)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Parameter harga berhasil disimpan',
+  })
+  async simpanParameterHarga(
+    @PenggunaSaatIni('id') idPercetakan: string,
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.simpanParameterHarga(idPercetakan, dto);
+  }
+
+  /**
+   * Ambil parameter harga percetakan
+   */
+  @Get('parameter-harga')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Ambil parameter harga percetakan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Parameter harga berhasil diambil',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Parameter harga belum diatur',
+  })
+  async ambilParameterHarga(@PenggunaSaatIni('id') idPercetakan: string) {
+    return this.percetakanService.ambilParameterHarga(idPercetakan);
+  }
+
+  /**
+   * Buat kombinasi tarif baru dari parameter harga
+   */
+  @Post('kombinasi-tarif')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Buat kombinasi tarif baru' })
+  @ApiResponse({
+    status: 201,
+    description: 'Kombinasi tarif berhasil dibuat',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Parameter harga belum diatur',
+  })
+  async buatKombinasiTarif(
+    @PenggunaSaatIni('id') idPercetakan: string,
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.buatKombinasiTarif(idPercetakan, dto);
+  }
+
+  /**
+   * Ambil semua kombinasi tarif percetakan
+   */
+  @Get('kombinasi-tarif')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Ambil semua kombinasi tarif percetakan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Kombinasi tarif berhasil diambil',
+  })
+  async ambilSemuaKombinasi(@PenggunaSaatIni('id') idPercetakan: string) {
+    return this.percetakanService.ambilSemuaKombinasi(idPercetakan);
+  }
+
+  /**
+   * Toggle status aktif kombinasi tarif
+   */
+  @Put('kombinasi-tarif/:id/toggle-aktif')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Toggle status aktif kombinasi tarif' })
+  @ApiParam({ name: 'id', description: 'ID kombinasi tarif' })
+  @ApiResponse({
+    status: 200,
+    description: 'Status aktif berhasil diubah',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Kombinasi tarif tidak ditemukan',
+  })
+  async toggleAktifKombinasi(
+    @Param('id') id: string,
+    @Body() dto: { aktif: boolean },
+  ) {
+    return this.percetakanService.toggleAktifKombinasi(id, dto.aktif);
+  }
+
+  /**
+   * Hapus kombinasi tarif
+   */
+  @Put('kombinasi-tarif/:id/hapus')
+  @Peran('percetakan')
+  @ApiOperation({ summary: 'Hapus kombinasi tarif' })
+  @ApiParam({ name: 'id', description: 'ID kombinasi tarif' })
+  @ApiResponse({
+    status: 200,
+    description: 'Kombinasi tarif berhasil dihapus',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Kombinasi tarif tidak ditemukan',
+  })
+  async hapusKombinasi(@Param('id') id: string) {
+    return this.percetakanService.hapusKombinasi(id);
+  }
+
+  /**
+   * Kalkulasi harga otomatis berdasarkan spesifikasi
+   */
+  @Post('kalkulasi-harga-otomatis')
+  @Peran('penulis', 'percetakan')
+  @ApiOperation({ summary: 'Kalkulasi harga otomatis dari kombinasi aktif' })
+  @ApiResponse({
+    status: 200,
+    description: 'Harga berhasil dikalkulasi',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Kombinasi tarif tidak ditemukan untuk spesifikasi ini',
+  })
+  async kalkulasiHargaOtomatis(
+    @Body() dto: any,
+  ) {
+    return this.percetakanService.kalkulasiHargaOtomatis(dto.idPercetakan, dto);
   }
 
   /**
@@ -476,5 +574,57 @@ export class PercetakanController {
     @Query('status') status?: string,
   ) {
     return this.percetakanService.ambilPesananPercetakan(idPercetakan, status);
+  }
+
+  /**
+   * ============================================
+   * GENERIC ID ROUTES (MUST BE LAST)
+   * ============================================
+   */
+
+  /**
+   * Ambil detail pesanan by ID
+   * ⚠️ Route ini harus di paling bawah karena menggunakan :id dinamis
+   */
+  @Get(':id')
+  @Peran('penulis', 'percetakan', 'admin')
+  @ApiOperation({ summary: 'Ambil detail pesanan by ID' })
+  @ApiParam({ name: 'id', description: 'ID pesanan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detail pesanan berhasil diambil',
+  })
+  @ApiResponse({ status: 404, description: 'Pesanan tidak ditemukan' })
+  @ApiResponse({ status: 403, description: 'Tidak memiliki akses ke pesanan ini' })
+  async ambilPesananById(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPengguna: string,
+    @PenggunaSaatIni('peran') peran: string,
+  ) {
+    return this.percetakanService.ambilPesananById(id, idPengguna, peran);
+  }
+
+  /**
+   * Perbarui detail pesanan
+   * Hanya untuk status 'tertunda'
+   * ⚠️ Route ini harus di paling bawah karena menggunakan :id dinamis
+   */
+  @Put(':id')
+  @Peran('penulis')
+  @ApiOperation({ summary: 'Perbarui detail pesanan (hanya status tertunda)' })
+  @ApiParam({ name: 'id', description: 'ID pesanan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Pesanan berhasil diperbarui',
+  })
+  @ApiResponse({ status: 400, description: 'Status pesanan tidak tertunda' })
+  @ApiResponse({ status: 404, description: 'Pesanan tidak ditemukan' })
+  @ApiResponse({ status: 403, description: 'Tidak memiliki akses' })
+  async perbaruiPesanan(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPemesan: string,
+    @Body(new ValidasiZodPipe(PerbaruiPesananSchema)) dto: PerbaruiPesananDtoClass,
+  ) {
+    return this.percetakanService.perbaruiPesanan(id, idPemesan, dto);
   }
 }
