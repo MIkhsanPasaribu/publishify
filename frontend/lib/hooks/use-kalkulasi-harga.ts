@@ -69,51 +69,56 @@ export function useKalkulasiHarga(params: KalkulasiParams) {
       return;
     }
 
-    // 1. Hitung biaya kertas per lembar
+    // 1. Hitung biaya kertas per lembar (convert ke number untuk safety)
     let hargaKertasPerLembar = 0;
     switch (formatKertas) {
       case "A4":
-        hargaKertasPerLembar = tarif.hargaKertasA4;
+        hargaKertasPerLembar = Number(tarif.hargaKertasA4) || 0;
         break;
       case "A5":
-        hargaKertasPerLembar = tarif.hargaKertasA5;
+        hargaKertasPerLembar = Number(tarif.hargaKertasA5) || 0;
         break;
       case "B5":
-        hargaKertasPerLembar = tarif.hargaKertasB5;
+        hargaKertasPerLembar = Number(tarif.hargaKertasB5) || 0;
         break;
     }
 
-    // 2. Hitung biaya cover per unit
+    // 2. Hitung biaya cover per unit (convert ke number untuk safety)
     let hargaCoverPerUnit = 0;
     switch (jenisCover) {
       case "SOFTCOVER":
-        hargaCoverPerUnit = tarif.hargaSoftcover;
+        hargaCoverPerUnit = Number(tarif.hargaSoftcover) || 0;
         break;
       case "HARDCOVER":
-        hargaCoverPerUnit = tarif.hargaHardcover;
+        hargaCoverPerUnit = Number(tarif.hargaHardcover) || 0;
         break;
     }
 
-    // 3. Biaya jilid
-    const hargaJilid = tarif.biayaJilid;
+    // 3. Biaya jilid (convert ke number untuk safety)
+    const hargaJilid = Number(tarif.biayaJilid) || 0;
 
-    // 4. Hitung total
-    const biayaKertas = hargaKertasPerLembar * jumlahHalaman;
-    const biayaCover = hargaCoverPerUnit;
-    const biayaJilid = hargaJilid;
-    const biayaPerUnit = biayaKertas + biayaCover + biayaJilid;
+    // 4. Hitung total per unit
+    const biayaKertasPerUnit = hargaKertasPerLembar * jumlahHalaman;
+    const biayaCoverPerUnit = hargaCoverPerUnit;
+    const biayaJilidPerUnit = hargaJilid;
+    const biayaPerUnit = biayaKertasPerUnit + biayaCoverPerUnit + biayaJilidPerUnit;
+    
+    // 5. Hitung total untuk semua buku
+    const totalBiayaKertas = biayaKertasPerUnit * jumlahBuku;
+    const totalBiayaCover = biayaCoverPerUnit * jumlahBuku;
+    const totalBiayaJilid = biayaJilidPerUnit * jumlahBuku;
     const totalHarga = biayaPerUnit * jumlahBuku;
 
     setEstimasi({
-      biayaKertas,
-      biayaCover,
-      biayaJilid,
+      biayaKertas: totalBiayaKertas,
+      biayaCover: totalBiayaCover,
+      biayaJilid: totalBiayaJilid,
       biayaPerUnit,
       totalHarga,
       breakdown: [
-        { label: "Kertas", nilai: biayaKertas },
-        { label: "Cover", nilai: biayaCover },
-        { label: "Jilid", nilai: biayaJilid },
+        { label: `Kertas (${jumlahHalaman} hal × ${jumlahBuku} buku)`, nilai: totalBiayaKertas },
+        { label: `Cover (${jumlahBuku} buku)`, nilai: totalBiayaCover },
+        { label: `Jilid (${jumlahBuku} buku)`, nilai: totalBiayaJilid },
       ],
     });
   }, [tarif, formatKertas, jenisCover, jumlahHalaman, jumlahBuku]);

@@ -82,17 +82,28 @@ export class PercetakanService {
     return {
       sukses: true,
       pesan: 'Daftar percetakan berhasil diambil',
-      data: daftarPercetakan.map((p) => ({
-        id: p.id,
-        email: p.email,
-        nama: p.profilPengguna?.namaTampilan || 
-              `${p.profilPengguna?.namaDepan || ''} ${p.profilPengguna?.namaBelakang || ''}`.trim() ||
-              'Percetakan',
-        alamat: p.profilPengguna?.alamat,
-        kota: p.profilPengguna?.kota,
-        provinsi: p.profilPengguna?.provinsi,
-        tarifAktif: p.parameterHarga[0] || null,
-      })),
+      data: daftarPercetakan.map((p) => {
+        const tarif = p.parameterHarga[0];
+        return {
+          id: p.id,
+          email: p.email,
+          nama: p.profilPengguna?.namaTampilan || 
+                `${p.profilPengguna?.namaDepan || ''} ${p.profilPengguna?.namaBelakang || ''}`.trim() ||
+                'Percetakan',
+          alamat: p.profilPengguna?.alamat,
+          kota: p.profilPengguna?.kota,
+          provinsi: p.profilPengguna?.provinsi,
+          tarifAktif: tarif ? {
+            ...tarif,
+            hargaKertasA4: tarif.hargaKertasA4 ? Number(tarif.hargaKertasA4) : 0,
+            hargaKertasA5: tarif.hargaKertasA5 ? Number(tarif.hargaKertasA5) : 0,
+            hargaKertasB5: tarif.hargaKertasB5 ? Number(tarif.hargaKertasB5) : 0,
+            hargaSoftcover: tarif.hargaSoftcover ? Number(tarif.hargaSoftcover) : 0,
+            hargaHardcover: tarif.hargaHardcover ? Number(tarif.hargaHardcover) : 0,
+            biayaJilid: tarif.biayaJilid ? Number(tarif.biayaJilid) : 0,
+          } : null,
+        };
+      }),
       total: daftarPercetakan.length,
     };
   }
@@ -149,6 +160,7 @@ export class PercetakanService {
     console.log('✅ Tarif ditemukan:', tarifAktif.namaKombinasi);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
+    // Transform Decimal to number untuk frontend
     return {
       sukses: true,
       pesan: 'Tarif percetakan berhasil diambil',
@@ -159,7 +171,15 @@ export class PercetakanService {
                 `${percetakan.profilPengguna?.namaDepan || ''} ${percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
                 'Percetakan',
         },
-        tarif: tarifAktif,
+        tarif: {
+          ...tarifAktif,
+          hargaKertasA4: tarifAktif.hargaKertasA4 ? Number(tarifAktif.hargaKertasA4) : 0,
+          hargaKertasA5: tarifAktif.hargaKertasA5 ? Number(tarifAktif.hargaKertasA5) : 0,
+          hargaKertasB5: tarifAktif.hargaKertasB5 ? Number(tarifAktif.hargaKertasB5) : 0,
+          hargaSoftcover: tarifAktif.hargaSoftcover ? Number(tarifAktif.hargaSoftcover) : 0,
+          hargaHardcover: tarifAktif.hargaHardcover ? Number(tarifAktif.hargaHardcover) : 0,
+          biayaJilid: tarifAktif.biayaJilid ? Number(tarifAktif.biayaJilid) : 0,
+        },
       },
     };
   }
