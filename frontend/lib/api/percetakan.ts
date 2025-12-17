@@ -102,6 +102,14 @@ export async function ambilDaftarPesanan(
 }
 
 /**
+ * Ambil daftar pesanan milik penulis (untuk halaman /dashboard/pesanan-cetak)
+ */
+export async function ambilDaftarPesananPenulis(): Promise<ResponsePesananList> {
+  const response = await client.get("/percetakan/penulis/saya");
+  return response.data;
+}
+
+/**
  * Ambil detail pesanan by ID
  */
 export async function ambilDetailPesanan(

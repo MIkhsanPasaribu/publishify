@@ -200,7 +200,7 @@ export default function CetakFisikPage() {
 
       if (response.sukses) {
         toast.success("Pesanan cetak berhasil dibuat!");
-        router.push("/dashboard/pesanan");
+        router.push("/dashboard/pesanan-cetak");
       }
     } catch (error: any) {
       console.error("Error creating order:", error);

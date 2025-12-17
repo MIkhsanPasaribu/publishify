@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -13,6 +13,7 @@ import {
   Filter,
   Calendar,
   DollarSign,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,99 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Data Dummy
-const DUMMY_PESANAN = [
-  {
-    id: "1",
-    nomorPesanan: "PO-20251126-1234",
-    naskah: {
-      judul: "Petualangan di Negeri Dongeng",
-      urlSampul: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400",
-    },
-    jumlah: 100,
-    formatKertas: "A5",
-    jenisKertas: "Bookpaper",
-    jenisCover: "Soft Cover",
-    hargaTotal: 2500000,
-    status: "dikirim",
-    tanggalPesan: "2025-11-20T10:00:00Z",
-    estimasiSelesai: "2025-11-27T10:00:00Z",
-    pengiriman: {
-      namaEkspedisi: "JNE",
-      nomorResi: "JNE12345678901234",
-      status: "dalam_perjalanan",
-    },
-  },
-  {
-    id: "2",
-    nomorPesanan: "PO-20251125-5678",
-    naskah: {
-      judul: "Panduan Lengkap Pemrograman Web",
-      urlSampul: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400",
-    },
-    jumlah: 50,
-    formatKertas: "A4",
-    jenisKertas: "HVS 80gr",
-    jenisCover: "Hard Cover",
-    hargaTotal: 3500000,
-    status: "dalam_produksi",
-    tanggalPesan: "2025-11-15T14:30:00Z",
-    estimasiSelesai: "2025-11-30T10:00:00Z",
-  },
-  {
-    id: "3",
-    nomorPesanan: "PO-20251120-9012",
-    naskah: {
-      judul: "Resep Masakan Nusantara",
-      urlSampul: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400",
-    },
-    jumlah: 200,
-    formatKertas: "A5",
-    jenisKertas: "Art Paper 120gr",
-    jenisCover: "Soft Cover",
-    hargaTotal: 4800000,
-    status: "selesai",
-    tanggalPesan: "2025-11-10T09:00:00Z",
-    estimasiSelesai: "2025-11-18T10:00:00Z",
-    tanggalSelesai: "2025-11-17T15:00:00Z",
-    pengiriman: {
-      namaEkspedisi: "SiCepat",
-      nomorResi: "SICEPAT987654321",
-      status: "terkirim",
-    },
-  },
-  {
-    id: "4",
-    nomorPesanan: "PO-20251118-3456",
-    naskah: {
-      judul: "Kisah Inspiratif Para Pejuang",
-      urlSampul: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400",
-    },
-    jumlah: 75,
-    formatKertas: "B5",
-    jenisKertas: "Bookpaper",
-    jenisCover: "Hard Cover",
-    hargaTotal: 4200000,
-    status: "tertunda",
-    tanggalPesan: "2025-11-18T11:00:00Z",
-  },
-  {
-    id: "5",
-    nomorPesanan: "PO-20251115-7890",
-    naskah: {
-      judul: "Belajar Bahasa Inggris dengan Mudah",
-      urlSampul: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400",
-    },
-    jumlah: 150,
-    formatKertas: "A5",
-    jenisKertas: "HVS 70gr",
-    jenisCover: "Soft Cover",
-    hargaTotal: 3200000,
-    status: "dibatalkan",
-    tanggalPesan: "2025-11-15T16:00:00Z",
-  },
-];
+import { ambilDaftarPesananPenulis } from "@/lib/api/percetakan";
+import type { PesananCetak } from "@/types/percetakan";
+import { toast } from "sonner";
 
 const STATUS_CONFIG = {
   tertunda: {
@@ -172,24 +83,65 @@ function formatRupiah(amount: number) {
 export default function RiwayatPesananCetakPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("semua");
+  const [pesananList, setPesananList] = useState<PesananCetak[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter data
-  const filteredPesanan = DUMMY_PESANAN.filter((pesanan) => {
-    const matchSearch =
-      pesanan.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pesanan.naskah.judul.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = filterStatus === "semua" || pesanan.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  // Fetch data pesanan penulis
+  useEffect(() => {
+    async function fetchPesanan() {
+      try {
+        setIsLoading(true);
+        const response = await ambilDaftarPesananPenulis();
+        
+        if (response.sukses && response.data) {
+          setPesananList(response.data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching pesanan:", error);
+        toast.error(error.response?.data?.pesan || "Gagal memuat data pesanan");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchPesanan();
+  }, []);
+
+  // Filter data dan sort by latest
+  const filteredPesanan = pesananList
+    .filter((pesanan) => {
+      const matchSearch =
+        pesanan.nomorPesanan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pesanan.naskah?.judul?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchStatus = filterStatus === "semua" || pesanan.status === filterStatus;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => {
+      // Sort by creation date, newest first
+      const dateA = new Date(a.dibuatPada || 0).getTime();
+      const dateB = new Date(b.dibuatPada || 0).getTime();
+      return dateB - dateA;
+    });
 
   // Statistik
   const stats = {
-    total: DUMMY_PESANAN.length,
-    tertunda: DUMMY_PESANAN.filter((p) => p.status === "tertunda").length,
-    diproses: DUMMY_PESANAN.filter((p) => p.status === "dalam_produksi").length,
-    dikirim: DUMMY_PESANAN.filter((p) => p.status === "dikirim").length,
-    selesai: DUMMY_PESANAN.filter((p) => p.status === "selesai").length,
+    total: pesananList.length,
+    tertunda: pesananList.filter((p) => p.status === "tertunda").length,
+    diproses: pesananList.filter((p) => p.status === "dalam_produksi").length,
+    dikirim: pesananList.filter((p) => p.status === "dikirim").length,
+    selesai: pesananList.filter((p) => p.status === "selesai").length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-[#0d7377] mx-auto" />
+          <p className="mt-4 text-gray-600 font-medium">Memuat data pesanan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 p-6 md:p-8">
@@ -347,11 +299,17 @@ export default function RiwayatPesananCetakPage() {
                       {/* Cover Buku */}
                       <div className="flex-shrink-0">
                         <div className="w-32 h-44 rounded-lg overflow-hidden bg-gray-100 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-gray-200 group-hover:ring-[#0d7377]">
-                          <img
-                            src={pesanan.naskah.urlSampul}
-                            alt={pesanan.naskah.judul}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                          {pesanan.naskah?.urlSampul ? (
+                            <img
+                              src={pesanan.naskah.urlSampul}
+                              alt={pesanan.naskah.judul}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                              <Package className="h-12 w-12 text-gray-400" />
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -360,10 +318,10 @@ export default function RiwayatPesananCetakPage() {
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           <div className="flex-1">
                             <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#0d7377] transition-colors">
-                              {pesanan.naskah.judul}
+                              {pesanan.naskah?.judul || "Judul Tidak Tersedia"}
                             </h3>
                             <p className="text-sm text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded-full w-fit">
-                              {pesanan.nomorPesanan}
+                              {pesanan.nomorPesanan || "-"}
                             </p>
                           </div>
                           <Badge
@@ -379,27 +337,27 @@ export default function RiwayatPesananCetakPage() {
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="text-xs text-gray-600 mb-1">Jumlah</p>
                             <p className="font-bold text-gray-900 text-lg">
-                              {pesanan.jumlah} <span className="text-sm font-normal">eks</span>
+                              {pesanan.jumlah || 0} <span className="text-sm font-normal">eks</span>
                             </p>
                           </div>
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="text-xs text-gray-600 mb-1">Format</p>
                             <p className="font-semibold text-gray-900 text-sm">
-                              {pesanan.formatKertas}
+                              {pesanan.formatKertas || "-"}
                             </p>
-                            <p className="text-xs text-gray-600">{pesanan.jenisKertas}</p>
+                            <p className="text-xs text-gray-600">{pesanan.jenisKertas || "-"}</p>
                           </div>
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="text-xs text-gray-600 mb-1">Cover</p>
                             <p className="font-semibold text-gray-900 text-sm">
-                              {pesanan.jenisCover}
+                              {pesanan.jenisCover === "SOFTCOVER" ? "Soft Cover" : pesanan.jenisCover === "HARDCOVER" ? "Hard Cover" : "-"}
                             </p>
                           </div>
                           <div className="bg-gradient-to-br from-[#0d7377] to-[#0a5c5f] rounded-lg p-3 text-white">
                             <p className="text-xs opacity-90 mb-1">Total Biaya</p>
                             <p className="font-bold text-lg flex items-center gap-1">
                               <DollarSign className="h-4 w-4" />
-                              {formatRupiah(pesanan.hargaTotal)}
+                              {formatRupiah(Number(pesanan.hargaTotal) || 0)}
                             </p>
                           </div>
                         </div>
@@ -409,7 +367,7 @@ export default function RiwayatPesananCetakPage() {
                             <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
                               <Calendar className="h-4 w-4" />
                               <span className="font-medium">Dipesan:</span>
-                              <span>{formatTanggal(pesanan.tanggalPesan)}</span>
+                              <span>{pesanan.dibuatPada ? formatTanggal(pesanan.dibuatPada) : "-"}</span>
                             </div>
                             {pesanan.estimasiSelesai && (
                               <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
@@ -432,13 +390,15 @@ export default function RiwayatPesananCetakPage() {
                             </div>
                           )}
 
-                          <Button
-                            variant="outline"
-                            className="border-2 border-[#0d7377] text-[#0d7377] hover:bg-[#0d7377] hover:text-white font-semibold transition-all duration-300"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Lihat Detail
-                          </Button>
+                          <Link href={`/dashboard/pesanan-cetak/${pesanan.id}`}>
+                            <Button
+                              variant="outline"
+                              className="border-2 border-[#0d7377] text-[#0d7377] hover:bg-[#0d7377] hover:text-white font-semibold transition-all duration-300"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Lihat Detail
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </div>
