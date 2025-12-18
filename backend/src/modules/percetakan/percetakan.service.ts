@@ -1301,7 +1301,8 @@ export class PercetakanService {
       if (status === 'baru') {
         where.status = { in: ['tertunda', 'diterima'] };
       } else if (status === 'produksi') {
-        where.status = { in: ['dalam_produksi', 'kontrol_kualitas'] };
+        // Include pesanan yang baru diterima + dalam produksi + kontrol kualitas
+        where.status = { in: ['diterima', 'dalam_produksi', 'kontrol_kualitas'] };
       } else if (status === 'pengiriman') {
         where.status = { in: ['siap', 'dikirim'] };
       } else if (status === 'selesai') {

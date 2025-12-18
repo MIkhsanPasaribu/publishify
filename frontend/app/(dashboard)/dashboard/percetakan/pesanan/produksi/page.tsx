@@ -40,7 +40,7 @@ export default function DalamProduksiPage() {
   );
   const [showUpdateStatusDialog, setShowUpdateStatusDialog] = useState(false);
 
-  // Fetch pesanan dalam produksi
+  // Fetch pesanan dalam produksi + pesanan baru yang perlu diproses
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["pesanan-produksi"],
     queryFn: () => ambilPesananPercetakan("produksi"),
@@ -49,19 +49,29 @@ export default function DalamProduksiPage() {
 
   const pesananList = data?.data || [];
 
-  // Filter berdasarkan search
-  const filteredPesanan = pesananList.filter((pesanan: PesananCetak) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      pesanan.nomorPesanan?.toLowerCase().includes(searchLower) ||
-      pesanan.naskah?.judul?.toLowerCase().includes(searchLower) ||
-      pesanan.pemesan?.email?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filter berdasarkan search dan sort by tanggal terbaru
+  const filteredPesanan = pesananList
+    .filter((pesanan: PesananCetak) => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        pesanan.nomorPesanan?.toLowerCase().includes(searchLower) ||
+        pesanan.naskah?.judul?.toLowerCase().includes(searchLower) ||
+        pesanan.pemesan?.email?.toLowerCase().includes(searchLower)
+      );
+    })
+    .sort((a: PesananCetak, b: PesananCetak) => {
+      // Sort by tanggalPesan (terbaru di atas)
+      const dateA = new Date(a.tanggalPesan || a.dibuatPada || 0).getTime();
+      const dateB = new Date(b.tanggalPesan || b.dibuatPada || 0).getTime();
+      return dateB - dateA;
+    });
 
   // Stats
   const stats = {
     total: pesananList.length,
+    diterima: pesananList.filter(
+      (p: PesananCetak) => p.status === "diterima"
+    ).length,
     dalamProduksi: pesananList.filter(
       (p: PesananCetak) => p.status === "dalam_produksi"
     ).length,
@@ -110,7 +120,7 @@ export default function DalamProduksiPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border-2">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -120,6 +130,22 @@ export default function DalamProduksiPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Pesanan</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Pesanan Baru</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.diterima}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -200,7 +226,7 @@ export default function DalamProduksiPage() {
                 <TableHead>Jumlah</TableHead>
                 <TableHead>Spesifikasi</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Tanggal Mulai</TableHead>
+                <TableHead>Tanggal</TableHead>
                 <TableHead>Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -239,28 +265,49 @@ export default function DalamProduksiPage() {
                     <TableCell>
                       <Badge
                         className={
-                          pesanan.status === "dalam_produksi"
+                          pesanan.status === "diterima"
+                            ? "bg-amber-100 text-amber-800 border border-amber-300"
+                            : pesanan.status === "dalam_produksi"
                             ? "bg-purple-100 text-purple-800"
                             : pesanan.status === "kontrol_kualitas"
                               ? "bg-indigo-100 text-indigo-800"
-                              : "bg-green-100 text-green-800"
+                              : pesanan.status === "siap"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
                         }
                       >
-                        {pesanan.status === "dalam_produksi"
+                        {pesanan.status === "diterima"
+                          ? "Pesanan Baru"
+                          : pesanan.status === "dalam_produksi"
                           ? "Dalam Produksi"
                           : pesanan.status === "kontrol_kualitas"
                             ? "Kontrol Kualitas"
-                            : "Siap Kirim"}
+                            : pesanan.status === "siap"
+                            ? "Siap Kirim"
+                            : pesanan.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {pesanan.estimasiSelesai
-                        ? format(
-                            new Date(pesanan.estimasiSelesai),
-                            "dd MMM yyyy",
-                            { locale: id }
-                          )
-                        : "-"}
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-900">
+                          {pesanan.tanggalPesan || pesanan.dibuatPada
+                            ? format(
+                                new Date(pesanan.tanggalPesan || pesanan.dibuatPada),
+                                "dd MMM yyyy",
+                                { locale: id }
+                              )
+                            : "-"}
+                        </div>
+                        {pesanan.estimasiSelesai && (
+                          <div className="text-xs text-gray-500">
+                            Est: {format(
+                              new Date(pesanan.estimasiSelesai),
+                              "dd MMM",
+                              { locale: id }
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Button
