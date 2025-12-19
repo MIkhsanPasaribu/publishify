@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
@@ -12,16 +13,29 @@ import {
   UpdateStatusDto,
   BuatPengirimanDto,
   KonfirmasiPesananDto,
+  KonfirmasiPenerimaanDto,
 } from './dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import { NotifikasiService } from '@/modules/notifikasi/notifikasi.service';
+import { NotifikasiGateway } from '@/modules/notifikasi/notifikasi.gateway';
+import { EmailService } from '@/modules/notifikasi/email.service';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
 
 /**
  * Service untuk mengelola pesanan cetak buku
- * Menangani pembuatan, update, konfirmasi, dan tracking pesanan
+ * Menangani pembuatan, update, konfirmasi, tracking pesanan, email & WebSocket notifications
  */
 @Injectable()
 export class PercetakanService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PercetakanService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifikasiService: NotifikasiService,
+    private readonly notifikasiGateway: NotifikasiGateway,
+    private readonly emailService: EmailService,
+  ) {}
 
   /**
    * Ambil daftar percetakan yang tersedia dengan info tarif aktif
@@ -840,6 +854,27 @@ export class PercetakanService {
   async updateStatusPesanan(id: string, idPercetakan: string, dto: UpdateStatusDto) {
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+      },
     });
 
     if (!pesanan) {
@@ -877,13 +912,30 @@ export class PercetakanService {
       updateData.estimasiSelesai = new Date(dto.estimasiSelesai);
     }
 
-    if (dto.status === 'terkirim') {
-      updateData.tanggalSelesai = new Date();
-    }
-
     const pesananUpdated = await this.prisma.pesananCetak.update({
       where: { id },
       data: updateData,
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+      },
     });
 
     // Buat log produksi
@@ -915,6 +967,56 @@ export class PercetakanService {
         deskripsi: `Memperbarui status pesanan ${pesanan.nomorPesanan} menjadi ${dto.status}`,
       },
     });
+
+    // 🔔 PRIORITY 1: Email & WebSocket Notification saat status = "terkirim"
+    if (dto.status === 'terkirim' && pesananUpdated.pengiriman) {
+      this.logger.log(`📧 Mengirim email & notifikasi untuk pesanan terkirim: ${pesanan.nomorPesanan}`);
+
+      const penulis = pesananUpdated.naskah.penulis;
+      const namaPenerima = penulis.profilPengguna?.namaTampilan ||
+        `${penulis.profilPengguna?.namaDepan || ''} ${penulis.profilPengguna?.namaBelakang || ''}`.trim() ||
+        'Pengguna';
+
+      // Format tanggal estimasi sampai
+      const estimasiSampai = pesananUpdated.pengiriman.estimasiTiba
+        ? format(new Date(pesananUpdated.pengiriman.estimasiTiba), 'd MMMM yyyy', { locale: idLocale })
+        : 'Segera';
+
+      // Kirim email notification
+      try {
+        await this.emailService.kirimEmailPesananDikirim({
+          emailPenerima: penulis.email,
+          namaPenerima,
+          nomorPesanan: pesananUpdated.nomorPesanan,
+          judulBuku: pesananUpdated.naskah.judul,
+          nomorResi: pesananUpdated.pengiriman.nomorResi || '-',
+          kurir: pesananUpdated.pengiriman.namaEkspedisi,
+          estimasiSampai,
+        });
+
+        this.logger.log(`✅ Email pesanan dikirim terkirim ke ${penulis.email}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Kirim database notification
+      try {
+        const notifikasi = await this.notifikasiService.kirimNotifikasi({
+          idPengguna: penulis.id,
+          judul: 'Pesanan Telah Dikirim! 📦',
+          pesan: `Pesanan "${pesananUpdated.naskah.judul}" telah dikirim dengan resi ${pesananUpdated.pengiriman.nomorResi}. Estimasi tiba: ${estimasiSampai}.`,
+          tipe: 'info',
+          url: `/penulis/pesanan-cetak`,
+        });
+
+        // Emit via WebSocket
+        await this.notifikasiGateway.emitKeUser(penulis.id, notifikasi.data);
+
+        this.logger.log(`✅ WebSocket notification dikirim ke user ${penulis.id}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim notifikasi: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
 
     return {
       sukses: true,
@@ -1665,6 +1767,187 @@ export class PercetakanService {
         totalHarga,
         minimumPesanan: skemaTarif.minimumPesanan,
       },
+    };
+  }
+
+  /**
+   * 🎯 PRIORITY 1: Konfirmasi penerimaan pesanan oleh penulis
+   * Update status dari "terkirim" menjadi "selesai"
+   * Kirim email notification dan WebSocket update
+   * 
+   * Endpoint: POST /api/pesanan/:id/konfirmasi-terima
+   */
+  async konfirmasiPenerimaanPesanan(id: string, idPenulis: string, dto: KonfirmasiPenerimaanDto) {
+    this.logger.log(`\n✅ [KONFIRMASI] Penulis konfirmasi penerimaan pesanan: ${id}`);
+    this.logger.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Ambil pesanan dengan relasi lengkap
+    const pesanan = await this.prisma.pesananCetak.findUnique({
+      where: { id },
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!pesanan) {
+      throw new NotFoundException('Pesanan tidak ditemukan');
+    }
+
+    // Validasi: hanya pemesan yang bisa konfirmasi
+    if (pesanan.idPemesan !== idPenulis) {
+      throw new ForbiddenException('Anda tidak memiliki akses untuk konfirmasi pesanan ini');
+    }
+
+    // Validasi: status harus "terkirim"
+    if (pesanan.status !== 'terkirim') {
+      throw new BadRequestException(
+        `Pesanan hanya bisa dikonfirmasi jika status "terkirim". Status saat ini: "${pesanan.status}"`,
+      );
+    }
+
+    this.logger.log(`📦 Pesanan: ${pesanan.nomorPesanan}`);
+    this.logger.log(`📖 Buku: ${pesanan.naskah.judul}`);
+    this.logger.log(`👤 Penulis: ${idPenulis}`);
+
+    // Update status menjadi "selesai"
+    const tanggalSelesai = new Date();
+    const pesananUpdated = await this.prisma.pesananCetak.update({
+      where: { id },
+      data: {
+        status: 'selesai',
+        tanggalSelesai,
+        catatanPenerimaan: dto.catatan || null,
+      },
+    });
+
+    // Buat log produksi
+    await this.prisma.logProduksi.create({
+      data: {
+        idPesanan: id,
+        tahapan: 'Pesanan Selesai',
+        deskripsi: dto.catatan
+          ? `Pesanan dikonfirmasi selesai oleh penulis. Catatan: ${dto.catatan}`
+          : 'Pesanan dikonfirmasi selesai oleh penulis',
+      },
+    });
+
+    // Log aktivitas penulis
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna: idPenulis,
+        jenis: 'pesanan_cetak',
+        aksi: 'konfirmasi_penerimaan',
+        entitas: 'pesanan_cetak',
+        idEntitas: id,
+        deskripsi: `Mengkonfirmasi penerimaan pesanan ${pesanan.nomorPesanan}`,
+      },
+    });
+
+    this.logger.log(`✅ Status updated: terkirim → selesai`);
+
+    // 🔔 PRIORITY 1: Email & WebSocket Notification saat konfirmasi selesai
+    // Gunakan data dari pesanan awal yang sudah include naskah
+    const penulis = pesanan.naskah.penulis;
+    const namaPenerima = penulis.profilPengguna?.namaTampilan ||
+      `${penulis.profilPengguna?.namaDepan || ''} ${penulis.profilPengguna?.namaBelakang || ''}`.trim() ||
+      'Pengguna';
+
+    const tanggalSelesaiStr = format(tanggalSelesai, 'd MMMM yyyy, HH:mm', { locale: idLocale });
+
+    // Kirim email notification ke penulis
+    try {
+      await this.emailService.kirimEmailPesananSelesai({
+        emailPenerima: penulis.email,
+        namaPenerima,
+        nomorPesanan: pesanan.nomorPesanan,
+        judulBuku: pesanan.naskah.judul,
+        tanggalSelesai: tanggalSelesaiStr,
+      });
+
+      this.logger.log(`✅ Email pesanan selesai terkirim ke ${penulis.email}`);
+    } catch (error) {
+      this.logger.error(`❌ Gagal kirim email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Kirim database notification ke penulis
+    try {
+      const notifikasiPenulis = await this.notifikasiService.kirimNotifikasi({
+        idPengguna: penulis.id,
+        judul: 'Pesanan Selesai! 🎉',
+        pesan: `Terima kasih telah mengkonfirmasi penerimaan "${pesanan.naskah.judul}". Pesanan Anda telah selesai dengan sukses.`,
+        tipe: 'sukses',
+        url: `/penulis/pesanan-cetak`,
+      });
+
+      // Emit via WebSocket ke penulis
+      await this.notifikasiGateway.emitKeUser(penulis.id, notifikasiPenulis.data);
+
+      this.logger.log(`✅ WebSocket notification dikirim ke penulis ${penulis.id}`);
+    } catch (error) {
+      this.logger.error(`❌ Gagal kirim notifikasi ke penulis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Kirim notifikasi ke percetakan juga
+    if (pesanan.percetakan) {
+      try {
+        const namaPercetakan = pesanan.percetakan.profilPengguna?.namaTampilan ||
+          `${pesanan.percetakan.profilPengguna?.namaDepan || ''} ${pesanan.percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
+          'Percetakan';
+
+        const notifikasiPercetakan = await this.notifikasiService.kirimNotifikasi({
+          idPengguna: pesanan.percetakan.id,
+          judul: 'Pesanan Dikonfirmasi Diterima ✅',
+          pesan: `Penulis telah mengkonfirmasi penerimaan pesanan ${pesanan.nomorPesanan} untuk buku "${pesanan.naskah.judul}". Pesanan selesai.`,
+          tipe: 'sukses',
+          url: `/percetakan/pesanan/${id}`,
+        });
+
+        // Emit via WebSocket ke percetakan
+        await this.notifikasiGateway.emitKeUser(pesanan.percetakan.id, notifikasiPercetakan.data);
+
+        this.logger.log(`✅ WebSocket notification dikirim ke percetakan ${pesanan.percetakan.id}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim notifikasi ke percetakan: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    this.logger.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    return {
+      sukses: true,
+      pesan: 'Terima kasih! Penerimaan pesanan telah dikonfirmasi. Status pesanan diperbarui menjadi "selesai".',
+      data: pesananUpdated,
     };
   }
 }

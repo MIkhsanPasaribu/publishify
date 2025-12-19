@@ -8,3 +8,4 @@ export * from './filter-pesanan.dto';
 export * from './update-status.dto';
 export * from './buat-pengiriman.dto';
 export * from './konfirmasi-pesanan.dto';
+export * from './konfirmasi-penerimaan.dto';

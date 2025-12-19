@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PercetakanController } from './percetakan.controller';
 import { PercetakanService } from './percetakan.service';
 import { PrismaModule } from '@/prisma/prisma.module';
+import { NotifikasiModule } from '@/modules/notifikasi/notifikasi.module';
 
 /**
  * Percetakan Module
@@ -15,13 +16,15 @@ import { PrismaModule } from '@/prisma/prisma.module';
  * - Kalkulasi biaya cetak otomatis
  * - Statistik pesanan dan revenue
  * - Log produksi untuk tracking detail
+ * - Email notification untuk status changes
+ * - Real-time WebSocket notifications
  *
  * Flow Status:
- * tertunda → diterima → dalam_produksi → kontrol_kualitas → siap → dikirim → terkirim
+ * tertunda → diterima → dalam_produksi → kontrol_kualitas → siap → dikirim → terkirim → selesai
  * (atau tertunda → dibatalkan)
  */
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotifikasiModule],
   controllers: [PercetakanController],
   providers: [PercetakanService],
   exports: [PercetakanService],

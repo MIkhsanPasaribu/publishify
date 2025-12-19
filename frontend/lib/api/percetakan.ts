@@ -157,6 +157,19 @@ export async function batalkanPesanan(
   return response.data;
 }
 
+/**
+ * 🎯 PRIORITY 1: Konfirmasi penerimaan pesanan oleh penulis
+ * Update status dari "terkirim" menjadi "selesai"
+ * POST /api/percetakan/:id/konfirmasi-terima
+ */
+export async function konfirmasiPenerimaanPesanan(
+  id: string,
+  catatan?: string
+): Promise<ResponsePesananDetail> {
+  const response = await client.post(`/percetakan/${id}/konfirmasi-terima`, { catatan });
+  return response.data;
+}
+
 // ============= LOG PRODUKSI =============
 
 /**

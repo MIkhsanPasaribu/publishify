@@ -385,8 +385,7 @@ export default function RiwayatPesananCetakPage() {
                           </div>
                           <div className="bg-gradient-to-br from-teal-600 to-cyan-600 rounded-lg p-2.5 sm:p-3 text-white shadow-md shadow-teal-500/20">
                             <p className="text-xs opacity-90 mb-1">Total Biaya</p>
-                            <p className="font-bold text-base sm:text-lg flex items-center gap-1">
-                              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <p className="font-bold text-base sm:text-lg">
                               {formatRupiah(Number(pesanan.hargaTotal) || 0)}
                             </p>
                           </div>

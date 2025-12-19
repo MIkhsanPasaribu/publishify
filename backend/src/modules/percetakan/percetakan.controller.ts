@@ -26,6 +26,7 @@ import {
   UpdateStatusDtoClass,
   BuatPengirimanDtoClass,
   KonfirmasiPesananDtoClass,
+  KonfirmasiPenerimaanDtoClass,
 } from './dto';
 import { BuatTarifDto } from './dto/buat-tarif.dto';
 import { PerbaruiTarifDto } from './dto/perbarui-tarif.dto';
@@ -42,6 +43,7 @@ import {
   FilterPesananSchema,
   UpdateStatusSchema,
   BuatPengirimanSchema,
+  KonfirmasiPenerimaanSchema,
   KonfirmasiPesananSchema,
 } from './dto';
 
@@ -684,6 +686,61 @@ export class PercetakanController {
     @PenggunaSaatIni('peran') peran: string,
   ) {
     return this.percetakanService.ambilPesananById(id, idPengguna, peran);
+  }
+
+  /**
+   * 🎯 PRIORITY 1: Konfirmasi penerimaan pesanan oleh penulis
+   * Update status dari "terkirim" menjadi "selesai"
+   * Kirim email notification dan WebSocket update
+   * ⚠️ Route ini harus sebelum :id karena menggunakan static path
+   */
+  @Post(':id/konfirmasi-terima')
+  @Peran('penulis')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Konfirmasi penerimaan pesanan (ubah status ke "selesai")',
+    description: `
+      Endpoint untuk penulis mengkonfirmasi bahwa pesanan telah diterima.
+      Status pesanan akan otomatis berubah dari "terkirim" menjadi "selesai".
+      
+      **Fitur:**
+      - Update status pesanan ke "selesai"
+      - Kirim email notification ke penulis & percetakan
+      - Real-time WebSocket notification
+      - Catat waktu selesai dan catatan penerimaan
+      
+      **Requirements:**
+      - Status pesanan harus "terkirim"
+      - Hanya pemesan (penulis) yang bisa konfirmasi
+    `,
+  })
+  @ApiParam({ name: 'id', description: 'ID pesanan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Penerimaan pesanan berhasil dikonfirmasi',
+    schema: {
+      example: {
+        sukses: true,
+        pesan: 'Terima kasih! Penerimaan pesanan telah dikonfirmasi. Status pesanan diperbarui menjadi "selesai".',
+        data: {
+          id: 'uuid-pesanan',
+          nomorPesanan: 'PSN-2025-001',
+          status: 'selesai',
+          tanggalSelesai: '2025-12-19T10:30:00.000Z',
+          catatanPenerimaan: 'Buku diterima dalam kondisi sempurna',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Status pesanan bukan "terkirim"' })
+  @ApiResponse({ status: 404, description: 'Pesanan tidak ditemukan' })
+  @ApiResponse({ status: 403, description: 'Hanya pemesan yang bisa konfirmasi' })
+  async konfirmasiPenerimaanPesanan(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPenulis: string,
+    @Body() dto: KonfirmasiPenerimaanDtoClass,
+  ) {
+    return this.percetakanService.konfirmasiPenerimaanPesanan(id, idPenulis, dto);
   }
 
   /**

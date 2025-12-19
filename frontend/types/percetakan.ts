@@ -8,6 +8,7 @@ export type StatusPesanan =
   | "siap"
   | "dikirim"
   | "terkirim"
+  | "selesai"
   | "dibatalkan";
 
 export type StatusPembayaran =
@@ -61,6 +62,7 @@ export interface PesananCetak {
   tanggalPesan: string; // Database field name (timestamp)
   estimasiSelesai: string | null; // timestamp
   tanggalSelesai: string | null; // timestamp
+  catatanPenerimaan: string | null; // Catatan saat konfirmasi penerimaan
   diperbaruiPada: string; // timestamp
   
   // Relations (jika di-include dari API)
