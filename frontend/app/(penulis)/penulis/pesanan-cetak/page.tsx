@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ambilDaftarPesananPenulis } from "@/lib/api/percetakan";
+import { ambilDaftarPesananPenulis, konfirmasiPenerimaanPesanan } from "@/lib/api/percetakan";
 import type { PesananCetak } from "@/types/percetakan";
 import { toast } from "sonner";
 
@@ -49,6 +49,12 @@ const STATUS_CONFIG = {
     icon: Truck,
     color: "bg-purple-100 text-purple-800 border-purple-200",
     dotColor: "bg-purple-500",
+  },
+  terkirim: {
+    label: "Terkirim",
+    icon: CheckCircle2,
+    color: "bg-teal-100 text-teal-800 border-teal-200",
+    dotColor: "bg-teal-500",
   },
   selesai: {
     label: "Selesai",
@@ -86,6 +92,7 @@ export default function RiwayatPesananCetakPage() {
   const [filterStatus, setFilterStatus] = useState<string>("semua");
   const [pesananList, setPesananList] = useState<PesananCetak[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [konfirmasiLoading, setKonfirmasiLoading] = useState<string | null>(null);
 
   // Fetch data pesanan penulis
   useEffect(() => {
@@ -108,6 +115,37 @@ export default function RiwayatPesananCetakPage() {
     fetchPesanan();
   }, []);
 
+  // Handle konfirmasi penerimaan pesanan
+  async function handleKonfirmasiPenerimaan(idPesanan: string, judulBuku: string) {
+    const confirmed = window.confirm(
+      `Apakah Anda sudah menerima pesanan buku "${judulBuku}" dengan baik?\n\nPesanan akan ditandai sebagai selesai.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setKonfirmasiLoading(idPesanan);
+      const response = await konfirmasiPenerimaanPesanan(idPesanan);
+      
+      if (response.sukses) {
+        toast.success("Terima kasih! Penerimaan pesanan berhasil dikonfirmasi 🎉");
+        
+        // Update pesanan list
+        setPesananList((prev) =>
+          prev.map((p) =>
+            p.id === idPesanan ? { ...p, status: "selesai" } : p
+          )
+        );
+      }
+    } catch (error: any) {
+      console.error("Error konfirmasi penerimaan:", error);
+      toast.error(error.response?.data?.pesan || "Gagal mengkonfirmasi penerimaan pesanan");
+    } finally {
+      setKonfirmasiLoading(null);
+    }
+  }
+
+  // 
   // Filter data dan sort by latest
   const filteredPesanan = pesananList
     .filter((pesanan) => {
@@ -130,7 +168,8 @@ export default function RiwayatPesananCetakPage() {
     tertunda: pesananList.filter((p) => p.status === "tertunda").length,
     diproses: pesananList.filter((p) => p.status === "dalam_produksi").length,
     dikirim: pesananList.filter((p) => p.status === "dikirim").length,
-    selesai: pesananList.filter((p) => p.status === "terkirim").length,
+    terkirim: pesananList.filter((p) => p.status === "terkirim").length,
+    selesai: pesananList.filter((p) => p.status === "selesai").length,
   };
 
   if (isLoading) {
@@ -273,6 +312,7 @@ export default function RiwayatPesananCetakPage() {
                     <SelectItem value="tertunda">Menunggu Pembayaran</SelectItem>
                     <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
                     <SelectItem value="dikirim">Sedang Dikirim</SelectItem>
+                    <SelectItem value="terkirim">Terkirim</SelectItem>
                     <SelectItem value="selesai">Selesai</SelectItem>
                     <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
                   </SelectContent>
@@ -419,16 +459,41 @@ export default function RiwayatPesananCetakPage() {
                             </div>
                           )}
 
-                          <Link href={`/penulis/pesanan-cetak/${pesanan.id}`}>
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white rounded-xl font-semibold transition-all text-sm"
-                            >
-                              <Eye className="h-4 w-4" />
-                              Lihat Detail
-                            </motion.button>
-                          </Link>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            {/* Button Konfirmasi Penerimaan - hanya untuk status terkirim */}
+                            {pesanan.status === "terkirim" && (
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => handleKonfirmasiPenerimaan(pesanan.id, pesanan.naskah?.judul || "buku")}
+                                disabled={konfirmasiLoading === pesanan.id}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-semibold transition-all text-sm shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {konfirmasiLoading === pesanan.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Memproses...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Pesanan Diterima
+                                  </>
+                                )}
+                              </motion.button>
+                            )}
+
+                            <Link href={`/penulis/pesanan-cetak/${pesanan.id}`}>
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white rounded-xl font-semibold transition-all text-sm"
+                              >
+                                <Eye className="h-4 w-4" />
+                                Lihat Detail
+                              </motion.button>
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>

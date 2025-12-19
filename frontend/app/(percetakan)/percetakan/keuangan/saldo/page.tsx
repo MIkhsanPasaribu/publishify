@@ -107,47 +107,51 @@ export default function SaldoPercetakanPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-              Saldo & Keuangan
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Kelola saldo dan riwayat transaksi percetakan
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-            <Dialog open={openWithdraw} onOpenChange={setOpenWithdraw}>
-              <DialogTrigger>
-                <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg gap-2">
-                  <Wallet className="h-4 w-4" />
-                  Tarik Dana
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Penarikan Dana</DialogTitle>
-                  <DialogDescription>
-                    Tarik dana dari saldo tersedia ke rekening bank terdaftar
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Saldo Tersedia</Label>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatRupiah(saldoData.tersedia)}
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">💰</span>
+                Saldo & Keuangan
+              </h1>
+              <p className="text-sm text-teal-50">
+                Kelola saldo dan riwayat transaksi percetakan
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" className="bg-white/20 hover:bg-white/30 text-white gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+              <Dialog open={openWithdraw} onOpenChange={setOpenWithdraw}>
+                <DialogTrigger>
+                  <Button className="bg-white/20 hover:bg-white/30 text-white gap-2">
+                    <Wallet className="h-4 w-4" />
+                    Tarik Dana
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Penarikan Dana</DialogTitle>
+                    <DialogDescription>
+                      Tarik dana dari saldo tersedia ke rekening bank terdaftar
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Saldo Tersedia</Label>
+                      <div className="text-2xl font-bold text-green-600">
+                        {formatRupiah(saldoData.tersedia)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="jumlah">Jumlah Penarikan</Label>
-                    <Input
+                    <div className="space-y-2">
+                      <Label htmlFor="jumlah">Jumlah Penarikan</Label>
+                      <Input
                       id="jumlah"
                       type="number"
                       placeholder="Masukkan jumlah"
@@ -395,8 +399,8 @@ export default function SaldoPercetakanPage() {
               </Table>
             </div>
             {filteredTransaksi.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                <Filter className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-12 text-slate-500">
+                <Filter className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                 <p>Tidak ada transaksi yang sesuai filter</p>
               </div>
             )}

@@ -101,39 +101,49 @@ export default function PembayaranPercetakanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-              Kelola Pembayaran
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Verifikasi dan kelola pembayaran dari penulis
-            </p>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">💳</span>
+                Kelola Pembayaran
+              </h1>
+              <p className="text-sm text-teal-50">
+                Verifikasi dan kelola pembayaran dari penulis
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden sm:block">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Statistik Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <CreditCard className="h-6 w-6 text-emerald-600" />
+                <div className="p-3 bg-teal-100 rounded-lg">
+                  <CreditCard className="h-6 w-6 text-teal-600" />
                 </div>
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-sm text-emerald-700 font-medium">Total Pembayaran</p>
-              <p className="text-3xl font-bold text-emerald-900 mt-1">
+              <p className="text-sm text-slate-500 font-medium">Total Pembayaran</p>
+              <p className="text-3xl font-bold text-slate-900 mt-1">
                 {stats.totalPembayaran}
               </p>
-              <p className="text-xs text-emerald-600 mt-2">Transaksi bulan ini</p>
+              <p className="text-xs text-slate-500 mt-2">Transaksi bulan ini</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 bg-green-100 rounded-lg">
@@ -141,9 +151,9 @@ export default function PembayaranPercetakanPage() {
                 </div>
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-sm text-green-700 font-medium">Berhasil</p>
-              <p className="text-3xl font-bold text-green-900 mt-1">{stats.berhasil}</p>
-              <p className="text-xs text-green-600 mt-2">Terverifikasi</p>
+              <p className="text-sm text-slate-500 font-medium">Berhasil</p>
+              <p className="text-3xl font-bold text-slate-900 mt-1">{stats.berhasil}</p>
+              <p className="text-xs text-slate-500 mt-2">Terverifikasi</p>
             </CardContent>
           </Card>
 

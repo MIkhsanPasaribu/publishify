@@ -96,48 +96,54 @@ export default function PengirimanPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/percetakan">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Pengiriman Pesanan</h1>
-            <p className="text-gray-600 mt-1">
-              Kelola pengiriman dan tracking pesanan
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Package className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Pesanan</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">🚚</span>
+                Pengiriman Pesanan
+              </h1>
+              <p className="text-sm text-teal-50">
+                Kelola pengiriman dan tracking pesanan
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden sm:block">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Truck className="w-6 h-6 text-white" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Package className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Total Pesanan</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Siap Kirim</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Siap Kirim</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.siap}</p>
               </div>
             </div>
@@ -327,6 +333,7 @@ export default function PengirimanPage() {
           onSuccess={handleRefresh}
         />
       )}
+      </div>
     </div>
   );
 }

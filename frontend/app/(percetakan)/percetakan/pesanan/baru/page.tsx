@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileText, CheckCircle, Eye } from "lucide-react";
+import { Download, FileText, CheckCircle, Eye, Package } from "lucide-react";
 import { ambilPesananPercetakan } from "@/lib/api/percetakan";
 import { KonfirmasiPesananDialog } from "@/components/percetakan/konfirmasi-pesanan-dialog";
 import { Button } from "@/components/ui/button";
@@ -75,55 +75,66 @@ export default function PesananBaruPage() {
   const totalPesanan = data?.total || 0;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            📥 Pesanan Baru
-            {totalPesanan > 0 && (
-              <Badge variant="destructive" className="text-lg px-3 py-1">
-                {totalPesanan}
-              </Badge>
-            )}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Pesanan yang menunggu konfirmasi dari Anda
-          </p>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-3">
+                <span className="text-xl sm:text-2xl">📥</span>
+                Pesanan Baru
+                {totalPesanan > 0 && (
+                  <Badge variant="destructive" className="text-base px-2.5 py-0.5">
+                    {totalPesanan}
+                  </Badge>
+                )}
+              </h1>
+              <p className="text-sm text-teal-50">
+                Pesanan yang menunggu konfirmasi dari Anda
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden sm:block">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Pesanan Baru</CardDescription>
-            <CardTitle className="text-3xl">{totalPesanan}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Menunggu Konfirmasi</CardDescription>
-            <CardTitle className="text-3xl">
-              {
-                pesananList.filter((p: PesananCetak) => p.status === "tertunda")
-                  .length
-              }
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Diterima</CardDescription>
-            <CardTitle className="text-3xl">
-              {
-                pesananList.filter((p: PesananCetak) => p.status === "diterima")
-                  .length
-              }
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardDescription className="text-slate-500">Total Pesanan Baru</CardDescription>
+              <CardTitle className="text-3xl text-slate-900">{totalPesanan}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardDescription className="text-slate-500">Menunggu Konfirmasi</CardDescription>
+              <CardTitle className="text-3xl text-slate-900">
+                {
+                  pesananList.filter((p: PesananCetak) => p.status === "tertunda")
+                    .length
+                }
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardDescription className="text-slate-500">Diterima</CardDescription>
+              <CardTitle className="text-3xl text-slate-900">
+                {
+                  pesananList.filter((p: PesananCetak) => p.status === "diterima")
+                    .length
+                }
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
 
       {/* Table */}
       <Card>
@@ -384,6 +395,7 @@ export default function PesananBaruPage() {
           onSuccess={handleRefresh}
         />
       )}
+      </div>
     </div>
   );
 }

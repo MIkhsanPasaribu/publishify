@@ -112,45 +112,52 @@ export default function PengaturanPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Pengaturan Akun
-            </h1>
-            <p className="text-gray-600">
-              Kelola informasi profil dan preferensi akun Anda
-            </p>
-          </div>
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-6 py-3 bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white rounded-lg hover:from-[#0d9488] hover:to-[#0a7a73] transition-all shadow-lg hover:shadow-xl"
-            >
-              Edit Profil
-            </button>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleSimpan}
-                className="px-6 py-3 bg-gradient-to-r from-[#14b8a6] to-[#0d9488] text-white rounded-lg hover:from-[#0d9488] hover:to-[#0a7a73] transition-all shadow-lg hover:shadow-xl"
-              >
-                Simpan Perubahan
-              </button>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20 mb-8">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">⚙️</span>
+                Pengaturan Akun
+              </h1>
+              <p className="text-sm text-teal-50">
+                Kelola informasi profil dan preferensi akun Anda
+              </p>
             </div>
-          )}
+            <div className="flex items-center gap-3">
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all"
+                >
+                  Edit Profil
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleSimpan}
+                    className="px-4 py-2 bg-white text-teal-600 rounded-lg hover:bg-white/90 transition-all font-medium"
+                  >
+                    Simpan
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Tabs Navigation */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden">
           <div className="flex overflow-x-auto">
             {tabs.map((tab) => (
               <button
@@ -158,8 +165,8 @@ export default function PengaturanPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 min-w-[150px] px-6 py-4 text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? "bg-[#14b8a6] text-white shadow-lg"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
+                    : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -170,7 +177,7 @@ export default function PengaturanPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
           {/* Tab: Profil Pribadi */}
           {activeTab === "profil" && (
             <div className="space-y-8">

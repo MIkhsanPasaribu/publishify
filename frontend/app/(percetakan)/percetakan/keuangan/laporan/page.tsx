@@ -81,36 +81,44 @@ export default function LaporanPercetakanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-              Laporan Keuangan
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Analisis kinerja dan statistik operasional percetakan
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleExportExcel} className="gap-2">
-              <Download className="h-4 w-4" />
-              Excel
-            </Button>
-            <Button onClick={handleExportPDF} className="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white shadow-lg gap-2">
-              <FileText className="h-4 w-4" />
-              Export PDF
-            </Button>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">📊</span>
+                Laporan Keuangan
+              </h1>
+              <p className="text-sm text-teal-50">
+                Analisis kinerja dan statistik operasional percetakan
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={handleExportExcel} className="bg-white/20 hover:bg-white/30 text-white gap-2">
+                <Download className="h-4 w-4" />
+                Excel
+              </Button>
+              <Button onClick={handleExportPDF} className="bg-white/20 hover:bg-white/30 text-white gap-2">
+                <FileText className="h-4 w-4" />
+                Export PDF
+              </Button>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl items-center justify-center hidden sm:flex">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Filter Section */}
-        <Card className="border-2">
+        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                <label className="text-sm font-medium text-slate-700 mb-2 block">
                   Periode Laporan
                 </label>
                 <Select value={periodeLaporan} onValueChange={setPeriodeLaporan}>
@@ -379,14 +387,14 @@ export default function LaporanPercetakanPage() {
                 <p className="text-sm text-gray-600">Rating Kepuasan (dari 5)</p>
               </div>
 
-              <div className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100">
+              <div className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-slate-200">
                 <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                   <FileText className="h-8 w-8 text-purple-600" />
                 </div>
                 <p className="text-3xl font-bold text-purple-600 mb-2">
                   {performanceMetrics.jumlahRevisi}
                 </p>
-                <p className="text-sm text-gray-600">Total Revisi Bulan Ini</p>
+                <p className="text-sm text-slate-500">Total Revisi Bulan Ini</p>
               </div>
             </div>
           </CardContent>

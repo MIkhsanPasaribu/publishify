@@ -136,28 +136,33 @@ export default function DaftarPesananPercetakanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-              Kelola Pesanan Cetak
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Pantau dan kelola semua pesanan cetak dari penulis
-            </p>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
+        {/* Gradient Header Panel */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">📦</span>
+                Kelola Pesanan Cetak
+              </h1>
+              <p className="text-sm text-teal-50">
+                Pantau dan kelola semua pesanan cetak dari penulis
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden sm:block">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
-          <Link href="/percetakan">
-            <Button variant="outline" className="border-slate-300">
-              Kembali ke Dashboard
-            </Button>
-          </Link>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="border-2">
+          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-gray-600 mb-1">Total</p>
               <p className="text-2xl font-bold">{stats.total}</p>
@@ -382,6 +387,7 @@ export default function DaftarPesananPercetakanPage() {
           onSuccess={handleRefresh}
         />
       )}
+      </div>
     </div>
   );
 }
