@@ -118,8 +118,8 @@ export default function RiwayatPesananCetakPage() {
     })
     .sort((a, b) => {
       // Sort by creation date, newest first
-      const dateA = new Date(a.dibuatPada || 0).getTime();
-      const dateB = new Date(b.dibuatPada || 0).getTime();
+      const dateA = new Date(a.tanggalPesan || a.diperbaruiPada || 0).getTime();
+      const dateB = new Date(b.tanggalPesan || b.diperbaruiPada || 0).getTime();
       return dateB - dateA;
     });
 
@@ -367,7 +367,7 @@ export default function RiwayatPesananCetakPage() {
                             <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
                               <Calendar className="h-4 w-4" />
                               <span className="font-medium">Dipesan:</span>
-                              <span>{pesanan.dibuatPada ? formatTanggal(pesanan.dibuatPada) : "-"}</span>
+                              <span>{pesanan.tanggalPesan ? formatTanggal(pesanan.tanggalPesan) : "-"}</span>
                             </div>
                             {pesanan.estimasiSelesai && (
                               <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">

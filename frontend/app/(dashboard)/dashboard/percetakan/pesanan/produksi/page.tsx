@@ -61,8 +61,8 @@ export default function DalamProduksiPage() {
     })
     .sort((a: PesananCetak, b: PesananCetak) => {
       // Sort by tanggalPesan (terbaru di atas)
-      const dateA = new Date(a.tanggalPesan || a.dibuatPada || 0).getTime();
-      const dateB = new Date(b.tanggalPesan || b.dibuatPada || 0).getTime();
+      const dateA = new Date(a.tanggalPesan || a.diperbaruiPada || 0).getTime();
+      const dateB = new Date(b.tanggalPesan || b.diperbaruiPada || 0).getTime();
       return dateB - dateA;
     });
 
@@ -290,9 +290,9 @@ export default function DalamProduksiPage() {
                     <TableCell>
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          {pesanan.tanggalPesan || pesanan.dibuatPada
+                          {pesanan.tanggalPesan || pesanan.diperbaruiPada
                             ? format(
-                                new Date(pesanan.tanggalPesan || pesanan.dibuatPada),
+                                new Date(pesanan.tanggalPesan || pesanan.diperbaruiPada),
                                 "dd MMM yyyy",
                                 { locale: id }
                               )
