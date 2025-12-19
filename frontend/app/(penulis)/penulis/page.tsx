@@ -3,6 +3,24 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import {
+  BookOpen,
+  FileText,
+  CheckCircle2,
+  Send,
+  Clock,
+  TrendingUp,
+  MessageSquare,
+  Star,
+  ArrowRight,
+  Calendar,
+  User,
+  FilePlus,
+  FileCheck,
+  Lock,
+  Users,
+} from "lucide-react";
 import { naskahApi } from "@/lib/api/naskah";
 import { useAuthStore } from "@/stores/use-auth-store";
 
@@ -27,25 +45,21 @@ interface StatistikNaskah {
   }>;
 }
 
+// Fungsi untuk mendapatkan sapaan berdasarkan waktu
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Selamat Pagi";
+  if (hour < 15) return "Selamat Siang";
+  if (hour < 18) return "Selamat Sore";
+  return "Selamat Malam";
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { pengguna } = useAuthStore();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loadingChart, setLoadingChart] = useState(true);
-  const [loadingComments, setLoadingComments] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statistik, setStatistik] = useState<StatistikNaskah | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  // Simulasi loading kecil untuk chart & komentar
-  useEffect(() => {
-    const t1 = setTimeout(() => setLoadingChart(false), 800);
-    const t2 = setTimeout(() => setLoadingComments(false), 1200);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
 
   // Redirect berdasarkan role
   useEffect(() => {
@@ -127,36 +141,128 @@ export default function DashboardPage() {
     fetchStatistik();
   }, [isRedirecting]);
 
-  // Data statistik berdasarkan API response
+  // Get current year
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+
+  // Data statistik berdasarkan API response - 8 cards layout
   const stats = statistik
     ? [
-        { label: "Draft", value: statistik.perStatus.draft || 0, color: "bg-blue-500" },
-        { label: "Review", value: statistik.perStatus.dalam_review || 0, color: "bg-yellow-500" },
-        { label: "Disetujui", value: statistik.perStatus.disetujui || 0, color: "bg-purple-500" },
-        { label: "Diterbitkan", value: statistik.perStatus.diterbitkan || 0, color: "bg-green-500" },
+        {
+          label: "Total Naskah",
+          sublabel: "Total di semua",
+          value: statistik.totalNaskah || 0,
+          icon: BookOpen,
+          bgColor: "bg-blue-500",
+        },
+        {
+          label: "Naskah Draft",
+          sublabel: "Sedang ditulis",
+          value: statistik.perStatus.draft || 0,
+          icon: FileText,
+          bgColor: "bg-teal-500",
+        },
+        {
+          label: "Naskah Diajukan",
+          sublabel: "Menunggu review",
+          value: statistik.perStatus.diajukan || 0,
+          icon: Send,
+          bgColor: "bg-purple-500",
+        },
+        {
+          label: "Buku Terbit",
+          sublabel: "Sudah diterbitkan",
+          value: statistik.perStatus.diterbitkan || 0,
+          icon: CheckCircle2,
+          bgColor: "bg-teal-500",
+        },
+        {
+          label: "Dalam Review",
+          sublabel: "Sedang ditinjau",
+          value: statistik.perStatus.dalam_review || 0,
+          icon: Clock,
+          bgColor: "bg-blue-500",
+        },
+        {
+          label: "Perlu Revisi",
+          sublabel: "Butuh perbaikan",
+          value: statistik.perStatus.perlu_revisi || 0,
+          icon: FilePlus,
+          bgColor: "bg-pink-500",
+        },
+        {
+          label: "Disetujui",
+          sublabel: "Siap terbit",
+          value: statistik.perStatus.disetujui || 0,
+          icon: FileCheck,
+          bgColor: "bg-green-500",
+        },
+        {
+          label: "Ditolak",
+          sublabel: "Tidak lolos",
+          value: statistik.perStatus.ditolak || 0,
+          icon: Lock,
+          bgColor: "bg-orange-500",
+        },
       ]
     : [
-        { label: "Draft", value: 0, color: "bg-blue-500" },
-        { label: "Review", value: 0, color: "bg-yellow-500" },
-        { label: "Disetujui", value: 0, color: "bg-purple-500" },
-        { label: "Diterbitkan", value: 0, color: "bg-green-500" },
+        {
+          label: "Total Naskah",
+          sublabel: "Total di semua",
+          value: 0,
+          icon: BookOpen,
+          bgColor: "bg-blue-500",
+        },
+        {
+          label: "Naskah Draft",
+          sublabel: "Sedang ditulis",
+          value: 0,
+          icon: FileText,
+          bgColor: "bg-teal-500",
+        },
+        {
+          label: "Naskah Diajukan",
+          sublabel: "Menunggu review",
+          value: 0,
+          icon: Send,
+          bgColor: "bg-purple-500",
+        },
+        {
+          label: "Buku Terbit",
+          sublabel: "Sudah diterbitkan",
+          value: 0,
+          icon: CheckCircle2,
+          bgColor: "bg-teal-500",
+        },
+        {
+          label: "Dalam Review",
+          sublabel: "Sedang ditinjau",
+          value: 0,
+          icon: Clock,
+          bgColor: "bg-blue-500",
+        },
+        {
+          label: "Perlu Revisi",
+          sublabel: "Butuh perbaikan",
+          value: 0,
+          icon: FilePlus,
+          bgColor: "bg-pink-500",
+        },
+        {
+          label: "Disetujui",
+          sublabel: "Siap terbit",
+          value: 0,
+          icon: FileCheck,
+          bgColor: "bg-green-500",
+        },
+        {
+          label: "Ditolak",
+          sublabel: "Tidak lolos",
+          value: 0,
+          icon: Lock,
+          bgColor: "bg-orange-500",
+        },
       ];
-
-  // Data penjualan untuk chart (placeholder - bisa diganti dengan API nanti)
-  const salesData = [
-    { month: "Jan", value: 290 },
-    { month: "Feb", value: 402 },
-    { month: "Mar", value: 514 },
-    { month: "Apr", value: 625 },
-    { month: "Mei", value: 738 },
-    { month: "Jun", value: 848 },
-  ];
-
-  // Komentar terbaru (placeholder - bisa diganti dengan API nanti)
-  const comments: Array<{nama: string; waktu: string; pesan: string}> = [];
-
-  // Rating (placeholder - bisa diganti dengan API nanti)
-  const rating = 0;
 
   // Loading state saat redirect - HARUS SETELAH SEMUA HOOKS
   if (isRedirecting) {
@@ -171,250 +277,301 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div className="px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent transition-all"
-                />
-                <svg
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      {/* Main Content */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        {/* Welcome Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20"
+        >
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
 
-            {/* User Profile */}
-            <div className="flex items-center gap-4 ml-8">
-              <button className="relative p-2 text-gray-600 hover:text-[#14b8a6] transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              
-              <div className="w-10 h-10 bg-[#14b8a6] rounded-full flex items-center justify-center text-white font-semibold cursor-pointer hover:bg-[#0d9488] transition-colors">
-                P
+          {/* Content */}
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 flex items-center gap-2"
+              >
+                <span className="text-2xl">👋</span>
+                {getGreeting()}!
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-xs sm:text-sm text-white/90"
+              >
+                Semangat mengelola data seluruh Naskah untuk Kesuksesan hari ini!
+              </motion.p>
+            </div>
+            <div className="flex-shrink-0 hidden sm:block">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 md:w-8 md:h-8 text-white" />
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </motion.div>
 
-      {/* Main Content */}
-      <div className="p-8 space-y-8">
-        {/* Stats Cards - Kamu telah menulis */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-6 text-center">
-            Kamu telah menulis
-          </h2>
+        {/* Stats Cards - 8 Cards (4x2 grid) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           {loadingStats ? (
-            <div className="grid grid-cols-4 gap-6 animate-pulse">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="text-center p-6 bg-gray-50 rounded-xl">
-                  <div className="h-10 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 animate-pulse">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="bg-white rounded-lg p-4 border border-slate-200">
+                  <div className="h-8 w-8 bg-slate-200 rounded-lg mb-2" />
+                  <div className="h-6 bg-slate-200 rounded mb-1" />
+                  <div className="h-3 bg-slate-200 rounded w-2/3" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow"
-                >
-                  <div className="text-4xl font-bold text-gray-900 mb-2">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-medium text-gray-600">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.05 }}
+                    whileHover={{ y: -2 }}
+                    className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                          {stat.value}
+                        </div>
+                        <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                          {stat.label}
+                        </div>
+                        <div className="text-xs text-slate-500 line-clamp-1">
+                          {stat.sublabel}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Sales Chart */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Sales Chart */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Penjualan
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Statistik penjualan buku dalam 6 bulan terakhir
-                </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Left Column - Verifikasi & Naskah Status */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Naskah Verification Cards */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+            >
+              {/* Verifikasi Card */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-bold mb-1">
+                      {statistik?.perStatus.perlu_revisi || 0}
+                    </div>
+                    <div className="text-sm opacity-90">Naskah perlu verifikasi ulang</div>
+                  </div>
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <FilePlus className="w-5 h-5" />
+                  </div>
+                </div>
               </div>
 
-              {/* Simple Bar Chart */}
-              <div className="relative h-64 bg-gray-50 rounded-xl p-6">
-                <div className="absolute top-4 left-4 right-4">
-                  <div className="text-xs font-semibold text-gray-500 mb-2">BUKU 1</div>
-                </div>
-
-                {/* Chart Area */}
-                {loadingChart ? (
-                  <div className="h-full flex items-end justify-between px-4 pt-12 pb-8 animate-pulse">
-                    {[40, 70, 55, 85, 60, 95].map((h, index) => (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
-                          <div
-                            className="w-12 bg-gray-200 rounded-t-lg"
-                            style={{ height: `${h}%`, minHeight: "6px" }}
-                          ></div>
-                        </div>
-                        <span className="h-3 w-10 bg-gray-200 rounded"></span>
-                      </div>
-                    ))}
+              {/* Novel Terbit Card */}
+              <div className="bg-gradient-to-br from-green-500 to-teal-500 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-bold mb-1">
+                      {statistik?.perStatus.diterbitkan || 0}
+                    </div>
+                    <div className="text-sm opacity-90">Novel diterbitkan</div>
                   </div>
-                ) : (
-                  <div className="h-full flex items-end justify-between px-4 pt-12 pb-8">
-                    {salesData.map((data, index) => (
-                      <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                        {/* Bar */}
-                        <div className="w-full flex items-end justify-center" style={{ height: "150px" }}>
-                          <div
-                            className="w-12 bg-gradient-to-t from-[#14b8a6] to-[#0d9488] rounded-t-lg transition-all hover:opacity-80"
-                            style={{
-                              height: data.value === 0 ? "4px" : `${(data.value / Math.max(...salesData.map(d => d.value), 1)) * 100}%`,
-                              minHeight: "4px",
-                            }}
-                          ></div>
-                        </div>
-                        {/* Month Label */}
-                        <span className="text-xs text-gray-600 font-medium">
-                          {data.month.substring(0, 3)}
-                        </span>
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Statistik Kelas Chart - Placeholder */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6"
+            >
+              <div className="mb-4">
+                <h3 className="text-sm sm:text-base font-semibold text-slate-900">
+                  Statistik Naskah per Kategori
+                </h3>
+              </div>
+              
+              {/* Simple Bar Chart Placeholder */}
+              <div className="h-48 sm:h-64 flex items-end justify-between gap-2 sm:gap-4 px-2 sm:px-4">
+                {statistik?.perKategori?.slice(0, 6).map((item, idx) => {
+                  const maxValue = Math.max(...(statistik.perKategori?.map(i => i.total) || [1]));
+                  const height = (item.total / maxValue) * 100;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-full flex items-end justify-center" style={{ height: "180px" }}>
+                        <div
+                          className="w-full max-w-[40px] bg-gradient-to-t from-blue-500 to-teal-500 rounded-t-lg transition-all hover:opacity-80"
+                          style={{
+                            height: `${height}%`,
+                            minHeight: "8px",
+                          }}
+                        />
                       </div>
-                    ))}
+                      <span className="text-[10px] sm:text-xs text-slate-600 font-medium text-center line-clamp-2">
+                        {item.kategori}
+                      </span>
+                    </div>
+                  );
+                })}
+                {(!statistik?.perKategori || statistik.perKategori.length === 0) && (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <p className="text-sm">Belum ada data kategori</p>
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Right Column - Comments & Rating */}
-          <div className="space-y-8">
-            {/* Comments Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Komentar
+          {/* Right Column - Aktivitas */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Aktivitas Terbaru */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6"
+            >
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-4">
+                Aktivitas Terbaru
               </h3>
               
-              {loadingComments ? (
-                <div className="space-y-4 animate-pulse">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-200" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-2/5" />
-                        <div className="h-3 bg-gray-200 rounded w-4/5" />
-                        <div className="h-3 bg-gray-200 rounded w-3/5" />
+              {statistik?.naskahTerbaru && statistik.naskahTerbaru.length > 0 ? (
+                <div className="space-y-3">
+                  {statistik.naskahTerbaru.slice(0, 5).map((naskah, idx) => (
+                    <div key={naskah.id} className="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-0">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-blue-600" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 break-words">
+                          {naskah.judul}
+                        </p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {naskah.status.replace(/_/g, " ")} • {new Date(naskah.dibuatPada).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                        </p>
                       </div>
                     </div>
                   ))}
-                </div>
-              ) : comments.length === 0 ? (
-                <div className="text-center py-12">
-                  <svg
-                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <p className="text-gray-500 text-sm">Belum ada komentar</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {comments.map((c, idx) => (
-                    <div key={idx} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-[#14b8a6] text-white flex items-center justify-center font-semibold">
-                        {c.nama.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium text-gray-900">{c.nama}</div>
-                          <div className="text-xs text-gray-500">{c.waktu}</div>
-                        </div>
-                        <p className="text-gray-700 mt-1">{c.pesan}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Clock className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-500">Belum ada aktivitas</p>
                 </div>
               )}
-            </div>
-
-            {/* Rating Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Rating
-              </h3>
-              
-              <div className="flex items-center justify-center gap-2 py-8">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
-                    key={star}
-                    className={`w-12 h-12 ${
-                      star <= rating ? "text-yellow-400" : "text-gray-300"
-                    } transition-colors`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900 mb-1">
-                  {rating.toFixed(1)}
-                </div>
-                <div className="text-sm text-gray-500">dari 5.0</div>
-                <div className="text-xs text-gray-400 mt-2">Belum ada rating</div>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
+
+        {/* Aksi Cepat */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-3 sm:mb-4">
+            Aksi Cepat
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/penulis/naskah/buat")}
+              className="bg-white rounded-lg p-4 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all group text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FilePlus className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900">
+                    Tambah Naskah Baru
+                  </h4>
+                  <p className="text-xs text-slate-600">Mulai tulis naskah</p>
+                </div>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/penulis/draf")}
+              className="bg-white rounded-lg p-4 border border-slate-200 hover:border-teal-300 hover:bg-teal-50/50 transition-all group text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileCheck className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900">
+                    Kelola Naskah
+                  </h4>
+                  <p className="text-xs text-slate-600">Lihat semua naskah</p>
+                </div>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/penulis/buku-terbit")}
+              className="bg-white rounded-lg p-4 border border-slate-200 hover:border-purple-300 hover:bg-purple-50/50 transition-all group text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900">
+                    Lihat Buku Terbit
+                  </h4>
+                  <p className="text-xs text-slate-600">Naskah diterbitkan</p>
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </motion.div>
+
+
       </div>
     </div>
   );
