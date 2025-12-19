@@ -3,6 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FileText, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle,
+  Eye,
+  Edit3,
+  Trash2,
+  Plus,
+  Search,
+  BookOpen,
+  Calendar
+} from "lucide-react";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
 
 type TabKey = "semua" | "in_review" | "revision_needed" | "rejected";
@@ -17,11 +32,12 @@ const normalisasiStatus = (s: string): "draft" | "in_review" | "revision_needed"
   return v;
 };
 
+// Status configuration untuk badge
 const labelStatus: Record<string, { label: string; color: string; bg: string }> = {
-  draft: { label: "Draft", color: "text-gray-600", bg: "bg-gray-100" },
-  in_review: { label: "Dalam Review", color: "text-amber-800", bg: "bg-amber-100" },
-  revision_needed: { label: "Butuh Revisi", color: "text-orange-800", bg: "bg-orange-100" },
-  rejected: { label: "Ditolak", color: "text-gray-500", bg: "bg-gray-200" },
+  draft: { label: "Draft", color: "text-slate-700", bg: "bg-slate-100" },
+  in_review: { label: "Dalam Review", color: "text-amber-700", bg: "bg-amber-100" },
+  revision_needed: { label: "Perlu Revisi", color: "text-orange-700", bg: "bg-orange-100" },
+  rejected: { label: "Ditolak", color: "text-red-700", bg: "bg-red-100" },
 };
 
 function formatTanggal(iso?: string) {
@@ -39,6 +55,15 @@ export default function DrafPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("semua");
   const [allDrafts, setAllDrafts] = useState<Naskah[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Selamat Pagi";
+    if (hour < 15) return "Selamat Siang";
+    if (hour < 18) return "Selamat Sore";
+    return "Selamat Malam";
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -86,108 +111,388 @@ export default function DrafPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Draf Saya</h1>
-          <p className="text-gray-600 mt-1">Pantau progres naskah dan lanjutkan aksi yang diperlukan</p>
-        </div>
+  const [searchQuery, setSearchQuery] = useState("");
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl border border-gray-200 p-2 mb-6">
-          <div className="flex gap-2">
-            {([
-              { key: "semua", label: "Semua" },
-              { key: "in_review", label: "Dalam Review" },
-              { key: "revision_needed", label: "Butuh Revisi" },
-              { key: "rejected", label: "Ditolak" },
-            ] as const).map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === t.key
-                    ? "bg-[#14b8a6] text-white shadow"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-            <div className="ml-auto pr-2 text-sm text-gray-500 self-center">
-              {loading ? "Memuat…" : `${filteredDrafts.length} draf`}
+  // Enhanced filtered drafts dengan search
+  const filteredDraftsEnhanced = useMemo(() => {
+    let filtered = filteredDrafts;
+    
+    // Filter by search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((n) => 
+        n.judul?.toLowerCase().includes(query) || 
+        n.sinopsis?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [filteredDrafts, searchQuery]);
+
+  // Stats untuk tabs
+  const tabStats = useMemo(() => ({
+    semua: allDrafts.length,
+    in_review: allDrafts.filter((n) => normalisasiStatus(n.status) === "in_review").length,
+    revision_needed: allDrafts.filter((n) => {
+      const hasRevisionRecommendation = n.review?.some((r) => r.rekomendasi === "revisi");
+      return hasRevisionRecommendation || normalisasiStatus(n.status) === "revision_needed";
+    }).length,
+    rejected: allDrafts.filter((n) => normalisasiStatus(n.status) === "rejected").length,
+  }), [allDrafts]);
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Header Section */}
+      <div className="w-full bg-white border-b border-slate-200">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+          {/* Welcome Card */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-6 sm:p-8 mb-4 sm:mb-6 overflow-hidden"
+          >
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-32 h-32 sm:w-40 sm:h-40 bg-white/10 rounded-full -mr-16 sm:-mr-20 -mt-16 sm:-mt-20"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -ml-12 sm:-ml-16 -mb-12 sm:-mb-16"></div>
+            
+            <div className="relative text-center">
+              <p className="text-xs sm:text-sm font-medium text-teal-100 mb-1 sm:mb-2">
+                {getGreeting()} 👋
+              </p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 sm:mb-3">
+                Draf Naskah Saya
+              </h1>
+              <p className="text-sm sm:text-base text-teal-50 max-w-2xl mx-auto px-4">
+                Kelola dan pantau progres semua karya Anda di sini
+              </p>
             </div>
+          </motion.div>
+
+          {/* Action Button */}
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/penulis/naskah/buat")}
+              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              Buat Naskah Baru
+            </motion.button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full">
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari naskah..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+            />
           </div>
         </div>
 
-        {/* List */}
-        <div className="space-y-4">
-          {filteredDrafts.length === 0 && !loading && (
-            <div className="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center text-gray-600">
-              Belum ada draf pada tab ini.
-            </div>
-          )}
+        {/* Tabs */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {([
+              { key: "semua" as TabKey, label: "Semua", icon: BookOpen },
+              { key: "in_review" as TabKey, label: "Review", icon: Clock },
+              { key: "revision_needed" as TabKey, label: "Revisi", icon: AlertCircle },
+              { key: "rejected" as TabKey, label: "Ditolak", icon: XCircle },
+            ]).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              const count = tabStats[tab.key];
 
-          {filteredDrafts.map((n) => {
-            const norm = normalisasiStatus(n.status);
-            const st = labelStatus[norm] || { label: n.status, color: "text-gray-700", bg: "bg-gray-100" };
-            return (
-              <div key={n.id} className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">{n.judul}</h3>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${st.bg} ${st.color}`}>
-                      {st.label}
+              return (
+                <motion.button
+                  key={tab.key}
+                  whileHover={{ y: -2 }}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`
+                    relative px-3 sm:px-6 py-3 sm:py-4 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap
+                    ${isActive 
+                      ? 'text-teal-600' 
+                      : 'text-slate-600 hover:text-slate-900'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.label === "Dalam Review" ? "Review" : tab.label === "Perlu Revisi" ? "Revisi" : tab.label}</span>
+                    <span className={`
+                      ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold
+                      ${isActive 
+                        ? 'bg-teal-100 text-teal-700' 
+                        : 'bg-slate-100 text-slate-600'
+                      }
+                    `}>
+                      {count}
                     </span>
                   </div>
-                  <div className="mt-1 text-sm text-gray-600">
-                    Diajukan pada {formatTanggal(n.dibuatPada)}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 md:justify-end">
-                  {norm === "in_review" && (
-                    <button
-                      disabled
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed"
-                    >
-                      Lihat Detail
-                    </button>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-600 to-cyan-600"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
                   )}
-
-                  {norm === "revision_needed" && (
-                    <button
-                      onClick={() => onEdit(n.id)}
-                      className="px-4 py-2 rounded-lg bg-[#14b8a6] text-white hover:bg-[#0d9488]"
-                    >
-                      Lihat Feedback & Edit
-                    </button>
-                  )}
-
-                  {norm === "rejected" && (
-                    <button
-                      onClick={() => onHapus(n.id)}
-                      className="px-4 py-2 rounded-lg text-white bg-rose-600 hover:bg-rose-700"
-                    >
-                      Hapus
-                    </button>
-                  )}
-
-                  {!["in_review", "revision_needed", "rejected"].includes(norm) && (
-                    <button
-                      onClick={() => onLihatDetail(n.id)}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      Lihat Detail
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
       </div>
+
+      {/* Content Section */}
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-8">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+            {[...Array(6)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : filteredDraftsEnhanced.length === 0 ? (
+          <EmptyState 
+            activeTab={activeTab}
+            searchQuery={searchQuery}
+            onReset={() => {
+              setSearchQuery("");
+              setActiveTab("semua");
+            }}
+            onCreateNew={() => router.push("/penulis/naskah/buat")}
+          />
+        ) : (
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
+            >
+              {filteredDraftsEnhanced.map((naskah, index) => (
+                <NaskahCard
+                  key={naskah.id}
+                  naskah={naskah}
+                  index={index}
+                  onLihatDetail={onLihatDetail}
+                  onEdit={onEdit}
+                  onHapus={onHapus}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
+      </div>
     </div>
+  );
+}
+
+// Skeleton Loading Component
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
+        <div className="h-5 sm:h-6 bg-slate-200 rounded w-16 sm:w-20"></div>
+        <div className="h-6 sm:h-8 bg-slate-200 rounded w-6 sm:w-8"></div>
+      </div>
+      <div className="h-5 sm:h-6 bg-slate-200 rounded w-3/4 mb-2 sm:mb-3"></div>
+      <div className="space-y-2 mb-3 sm:mb-4">
+        <div className="h-3 sm:h-4 bg-slate-200 rounded w-full"></div>
+        <div className="h-3 sm:h-4 bg-slate-200 rounded w-5/6"></div>
+      </div>
+      <div className="flex gap-2">
+        <div className="h-9 sm:h-10 bg-slate-200 rounded-lg flex-1"></div>
+        <div className="h-9 sm:h-10 bg-slate-200 rounded-lg w-9 sm:w-10"></div>
+      </div>
+    </div>
+  );
+}
+
+// Empty State Component
+function EmptyState({ 
+  activeTab, 
+  searchQuery, 
+  onReset, 
+  onCreateNew 
+}: { 
+  activeTab: TabKey; 
+  searchQuery: string; 
+  onReset: () => void;
+  onCreateNew: () => void;
+}) {
+  const hasFilters = activeTab !== "semua" || searchQuery.trim() !== "";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-12 sm:py-20 px-4"
+    >
+      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+        <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
+      </div>
+      <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 text-center">
+        {hasFilters ? "Tidak ada naskah ditemukan" : "Belum ada naskah"}
+      </h3>
+      <p className="text-sm sm:text-base text-slate-600 text-center max-w-md mb-6 sm:mb-8 px-4">
+        {hasFilters 
+          ? "Coba ubah filter atau kata kunci pencarian Anda"
+          : "Mulai perjalanan menulis Anda dengan membuat naskah pertama"
+        }
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0">
+        {hasFilters && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onReset}
+            className="w-full sm:w-auto px-6 py-3 border-2 border-slate-200 text-slate-700 text-sm sm:text-base font-medium rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Reset Filter
+          </motion.button>
+        )}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onCreateNew}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm sm:text-base font-medium rounded-xl shadow-lg shadow-teal-500/20 hover:shadow-xl transition-all"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          Buat Naskah Baru
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}
+
+// Naskah Card Component
+function NaskahCard({ 
+  naskah, 
+  index,
+  onLihatDetail, 
+  onEdit, 
+  onHapus 
+}: { 
+  naskah: Naskah; 
+  index: number;
+  onLihatDetail: (id: string) => void;
+  onEdit: (id: string) => void;
+  onHapus: (id: string) => void;
+}) {
+  const status = normalisasiStatus(naskah.status || "draft");
+  const st = labelStatus[status] || { label: naskah.status, color: "text-gray-700", bg: "bg-gray-100" };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.05 }}
+      layout
+      whileHover={{ y: -4 }}
+      className="group bg-white rounded-xl sm:rounded-2xl border border-slate-200 hover:border-teal-200 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 overflow-hidden w-full"
+    >
+      <div className="p-4 sm:p-6">
+        {/* Header with Status Badge */}
+        <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-semibold ${st.bg} ${st.color} flex-shrink-0`}>
+            {st.label}
+          </span>
+          {naskah.review && naskah.review.length > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg flex-shrink-0">
+              <Eye className="w-3 h-3" />
+              {naskah.review.length}
+            </div>
+          )}
+        </div>
+
+        {/* Title */}
+        <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors break-words">
+          {naskah.judul || "Tanpa Judul"}
+        </h3>
+
+        {/* Synopsis */}
+        <p className="text-xs sm:text-sm text-slate-600 line-clamp-3 mb-3 sm:mb-4 leading-relaxed break-words">
+          {naskah.sinopsis || "Belum ada sinopsis"}
+        </p>
+
+        {/* Metadata */}
+        <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-slate-100 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+            <span className="truncate">{formatTanggal(naskah.dibuatPada)}</span>
+          </div>
+          {naskah.jumlahHalaman && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+              <span>{naskah.jumlahHalaman} hal</span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          {status === "in_review" ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onLihatDetail(naskah.id)}
+              disabled
+              className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-100 text-slate-400 text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl cursor-not-allowed min-w-0"
+            >
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">Dalam Review</span>
+            </motion.button>
+          ) : status === "revision_needed" ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onEdit(naskah.id)}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all min-w-0"
+            >
+              <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">Lihat Feedback</span>
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onLihatDetail(naskah.id)}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-teal-500/30 transition-all min-w-0"
+            >
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">Lihat</span>
+            </motion.button>
+          )}
+          
+          {status !== "in_review" && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onEdit(naskah.id)}
+                className="inline-flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 bg-slate-100 text-slate-700 rounded-lg sm:rounded-xl hover:bg-slate-200 transition-colors flex-shrink-0"
+                aria-label="Edit"
+              >
+                <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onHapus(naskah.id)}
+                className="inline-flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 bg-red-50 text-red-600 rounded-lg sm:rounded-xl hover:bg-red-100 transition-colors flex-shrink-0"
+                aria-label="Hapus"
+              >
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </motion.button>
+            </>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 }

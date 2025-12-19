@@ -27,6 +27,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Ambil data pengguna untuk cek role
@@ -347,14 +348,38 @@ export function Sidebar() {
   ];
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-[#0d7377] to-[#0a5c5f] text-white transition-all duration-300 z-40 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
-    >
-      <div className="flex flex-col h-full">
+    <>
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+        aria-label="Toggle Menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isMobileOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {/* Overlay untuk mobile */}
+      {isMobileOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-[#0d7377] to-[#0a5c5f] text-white transition-all duration-300 z-40 ${
+          isCollapsed ? "w-20" : "w-64"
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col`}
+      >
         {/* Logo & Toggle */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <Link href="/" className="flex items-center gap-3 group">
@@ -377,14 +402,14 @@ export function Sidebar() {
                   height={40}
                   className="w-10 h-10"
                 />
-              </Link>
-            )}
-          </div>
+            </Link>
+          )}
         </div>
+      </div>
 
-        {/* Menu Items */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3">
-          <ul className="space-y-2">
+      {/* Menu Items */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <ul className="space-y-2 pb-4">
             {menuItems.map((item, index) => {
               // Render divider with type guard
               if ("isDivider" in item && item.isDivider) {
@@ -411,6 +436,7 @@ export function Sidebar() {
                 <li key={index}>
                   <Link
                     href={menuItem.href}
+                    onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                       isActive
                         ? "bg-[#14b8a6] text-white shadow-lg"
@@ -433,11 +459,10 @@ export function Sidebar() {
               );
             })}
           </ul>
+        </nav>
 
-          {/* Divider */}
-          <div className="my-6 border-t border-white/10"></div>
-
-          {/* Bottom Menu Items */}
+        {/* Bottom Menu - Always at bottom */}
+        <div className="flex-shrink-0 border-t border-white/10 px-3 py-4">
           <ul className="space-y-2">
             {bottomMenuItems.map((item, index) => (
               <li key={index}>
@@ -459,6 +484,7 @@ export function Sidebar() {
                 ) : (
                   <Link
                     href={item.href}
+                    onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 text-white/80 hover:text-white ${
                       isCollapsed ? "justify-center" : ""
                     }`}
@@ -473,13 +499,14 @@ export function Sidebar() {
               </li>
             ))}
           </ul>
-        </nav>
+        </div>
 
-        {/* Toggle Button */}
-        <div className="p-4 border-t border-white/10">
+        {/* Toggle Button - Desktop Only */}
+        <div className="hidden lg:block flex-shrink-0 p-4 border-t border-white/10">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="w-full flex items-center justify-center py-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Toggle Sidebar"
           >
             <svg
               className={`w-5 h-5 transition-transform ${
@@ -498,7 +525,7 @@ export function Sidebar() {
             </svg>
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
@@ -539,6 +566,6 @@ export function Sidebar() {
           </div>
         </div>
       )}
-    </aside>
+    </>
   );
 }
