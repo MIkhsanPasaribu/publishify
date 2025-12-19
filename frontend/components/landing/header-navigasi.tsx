@@ -50,7 +50,7 @@ export function HeaderNavigasi() {
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/register"
+              href="/login"
               className="bg-[#14b8a6] text-white px-8 py-3 rounded-md hover:bg-[#0d9488] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               get started
@@ -115,7 +115,7 @@ export function HeaderNavigasi() {
               </Link>
               <div className="pt-4 border-t border-gray-100">
                 <Link
-                  href="/register"
+                  href="/login"
                   className="block text-center bg-[#14b8a6] text-white px-6 py-3 rounded-md hover:bg-[#0d9488] transition-colors font-semibold"
                   onClick={() => setMenuTerbuka(false)}
                 >
