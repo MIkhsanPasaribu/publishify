@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Package,
   Clock,
@@ -129,7 +130,7 @@ export default function RiwayatPesananCetakPage() {
     tertunda: pesananList.filter((p) => p.status === "tertunda").length,
     diproses: pesananList.filter((p) => p.status === "dalam_produksi").length,
     dikirim: pesananList.filter((p) => p.status === "dikirim").length,
-    selesai: pesananList.filter((p) => p.status === "selesai").length,
+    selesai: pesananList.filter((p) => p.status === "terkirim").length,
   };
 
   if (isLoading) {
@@ -144,227 +145,256 @@ export default function RiwayatPesananCetakPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#0d7377] to-[#0a5c5f] bg-clip-text text-transparent">
-              Riwayat Pesanan Cetak
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Pantau status pesanan cetak buku Anda secara real-time
-            </p>
+    <div className="min-h-screen w-full bg-slate-50">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8">
+        {/* Welcome Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 overflow-hidden shadow-lg shadow-teal-500/20"
+        >
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          {/* Content */}
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2"
+              >
+                Riwayat Pesanan Cetak
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-sm sm:text-base text-teal-50"
+              >
+                Pantau status pesanan cetak buku Anda secara real-time
+              </motion.p>
+            </div>
+            <div className="hidden lg:block ml-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Package className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
           </div>
+        </motion.div>
+
+        {/* Action Button */}
+        <div className="flex justify-end mb-6 sm:mb-8">
           <Link href="/penulis/buku-terbit">
-            <Button className="bg-gradient-to-r from-[#0d7377] to-[#0a5c5f] hover:from-[#0a5c5f] hover:to-[#084a4c] text-white shadow-lg">
-              <Package className="mr-2 h-4 w-4" />
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 transition-all"
+            >
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
               Pesan Cetak Baru
-            </Button>
+            </motion.button>
           </Link>
         </div>
 
-        {/* Statistik Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="border-2 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">Total Pesanan</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <Package className="h-6 w-6 text-gray-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-amber-200 bg-amber-50/50 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-amber-700 font-medium">Tertunda</p>
-                  <p className="text-3xl font-bold text-amber-800 mt-1">{stats.tertunda}</p>
-                </div>
-                <div className="p-3 bg-amber-100 rounded-full">
-                  <Clock className="h-6 w-6 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-blue-200 bg-blue-50/50 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-700 font-medium">Diproses</p>
-                  <p className="text-3xl font-bold text-blue-800 mt-1">{stats.diproses}</p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-purple-200 bg-purple-50/50 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-700 font-medium">Dikirim</p>
-                  <p className="text-3xl font-bold text-purple-800 mt-1">{stats.dikirim}</p>
-                </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <Truck className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-green-200 bg-green-50/50 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-700 font-medium">Selesai</p>
-                  <p className="text-3xl font-bold text-green-800 mt-1">{stats.selesai}</p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Statistik Cards - Dashboard Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            {[
+              { label: "Total Pesanan", sublabel: "Semua pesanan", value: stats.total, icon: Package, bgColor: "bg-slate-500" },
+              { label: "Tertunda", sublabel: "Menunggu bayar", value: stats.tertunda, icon: Clock, bgColor: "bg-amber-500" },
+              { label: "Diproses", sublabel: "Dalam produksi", value: stats.diproses, icon: Package, bgColor: "bg-blue-500" },
+              { label: "Dikirim", sublabel: "Dalam perjalanan", value: stats.dikirim, icon: Truck, bgColor: "bg-purple-500" },
+              { label: "Selesai", sublabel: "Berhasil terkirim", value: stats.selesai, icon: CheckCircle2, bgColor: "bg-green-500" },
+            ].map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.05 }}
+                  whileHover={{ y: -2 }}
+                  className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:border-teal-200 hover:shadow-lg transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                        {stat.value}
+                      </div>
+                      <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                        {stat.label}
+                      </div>
+                      <div className="text-xs text-slate-500 line-clamp-1">
+                        {stat.sublabel}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
 
         {/* Filter & Search */}
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Cari nomor pesanan atau judul buku..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11"
-                />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="border-2 border-slate-200">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                  <Input
+                    placeholder="Cari nomor pesanan atau judul buku..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full md:w-64 py-2.5 sm:py-3 text-sm sm:text-base border-slate-200 rounded-xl">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Filter Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semua">Semua Status</SelectItem>
+                    <SelectItem value="tertunda">Menunggu Pembayaran</SelectItem>
+                    <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
+                    <SelectItem value="dikirim">Sedang Dikirim</SelectItem>
+                    <SelectItem value="selesai">Selesai</SelectItem>
+                    <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full md:w-64 h-11">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semua">Semua Status</SelectItem>
-                  <SelectItem value="tertunda">Menunggu Pembayaran</SelectItem>
-                  <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
-                  <SelectItem value="dikirim">Sedang Dikirim</SelectItem>
-                  <SelectItem value="selesai">Selesai</SelectItem>
-                  <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Daftar Pesanan */}
-        <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-4"
+        >
           {filteredPesanan.length === 0 ? (
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <div className="text-center py-12">
-                  <Package className="mx-auto h-20 w-20 text-gray-300" />
-                  <h3 className="mt-4 text-lg font-semibold text-gray-900">
+            <Card className="border-2 border-slate-200">
+              <CardContent className="p-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="h-10 w-10 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
                     Tidak ada pesanan ditemukan
                   </h3>
-                  <p className="text-gray-500 mt-2">
+                  <p className="text-sm text-slate-600">
                     Coba ubah filter atau kata kunci pencarian Anda
                   </p>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            filteredPesanan.map((pesanan) => {
-              const statusConfig = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
+            filteredPesanan.map((pesanan, index) => {
+              const statusConfig = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG] || {
+                label: pesanan.status || "Tidak Diketahui",
+                icon: Package,
+                color: "bg-gray-100 text-gray-800 border-gray-200",
+                dotColor: "bg-gray-500",
+              };
               const StatusIcon = statusConfig.icon;
 
               return (
-                <Card
+                <motion.div
                   key={pesanan.id}
-                  className="hover:shadow-2xl transition-all duration-300 border-2 hover:border-[#0d7377] group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4 }}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row gap-6">
+                  <Card className="border-2 border-slate-200 hover:border-teal-200 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 bg-white">
+                    <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                       {/* Cover Buku */}
                       <div className="flex-shrink-0">
-                        <div className="w-32 h-44 rounded-lg overflow-hidden bg-gray-100 shadow-lg group-hover:shadow-xl transition-shadow ring-2 ring-gray-200 group-hover:ring-[#0d7377]">
+                        <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-lg overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 shadow-md hover:shadow-lg transition-shadow ring-2 ring-slate-200 hover:ring-teal-300">
                           {pesanan.naskah?.urlSampul ? (
                             <img
                               src={pesanan.naskah.urlSampul}
                               alt={pesanan.naskah.judul}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
-                              <Package className="h-12 w-12 text-gray-400" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="h-8 w-8 sm:h-10 sm:w-10 text-slate-400" />
                             </div>
                           )}
                         </div>
                       </div>
 
                       {/* Info Pesanan */}
-                      <div className="flex-1 space-y-4">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="flex-1 space-y-3 sm:space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#0d7377] transition-colors">
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 hover:text-teal-600 transition-colors">
                               {pesanan.naskah?.judul || "Judul Tidak Tersedia"}
                             </h3>
-                            <p className="text-sm text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded-full w-fit">
+                            <p className="text-xs sm:text-sm text-slate-600 font-mono bg-slate-100 px-3 py-1.5 rounded-lg w-fit">
                               {pesanan.nomorPesanan || "-"}
                             </p>
                           </div>
                           <Badge
-                            className={`${statusConfig.color} border-2 px-4 py-2 flex items-center gap-2 w-fit text-sm font-semibold shadow-sm`}
+                            className={`${statusConfig.color} border-2 px-3 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 w-fit text-xs sm:text-sm font-semibold shadow-sm`}
                           >
                             <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor} animate-pulse`} />
-                            <StatusIcon className="h-4 w-4" />
+                            <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                             {statusConfig.label}
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">Jumlah</p>
-                            <p className="font-bold text-gray-900 text-lg">
-                              {pesanan.jumlah || 0} <span className="text-sm font-normal">eks</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                          <div className="bg-slate-50 rounded-lg p-2.5 sm:p-3 border border-slate-100">
+                            <p className="text-xs text-slate-600 mb-1">Jumlah</p>
+                            <p className="font-bold text-slate-900 text-base sm:text-lg">
+                              {pesanan.jumlah || 0} <span className="text-xs sm:text-sm font-normal">eks</span>
                             </p>
                           </div>
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">Format</p>
-                            <p className="font-semibold text-gray-900 text-sm">
+                          <div className="bg-slate-50 rounded-lg p-2.5 sm:p-3 border border-slate-100">
+                            <p className="text-xs text-slate-600 mb-1">Format</p>
+                            <p className="font-semibold text-slate-900 text-xs sm:text-sm">
                               {pesanan.formatKertas || "-"}
                             </p>
-                            <p className="text-xs text-gray-600">{pesanan.jenisKertas || "-"}</p>
+                            <p className="text-xs text-slate-500">{pesanan.jenisKertas || "-"}</p>
                           </div>
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <p className="text-xs text-gray-600 mb-1">Cover</p>
-                            <p className="font-semibold text-gray-900 text-sm">
+                          <div className="bg-slate-50 rounded-lg p-2.5 sm:p-3 border border-slate-100">
+                            <p className="text-xs text-slate-600 mb-1">Cover</p>
+                            <p className="font-semibold text-slate-900 text-xs sm:text-sm">
                               {pesanan.jenisCover === "SOFTCOVER" ? "Soft Cover" : pesanan.jenisCover === "HARDCOVER" ? "Hard Cover" : "-"}
                             </p>
                           </div>
-                          <div className="bg-gradient-to-br from-[#0d7377] to-[#0a5c5f] rounded-lg p-3 text-white">
+                          <div className="bg-gradient-to-br from-teal-600 to-cyan-600 rounded-lg p-2.5 sm:p-3 text-white shadow-md shadow-teal-500/20">
                             <p className="text-xs opacity-90 mb-1">Total Biaya</p>
-                            <p className="font-bold text-lg flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
+                            <p className="font-bold text-base sm:text-lg flex items-center gap-1">
+                              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
                               {formatRupiah(Number(pesanan.hargaTotal) || 0)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4 border-t-2 border-gray-100">
-                          <div className="flex flex-wrap items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-3 sm:pt-4 border-t-2 border-slate-100">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                            <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
                               <Calendar className="h-4 w-4" />
                               <span className="font-medium">Dipesan:</span>
                               <span>{pesanan.tanggalPesan ? formatTanggal(pesanan.tanggalPesan) : "-"}</span>
@@ -391,37 +421,44 @@ export default function RiwayatPesananCetakPage() {
                           )}
 
                           <Link href={`/penulis/pesanan-cetak/${pesanan.id}`}>
-                            <Button
-                              variant="outline"
-                              className="border-2 border-[#0d7377] text-[#0d7377] hover:bg-[#0d7377] hover:text-white font-semibold transition-all duration-300"
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white rounded-xl font-semibold transition-all text-sm"
                             >
-                              <Eye className="mr-2 h-4 w-4" />
+                              <Eye className="h-4 w-4" />
                               Lihat Detail
-                            </Button>
+                            </motion.button>
                           </Link>
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+                  </Card>
+                </motion.div>
               );
             })
           )}
-        </div>
+        </motion.div>
 
-        {/* Pagination Dummy */}
+        {/* Pagination */}
         {filteredPesanan.length > 0 && (
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" disabled>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex justify-center gap-2 mt-6"
+          >
+            <Button variant="outline" disabled className="rounded-xl border-slate-200">
               Previous
             </Button>
-            <Button variant="outline" className="bg-[#0d7377] text-white border-[#0d7377]">
+            <Button className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl">
               1
             </Button>
-            <Button variant="outline">2</Button>
-            <Button variant="outline">3</Button>
-            <Button variant="outline">Next</Button>
-          </div>
+            <Button variant="outline" className="rounded-xl border-slate-200">2</Button>
+            <Button variant="outline" className="rounded-xl border-slate-200">3</Button>
+            <Button variant="outline" className="rounded-xl border-slate-200">Next</Button>
+          </motion.div>
         )}
       </div>
     </div>

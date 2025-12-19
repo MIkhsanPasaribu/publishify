@@ -382,30 +382,76 @@ export function Sidebar() {
         <div className="p-6 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center justify-between">
             {!isCollapsed && (
-              <Link href="/" className="flex items-center gap-3 group">
-                <Image
-                  src="/logo.png"
-                  alt="Publishify Logo"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 transition-transform group-hover:scale-110"
-                />
-                <span className="text-xl font-bold">Publishify</span>
-              </Link>
+              <>
+                <Link href="/" className="flex items-center gap-3 group">
+                  <Image
+                    src="/logo.png"
+                    alt="Publishify Logo"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 transition-transform group-hover:scale-110"
+                  />
+                  <span className="text-xl font-bold">Publishify</span>
+                </Link>
+                {/* Toggle Button - Desktop Only */}
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Toggle Sidebar"
+                  title="Tutup Sidebar"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+              </>
             )}
             {isCollapsed && (
-              <Link href="/" className="mx-auto">
-                <Image
-                  src="/logo.png"
-                  alt="Publishify Logo"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
-                />
-            </Link>
-          )}
+              <div className="flex items-center justify-between w-full">
+                <Link href="/" className="mx-auto">
+                  <Image
+                    src="/logo.png"
+                    alt="Publishify Logo"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10"
+                  />
+                </Link>
+                {/* Toggle Button - Collapsed State */}
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors absolute right-3"
+                  aria-label="Toggle Sidebar"
+                  title="Buka Sidebar"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
@@ -499,31 +545,6 @@ export function Sidebar() {
               </li>
             ))}
           </ul>
-        </div>
-
-        {/* Toggle Button - Desktop Only */}
-        <div className="hidden lg:block flex-shrink-0 p-4 border-t border-white/10">
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center justify-center py-2 rounded-lg hover:bg-white/10 transition-colors"
-            aria-label="Toggle Sidebar"
-          >
-            <svg
-              className={`w-5 h-5 transition-transform ${
-                isCollapsed ? "rotate-180" : ""
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-              />
-            </svg>
-          </button>
         </div>
       </aside>
 

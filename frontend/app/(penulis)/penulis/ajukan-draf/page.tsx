@@ -4,8 +4,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { FileText, Upload, Image as ImageIcon, BookOpen, Send, Calendar } from "lucide-react";
 import { uploadApi } from "@/lib/api/upload";
 import { naskahApi, type Kategori, type Genre } from "@/lib/api/naskah";
+
+// Fungsi untuk mendapatkan sapaan berdasarkan waktu
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Selamat Pagi";
+  if (hour < 15) return "Selamat Siang";
+  if (hour < 18) return "Selamat Sore";
+  return "Selamat Malam";
+}
 
 type ModeInput = "tulis" | "upload";
 
@@ -298,98 +309,108 @@ export default function AjukanDrafPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Ajukan Draf Baru
-          </h1>
-          <p className="text-gray-600">
-            Buat dan ajukan naskah baru untuk proses review
-          </p>
-        </div>
+    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8">
+        {/* Welcome Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 overflow-hidden shadow-lg shadow-teal-500/20"
+        >
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          {/* Content */}
+          <div className="relative z-10">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2"
+            >
+              Ajukan Draf Baru
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-xs sm:text-sm md:text-base text-white/90"
+            >
+              Buat dan ajukan naskah baru untuk proses review
+            </motion.p>
+          </div>
+        </motion.div>
 
         <form onSubmit={handleSubmit}>
           {/* Mode Selector */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm"
+          >
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
               Pilih Mode Pengisian Naskah
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <button
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <motion.button
                 type="button"
                 onClick={() => setModeInput("tulis")}
-                className={`p-6 rounded-xl border-2 transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-4 sm:p-6 rounded-lg border-2 transition-all ${
                   modeInput === "tulis"
-                    ? "border-[#14b8a6] bg-[#14b8a6]/5 shadow-md"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-teal-500 bg-teal-50 shadow-md"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <div className="flex flex-col items-center gap-3">
-                  <svg
-                    className={`w-12 h-12 ${
-                      modeInput === "tulis" ? "text-[#14b8a6]" : "text-gray-400"
+                <div className="flex flex-col items-center gap-2 sm:gap-3">
+                  <FileText
+                    className={`w-10 h-10 sm:w-12 sm:h-12 ${
+                      modeInput === "tulis" ? "text-teal-600" : "text-slate-400"
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
+                  />
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1">
                       Tulis Langsung
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-slate-600">
                       Tulis naskah langsung di editor
                     </p>
                   </div>
                 </div>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setModeInput("upload")}
-                className={`p-6 rounded-xl border-2 transition-all ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-4 sm:p-6 rounded-lg border-2 transition-all ${
                   modeInput === "upload"
-                    ? "border-[#14b8a6] bg-[#14b8a6]/5 shadow-md"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-teal-500 bg-teal-50 shadow-md"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <div className="flex flex-col items-center gap-3">
-                  <svg
-                    className={`w-12 h-12 ${
-                      modeInput === "upload" ? "text-[#14b8a6]" : "text-gray-400"
+                <div className="flex flex-col items-center gap-2 sm:gap-3">
+                  <Upload
+                    className={`w-10 h-10 sm:w-12 sm:h-12 ${
+                      modeInput === "upload" ? "text-teal-600" : "text-slate-400"
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
+                  />
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1">
                       Upload File Word
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-slate-600">
                       Upload naskah dalam format Word (DOC/DOCX)
                     </p>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Informasi Dasar Naskah */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">

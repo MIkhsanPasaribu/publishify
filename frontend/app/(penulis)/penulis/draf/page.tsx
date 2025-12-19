@@ -141,63 +141,51 @@ export default function DrafPage() {
   }), [allDrafts]);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      {/* Header Section */}
-      <div className="w-full bg-white border-b border-slate-200">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-          {/* Welcome Card */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-6 sm:p-8 mb-4 sm:mb-6 overflow-hidden"
-          >
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-32 h-32 sm:w-40 sm:h-40 bg-white/10 rounded-full -mr-16 sm:-mr-20 -mt-16 sm:-mt-20"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -ml-12 sm:-ml-16 -mb-12 sm:-mb-16"></div>
-            
-            <div className="relative text-center">
-              <p className="text-xs sm:text-sm font-medium text-teal-100 mb-1 sm:mb-2">
-                {getGreeting()} 👋
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 sm:mb-3">
+    <div className="min-h-screen w-full bg-slate-50">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8">
+        {/* Welcome Card */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 overflow-hidden shadow-lg shadow-teal-500/20"
+        >
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+          
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
                 Draf Naskah Saya
               </h1>
-              <p className="text-sm sm:text-base text-teal-50 max-w-2xl mx-auto px-4">
+              <p className="text-sm sm:text-base text-teal-50">
                 Kelola dan pantau progres semua karya Anda di sini
               </p>
             </div>
-          </motion.div>
-
-          {/* Action Button */}
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push("/penulis/naskah/buat")}
-              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              Buat Naskah Baru
-            </motion.button>
+            <div className="hidden lg:block ml-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
           </div>
+        </motion.div>
 
-          {/* Search Bar */}
-          <div className="relative w-full">
-            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari naskah..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-            />
-          </div>
+        {/* Search Bar */}
+        <div className="relative w-full mb-6 sm:mb-8">
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Cari naskah..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+          />
         </div>
 
         {/* Tabs */}
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex gap-1 sm:gap-2 border-b border-slate-200 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="mb-6 sm:mb-8">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 border-b border-slate-200">
             {([
               { key: "semua" as TabKey, label: "Semua", icon: BookOpen },
               { key: "in_review" as TabKey, label: "Review", icon: Clock },
@@ -214,19 +202,18 @@ export default function DrafPage() {
                   whileHover={{ y: -2 }}
                   onClick={() => setActiveTab(tab.key)}
                   className={`
-                    relative px-3 sm:px-6 py-3 sm:py-4 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap
+                    relative px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-medium text-xs sm:text-sm transition-all duration-200
                     ${isActive 
                       ? 'text-teal-600' 
                       : 'text-slate-600 hover:text-slate-900'
                     }
                   `}
                 >
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">{tab.label === "Dalam Review" ? "Review" : tab.label === "Perlu Revisi" ? "Revisi" : tab.label}</span>
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">{tab.label}</span>
                     <span className={`
-                      ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold
+                      px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0
                       ${isActive 
                         ? 'bg-teal-100 text-teal-700' 
                         : 'bg-slate-100 text-slate-600'
@@ -247,45 +234,45 @@ export default function DrafPage() {
             })}
           </div>
         </div>
-      </div>
 
-      {/* Content Section */}
-      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-8">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : filteredDraftsEnhanced.length === 0 ? (
-          <EmptyState 
-            activeTab={activeTab}
-            searchQuery={searchQuery}
-            onReset={() => {
-              setSearchQuery("");
-              setActiveTab("semua");
-            }}
-            onCreateNew={() => router.push("/penulis/naskah/buat")}
-          />
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <motion.div 
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
-            >
-              {filteredDraftsEnhanced.map((naskah, index) => (
-                <NaskahCard
-                  key={naskah.id}
-                  naskah={naskah}
-                  index={index}
-                  onLihatDetail={onLihatDetail}
-                  onEdit={onEdit}
-                  onHapus={onHapus}
-                />
+        {/* Content Section */}
+        <div className="w-full">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <SkeletonCard key={i} />
               ))}
-            </motion.div>
-          </AnimatePresence>
-        )}
+            </div>
+          ) : filteredDraftsEnhanced.length === 0 ? (
+            <EmptyState 
+              activeTab={activeTab}
+              searchQuery={searchQuery}
+              onReset={() => {
+                setSearchQuery("");
+                setActiveTab("semua");
+              }}
+              onCreateNew={() => router.push("/penulis/naskah/buat")}
+            />
+          ) : (
+            <AnimatePresence mode="popLayout">
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
+              >
+                {filteredDraftsEnhanced.map((naskah, index) => (
+                  <NaskahCard
+                    key={naskah.id}
+                    naskah={naskah}
+                    index={index}
+                    onLihatDetail={onLihatDetail}
+                    onEdit={onEdit}
+                    onHapus={onHapus}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
       </div>
     </div>
   );

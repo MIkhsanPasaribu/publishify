@@ -279,7 +279,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
       {/* Main Content */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -297,23 +297,23 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 flex items-center gap-2"
+                className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 flex items-center gap-2"
               >
-                <span className="text-2xl">👋</span>
+                <span className="text-2xl sm:text-3xl">👋</span>
                 {getGreeting()}!
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-xs sm:text-sm text-white/90"
+                className="text-sm sm:text-base text-teal-50"
               >
                 Semangat mengelola data seluruh Naskah untuk Kesuksesan hari ini!
               </motion.p>
             </div>
-            <div className="flex-shrink-0 hidden sm:block">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 md:w-8 md:h-8 text-white" />
+            <div className="flex-shrink-0 hidden lg:block ml-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
           </div>
