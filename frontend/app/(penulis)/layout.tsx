@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/penulis/sidebar";
+import { Sidebar } from "@/components/dashboard/sidebar";
 
 export default function PenulisLayout({
   children,
