@@ -216,228 +216,209 @@ export default function AntrianReviewPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Clock className="w-6 h-6 text-blue-600" />
-            </div>
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
                 Antrian Review
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-teal-50">
                 Naskah yang menunggu untuk ditugaskan ke editor
               </p>
+            </div>
+            <div className="flex-shrink-0 hidden lg:block">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Info Card */}
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
+        <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-900">
+              <p className="font-semibold mb-1">
+                Tentang Antrian Review
+              </p>
+              <p className="text-blue-700">
+                Halaman ini menampilkan naskah dengan status <strong>"Diajukan"</strong>. 
+                Tugaskan editor untuk melakukan review, dan status akan otomatis berubah 
+                menjadi <strong>"Dalam Review"</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-900">
-                <p className="font-semibold mb-1">
-                  Tentang Antrian Review
-                </p>
-                <p className="text-blue-700">
-                  Halaman ini menampilkan naskah dengan status <strong>"Diajukan"</strong>. 
-                  Tugaskan editor untuk melakukan review, dan status akan otomatis berubah 
-                  menjadi <strong>"Dalam Review"</strong>.
-                </p>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{naskahList.length}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Naskah Diajukan</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Statistik */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-yellow-700 mb-1">
-                    Total Naskah Diajukan
-                  </p>
-                  <p className="text-3xl font-bold text-yellow-900">
-                    {naskahList.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-yellow-200 rounded-xl">
-                  <BookOpen className="w-6 h-6 text-yellow-700" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{editorList.length}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Editor Tersedia</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-purple-200 bg-purple-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-700 mb-1">
-                    Editor Tersedia
-                  </p>
-                  <p className="text-3xl font-bold text-purple-900">
-                    {editorList.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-200 rounded-xl">
-                  <User className="w-6 h-6 text-purple-700" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-700 mb-1">
-                    Naskah Terfilter
-                  </p>
-                  <p className="text-3xl font-bold text-green-900">
-                    {naskahTerfilter.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-200 rounded-xl">
-                  <FileText className="w-6 h-6 text-green-700" />
-                </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{naskahTerfilter.length}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Naskah Terfilter</div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="bg-white rounded-lg sm:rounded-xl border border-slate-200 p-4 shadow-sm">
           <input
             type="text"
             placeholder="🔍 Cari naskah (judul, penulis, kategori, genre)..."
             value={pencarian}
             onChange={(e) => setPencarian(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
           />
+        </div>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Memuat data...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            <p className="mt-4 text-slate-600">Memuat data...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && naskahTerfilter.length === 0 && (
-          <Card className="border-gray-200">
-            <CardContent className="p-12 text-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-gray-100 rounded-full">
-                  <BookOpen className="w-12 h-12 text-gray-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Tidak Ada Naskah Diajukan
-                  </h3>
-                  <p className="text-gray-600">
-                    {pencarian 
-                      ? "Tidak ada naskah yang cocok dengan pencarian Anda"
-                      : "Belum ada naskah yang menunggu review saat ini"}
-                  </p>
-                </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-slate-100 rounded-full">
+                <BookOpen className="w-12 h-12 text-slate-400" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                  Tidak Ada Naskah Diajukan
+                </h3>
+                <p className="text-slate-600">
+                  {pencarian 
+                    ? "Tidak ada naskah yang cocok dengan pencarian Anda"
+                    : "Belum ada naskah yang menunggu review saat ini"}
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Naskah List */}
         {!loading && naskahTerfilter.length > 0 && (
           <div className="grid grid-cols-1 gap-4">
             {naskahTerfilter.map((naskah) => (
-              <Card 
+              <div 
                 key={naskah.id} 
-                className="hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500"
+                className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all border-l-4 border-l-amber-500 p-4 sm:p-6"
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      {/* Header */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                          <BookOpen className="w-5 h-5 text-yellow-700" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-gray-900 mb-1 truncate">
-                            {naskah.judul}
-                          </h3>
-                          {naskah.subJudul && (
-                            <p className="text-sm text-gray-600 mb-2">
-                              {naskah.subJudul}
-                            </p>
-                          )}
-                          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                            Menunggu Review
-                          </Badge>
-                        </div>
+                <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0 w-full">
+                    {/* Header */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                        <BookOpen className="w-5 h-5 text-amber-700" />
                       </div>
-
-                      {/* Sinopsis */}
-                      <p className="text-gray-700 mb-4 line-clamp-2">
-                        {naskah.sinopsis}
-                      </p>
-
-                      {/* Meta Information */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <User className="w-4 h-4" />
-                          <span className="font-medium">Penulis:</span>
-                          <span>{getNamaPenulis(naskah.penulis)}</span>
-                        </div>
-                        
-                        {naskah.kategori && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <FileText className="w-4 h-4" />
-                            <span className="font-medium">Kategori:</span>
-                            <span>{naskah.kategori.nama}</span>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+                          {naskah.judul}
+                        </h3>
+                        {naskah.subJudul && (
+                          <p className="text-sm text-slate-600 mb-2">
+                            {naskah.subJudul}
+                          </p>
                         )}
-                        
-                        {naskah.genre && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <FileText className="w-4 h-4" />
-                            <span className="font-medium">Genre:</span>
-                            <span>{naskah.genre.nama}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span className="font-medium">Diajukan:</span>
-                          <span>{formatTanggal(naskah.diperbaruiPada)}</span>
-                        </div>
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300">
+                          Menunggu Review
+                        </Badge>
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex-shrink-0">
-                      <Button
-                        onClick={() => handleTugaskanEditor(naskah)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Tugaskan Editor
-                      </Button>
+                    {/* Sinopsis */}
+                    <p className="text-slate-700 mb-4 line-clamp-2">
+                      {naskah.sinopsis}
+                    </p>
+
+                    {/* Meta Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <User className="w-4 h-4" />
+                        <span className="font-medium text-slate-700">Penulis:</span>
+                        <span>{getNamaPenulis(naskah.penulis)}</span>
+                      </div>
+                      
+                      {naskah.kategori && (
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <FileText className="w-4 h-4" />
+                          <span className="font-medium text-slate-700">Kategori:</span>
+                          <span>{naskah.kategori.nama}</span>
+                        </div>
+                      )}
+                      
+                      {naskah.genre && (
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <FileText className="w-4 h-4" />
+                          <span className="font-medium text-slate-700">Genre:</span>
+                          <span>{naskah.genre.nama}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <Calendar className="w-4 h-4" />
+                        <span className="font-medium text-slate-700">Diajukan:</span>
+                        <span>{formatTanggal(naskah.diperbaruiPada)}</span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Action Button */}
+                  <div className="flex-shrink-0 w-full lg:w-auto">
+                    <Button
+                      onClick={() => handleTugaskanEditor(naskah)}
+                      className="w-full lg:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Tugaskan Editor
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
-      </div>
 
       {/* Dialog Tugaskan Editor */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -453,27 +434,27 @@ export default function AntrianReviewPage() {
           {selectedNaskah && (
             <div className="space-y-4 py-4">
               {/* Info Naskah */}
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2">
                   {selectedNaskah.judul}
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Penulis: {getNamaPenulis(selectedNaskah.penulis)}
                 </p>
               </div>
 
               {/* Pilih Editor */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Pilih Editor <span className="text-red-500">*</span>
                 </label>
                 <Select value={selectedEditor} onValueChange={setSelectedEditor}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-slate-300 focus:border-teal-500 focus:ring-teal-500">
                     <SelectValue placeholder="-- Pilih Editor --" />
                   </SelectTrigger>
                   <SelectContent>
                     {editorList.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500 text-sm">
+                      <div className="p-4 text-center text-slate-500 text-sm">
                         Tidak ada editor tersedia
                       </div>
                     ) : (
@@ -485,7 +466,7 @@ export default function AntrianReviewPage() {
                     )}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-600">
                   Editor yang dipilih akan menerima tugas untuk mereview naskah ini
                 </p>
               </div>
@@ -496,14 +477,14 @@ export default function AntrianReviewPage() {
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
                   disabled={submitting}
-                  className="flex-1"
+                  className="flex-1 hover:bg-slate-50"
                 >
                   Batal
                 </Button>
                 <Button
                   onClick={handleSubmitTugasan}
                   disabled={!selectedEditor || submitting}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white"
                 >
                   {submitting ? "Memproses..." : "Tugaskan"}
                 </Button>

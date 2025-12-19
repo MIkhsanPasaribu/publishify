@@ -136,7 +136,7 @@ export default function DaftarPesananPercetakanPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -144,8 +144,7 @@ export default function DaftarPesananPercetakanPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">📦</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Kelola Pesanan Cetak
               </h1>
               <p className="text-sm text-teal-50">
@@ -161,76 +160,103 @@ export default function DaftarPesananPercetakanPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-gray-600 mb-1">Total</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-amber-200 bg-amber-50/30">
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-amber-700 mb-1">Tertunda</p>
-              <p className="text-2xl font-bold text-amber-800">{stats.tertunda}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-blue-200 bg-blue-50/30">
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-blue-700 mb-1">Produksi</p>
-              <p className="text-2xl font-bold text-blue-800">{stats.produksi}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-purple-200 bg-purple-50/30">
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-purple-700 mb-1">QC</p>
-              <p className="text-2xl font-bold text-purple-800">{stats.qc}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 border-green-200 bg-green-50/30">
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-green-700 mb-1">Siap Kirim</p>
-              <p className="text-2xl font-bold text-green-800">{stats.siap}</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-slate-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.total}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total</div>
+                <div className="text-xs text-slate-500">Semua pesanan</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.tertunda}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Tertunda</div>
+                <div className="text-xs text-slate-500">Menunggu</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Printer className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.produksi}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Produksi</div>
+                <div className="text-xs text-slate-500">Dikerjakan</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.qc}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">QC</div>
+                <div className="text-xs text-slate-500">Kontrol kualitas</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Play className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.siap}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Siap Kirim</div>
+                <div className="text-xs text-slate-500">Ready</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filter & Search */}
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Cari pesanan, pemesan, atau judul buku..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11"
-                />
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full md:w-64 h-11">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semua">Semua Status</SelectItem>
-                  <SelectItem value="tertunda">Tertunda</SelectItem>
-                  <SelectItem value="diterima">Diterima</SelectItem>
-                  <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
-                  <SelectItem value="kontrol_kualitas">Quality Control</SelectItem>
-                  <SelectItem value="siap">Siap Kirim</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input
+                placeholder="Cari pesanan, pemesan, atau judul buku..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 border-slate-300 focus:ring-teal-500"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full md:w-64 h-11 border-slate-300">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Status</SelectItem>
+                <SelectItem value="tertunda">Tertunda</SelectItem>
+                <SelectItem value="diterima">Diterima</SelectItem>
+                <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
+                <SelectItem value="kontrol_kualitas">Quality Control</SelectItem>
+                <SelectItem value="siap">Siap Kirim</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Table Pesanan */}
-        <Card className="border-2">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b-2">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50/80 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Pesanan

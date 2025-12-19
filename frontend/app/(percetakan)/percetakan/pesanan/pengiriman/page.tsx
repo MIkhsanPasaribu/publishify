@@ -96,7 +96,7 @@ export default function PengirimanPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -104,8 +104,7 @@ export default function PengirimanPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🚚</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Pengiriman Pesanan
               </h1>
               <p className="text-sm text-teal-50">
@@ -121,85 +120,81 @@ export default function PengirimanPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Total Pesanan</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Siap Kirim</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.siap}</p>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.total}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pesanan</div>
+                <div className="text-xs text-slate-500">Semua status</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-teal-100 rounded-lg">
-                <Truck className="h-5 w-5 text-teal-600" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Dalam Pengiriman</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.dikirim}</p>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.siap}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Siap Kirim</div>
+                <div className="text-xs text-slate-500">Ready</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Terkirim</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.terkirim}
-                </p>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.dikirim}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Dalam Pengiriman</div>
+                <div className="text-xs text-slate-500">On delivery</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.terkirim}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Terkirim</div>
+                <div className="text-xs text-slate-500">Delivered</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       {/* Search */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input
             placeholder="Cari nomor pesanan, resi, judul, atau pemesan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 border-slate-300 focus:ring-teal-500"
           />
         </div>
       </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Pesanan ({filteredPesanan.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="p-4 sm:p-6 border-b border-slate-200">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+            Daftar Pesanan ({filteredPesanan.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -305,8 +300,8 @@ export default function PengirimanPage() {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Buat Pengiriman Dialog */}
       {selectedPesanan && (

@@ -141,7 +141,7 @@ export default function DrafPage() {
   }), [allDrafts]);
 
   return (
-    <div className="min-h-screen w-full bg-slate-50">
+    <div className="min-h-screen w-full bg-transparent">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8">
         {/* Welcome Card */}
         <motion.div

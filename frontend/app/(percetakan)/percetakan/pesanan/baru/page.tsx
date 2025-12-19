@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileText, CheckCircle, Eye, Package } from "lucide-react";
+import { Download, FileText, CheckCircle, Eye, Package, Clock } from "lucide-react";
 import { ambilPesananPercetakan } from "@/lib/api/percetakan";
 import { KonfirmasiPesananDialog } from "@/components/percetakan/konfirmasi-pesanan-dialog";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,7 @@ export default function PesananBaruPage() {
   const totalPesanan = data?.total || 0;
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -84,7 +84,6 @@ export default function PesananBaruPage() {
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-3">
-                <span className="text-xl sm:text-2xl">📥</span>
                 Pesanan Baru
                 {totalPesanan > 0 && (
                   <Badge variant="destructive" className="text-base px-2.5 py-0.5">
@@ -105,46 +104,58 @@ export default function PesananBaruPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-slate-500">Total Pesanan Baru</CardDescription>
-              <CardTitle className="text-3xl text-slate-900">{totalPesanan}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-slate-500">Menunggu Konfirmasi</CardDescription>
-              <CardTitle className="text-3xl text-slate-900">
-                {
-                  pesananList.filter((p: PesananCetak) => p.status === "tertunda")
-                    .length
-                }
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardDescription className="text-slate-500">Diterima</CardDescription>
-              <CardTitle className="text-3xl text-slate-900">
-                {
-                  pesananList.filter((p: PesananCetak) => p.status === "diterima")
-                    .length
-                }
-              </CardTitle>
-            </CardHeader>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{totalPesanan}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pesanan Baru</div>
+                <div className="text-xs text-slate-500">Semua status</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {pesananList.filter((p: PesananCetak) => p.status === "tertunda").length}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Menunggu Konfirmasi</div>
+                <div className="text-xs text-slate-500">Perlu diproses</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {pesananList.filter((p: PesananCetak) => p.status === "diterima").length}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Diterima</div>
+                <div className="text-xs text-slate-500">Siap produksi</div>
+              </div>
+            </div>
+          </div>
         </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Pesanan</CardTitle>
-          <CardDescription>
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="p-4 sm:p-6 border-b border-slate-200">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900">Daftar Pesanan</h3>
+          <p className="text-sm text-slate-500 mt-1">
             Klik "Lihat Detail" untuk informasi lengkap pesanan
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </div>
+        <div className="p-4 sm:p-6">
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -269,8 +280,8 @@ export default function PesananBaruPage() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>

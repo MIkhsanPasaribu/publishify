@@ -151,7 +151,7 @@ export default function DashboardPercetakanPage() {
 
   if (statsLoading || pesananLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal-500 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Memuat data dashboard...</p>
@@ -161,7 +161,7 @@ export default function DashboardPercetakanPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         

@@ -101,7 +101,7 @@ export default function PembayaranPercetakanPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -109,8 +109,7 @@ export default function PembayaranPercetakanPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">💳</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Kelola Pembayaran
               </h1>
               <p className="text-sm text-teal-50">
@@ -126,103 +125,92 @@ export default function PembayaranPercetakanPage() {
         </div>
 
         {/* Statistik Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-teal-100 rounded-lg">
-                  <CreditCard className="h-6 w-6 text-teal-600" />
-                </div>
-                <TrendingUp className="h-5 w-5 text-green-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-slate-500 font-medium">Total Pembayaran</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">
-                {stats.totalPembayaran}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">Transaksi bulan ini</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.totalPembayaran}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pembayaran</div>
+                <div className="text-xs text-slate-500">Transaksi bulan ini</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-slate-500 font-medium">Berhasil</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{stats.berhasil}</p>
-              <p className="text-xs text-slate-500 mt-2">Terverifikasi</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.berhasil}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Berhasil</div>
+                <div className="text-xs text-slate-500">Terverifikasi</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-amber-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-amber-600" />
-                </div>
-                <Clock className="h-5 w-5 text-amber-500 animate-pulse" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-amber-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-amber-700 font-medium">Menunggu Verifikasi</p>
-              <p className="text-3xl font-bold text-amber-900 mt-1">{stats.menunggu}</p>
-              <p className="text-xs text-amber-600 mt-2">Perlu ditindaklanjuti</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-amber-900">{stats.menunggu}</div>
+                <div className="text-xs sm:text-sm font-medium text-amber-700">Menunggu Verifikasi</div>
+                <div className="text-xs text-amber-600">Perlu ditindaklanjuti</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-teal-200 bg-gradient-to-br from-teal-50 to-cyan-50 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-teal-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-teal-600" />
-                </div>
-                <TrendingUp className="h-5 w-5 text-green-500" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-teal-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-teal-700 font-medium">Total Pendapatan</p>
-              <p className="text-xl font-bold text-teal-900 mt-1">
-                {formatRupiah(stats.totalPendapatan)}
-              </p>
-              <p className="text-xs text-teal-600 mt-2">Dari pembayaran berhasil</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-teal-900">{formatRupiah(stats.totalPendapatan)}</div>
+                <div className="text-xs sm:text-sm font-medium text-teal-700">Total Pendapatan</div>
+                <div className="text-xs text-teal-600">Pembayaran berhasil</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filter & Search */}
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Cari nomor pembayaran, pesanan, atau pemesan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11"
-                />
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full md:w-64 h-11">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semua">Semua Status</SelectItem>
-                  <SelectItem value="berhasil">Berhasil</SelectItem>
-                  <SelectItem value="menunggu_verifikasi">Menunggu Verifikasi</SelectItem>
-                  <SelectItem value="gagal">Gagal</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input
+                placeholder="Cari nomor pembayaran, pesanan, atau pemesan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 border-slate-300 focus:ring-teal-500"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full md:w-64 h-11 border-slate-300">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Status</SelectItem>
+                <SelectItem value="berhasil">Berhasil</SelectItem>
+                <SelectItem value="menunggu_verifikasi">Menunggu Verifikasi</SelectItem>
+                <SelectItem value="gagal">Gagal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Table Pembayaran */}
-        <Card className="border-2">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-teal-50 to-cyan-50 border-b-2">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50/80 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-teal-800 uppercase tracking-wider">
                       Pembayaran
@@ -333,9 +321,8 @@ export default function PembayaranPercetakanPage() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }

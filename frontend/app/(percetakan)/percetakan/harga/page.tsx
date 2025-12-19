@@ -205,7 +205,7 @@ export default function KelolaHargaPage() {
   const kombinasiAktif = kombinasiList.find((k) => k.aktif);
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -213,8 +213,7 @@ export default function KelolaHargaPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">💰</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Kelola Skema Tarif
               </h1>
               <p className="text-sm text-teal-50">
@@ -230,21 +229,23 @@ export default function KelolaHargaPage() {
         </div>
 
         {/* Preview atau Form Parameter Harga */}
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardHeader>
+        <div className="bg-white rounded-lg border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="p-4 sm:p-6 border-b border-slate-200">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Komponen Harga Dasar
-                </CardTitle>
-                <CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Komponen Harga Dasar</h3>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">
                   {isEditingParameter 
                   ? "Buat skema tarif baru dengan nama dan harga komponen. Contoh: 'Tarif Standar' dengan harga normal, atau 'Tarif Diskon' dengan harga lebih murah."
                   : "Setiap skema tarif memiliki nama dan komponen harga yang berbeda."
-                }
-              </CardDescription>
-            </div>
+                  }
+                </p>
+              </div>
             {!isEditingParameter ? (
               <Button
                 onClick={() => setIsEditingParameter(true)}
@@ -287,8 +288,8 @@ export default function KelolaHargaPage() {
               </div>
             )}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+          </div>
+        <div className="p-4 sm:p-6 space-y-6">
           {!isEditingParameter ? (
             // Info State - Tidak ada form yang terbuka
             <div className="py-12 text-center">
@@ -447,8 +448,8 @@ export default function KelolaHargaPage() {
           </div>
           </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Kombinasi Tarif Aktif */}
       {kombinasiAktif && (

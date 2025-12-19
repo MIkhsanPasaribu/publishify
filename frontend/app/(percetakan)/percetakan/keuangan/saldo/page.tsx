@@ -107,7 +107,7 @@ export default function SaldoPercetakanPage() {
   });
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -115,8 +115,7 @@ export default function SaldoPercetakanPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">💰</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Saldo & Keuangan
               </h1>
               <p className="text-sm text-teal-50">
@@ -211,83 +210,72 @@ export default function SaldoPercetakanPage() {
             </Dialog>
           </div>
         </div>
+      </div>
 
-        {/* Saldo Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-2 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 to-emerald-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Wallet className="h-6 w-6 text-green-600" />
-                </div>
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+      {/* Saldo Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-gray-600 font-medium">Saldo Tersedia</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {formatRupiah(saldoData.tersedia)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">Bisa ditarik</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-slate-900">{formatRupiah(saldoData.tersedia)}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Saldo Tersedia</div>
+                <div className="text-xs text-slate-500">Bisa ditarik</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-50 to-amber-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                <RefreshCw className="h-5 w-5 text-yellow-500" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-gray-600 font-medium">Saldo Pending</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {formatRupiah(saldoData.pending)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">Pesanan dalam proses</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-slate-900">{formatRupiah(saldoData.pending)}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Saldo Pending</div>
+                <div className="text-xs text-slate-500">Pesanan proses</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 to-cyan-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-600" />
-                </div>
-                <TrendingUp className="h-5 w-5 text-green-500" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-gray-600 font-medium">Total Pendapatan</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {formatRupiah(saldoData.totalPendapatan)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">Keseluruhan</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-slate-900">{formatRupiah(saldoData.totalPendapatan)}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pendapatan</div>
+                <div className="text-xs text-slate-500">Keseluruhan</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-pink-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
-                </div>
-                <ArrowUpRight className="h-5 w-5 text-purple-500" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-gray-600 font-medium">Total Ditarik</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {formatRupiah(saldoData.totalDitarik)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">Penarikan dana</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-slate-900">{formatRupiah(saldoData.totalDitarik)}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Ditarik</div>
+                <div className="text-xs text-slate-500">Penarikan dana</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Rekening Bank */}
-        <Card className="border-2">
-          <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-gray-50">
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+          <div className="p-4 sm:p-6 border-b border-slate-200 bg-slate-50/50">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-slate-700" />
               Rekening Bank Terdaftar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
+            </h3>
+          </div>
+          <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Nama Bank</p>
@@ -307,17 +295,17 @@ export default function SaldoPercetakanPage() {
                 Update Rekening
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Riwayat Transaksi */}
-        <Card className="border-2">
-          <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-gray-50">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+          <div className="p-4 sm:p-6 border-b border-slate-200 bg-slate-50/50">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle className="flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-slate-700" />
                 Riwayat Transaksi
-              </CardTitle>
+              </h3>
               <div className="flex flex-wrap gap-3">
                 <Select value={filterTipe} onValueChange={setFilterTipe}>
                   <SelectTrigger className="w-[140px]">
@@ -341,8 +329,8 @@ export default function SaldoPercetakanPage() {
                 </Select>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
+          </div>
+          <div className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -404,8 +392,8 @@ export default function SaldoPercetakanPage() {
                 <p>Tidak ada transaksi yang sesuai filter</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

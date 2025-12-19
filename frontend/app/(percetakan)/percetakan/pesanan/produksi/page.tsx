@@ -99,7 +99,7 @@ export default function DalamProduksiPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
       <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6">
         {/* Gradient Header Panel */}
         <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
@@ -107,8 +107,7 @@ export default function DalamProduksiPage() {
           <div className="absolute bottom-0 left-0 w-20 sm:w-28 h-20 sm:h-28 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🏭</span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
                 Pesanan Dalam Produksi
               </h1>
               <p className="text-sm text-teal-50">
@@ -124,82 +123,71 @@ export default function DalamProduksiPage() {
         </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Package className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Pesanan</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-              </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.total}</div>
+              <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pesanan</div>
+              <div className="text-xs text-slate-500">Semua status</div>
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-amber-100 rounded-lg">
-                <Clock className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Pesanan Baru</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {stats.diterima}
-                </p>
-              </div>
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.diterima}</div>
+              <div className="text-xs sm:text-sm font-medium text-slate-700">Pesanan Baru</div>
+              <div className="text-xs text-slate-500">Perlu diproses</div>
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Printer className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Dalam Produksi</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {stats.dalamProduksi}
-                </p>
-              </div>
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Printer className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.dalamProduksi}</div>
+              <div className="text-xs sm:text-sm font-medium text-slate-700">Dalam Produksi</div>
+              <div className="text-xs text-slate-500">Dikerjakan</div>
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-indigo-100 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Kontrol Kualitas</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {stats.kontrolKualitas}
-                </p>
-              </div>
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.kontrolKualitas}</div>
+              <div className="text-xs sm:text-sm font-medium text-slate-700">Kontrol Kualitas</div>
+              <div className="text-xs text-slate-500">QC</div>
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Siap Kirim</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.siap}</p>
-              </div>
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.siap}</div>
+              <div className="text-xs sm:text-sm font-medium text-slate-700">Siap Kirim</div>
+              <div className="text-xs text-slate-500">Ready</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
