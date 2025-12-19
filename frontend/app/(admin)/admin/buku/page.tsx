@@ -108,19 +108,13 @@ export default function BukuTerbitAdminPage() {
           <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
           <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
 
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
-                Katalog Buku Terbit
-              </h1>
-              <p className="text-sm sm:text-base text-teal-50">
-                Kelola semua buku yang sudah diterbitkan di platform
-              </p>
-            </div>
-            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-              <Download className="w-4 h-4 mr-2" />
-              Export Data
-            </Button>
+          <div className="relative z-10">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+              Katalog Buku Terbit
+            </h1>
+            <p className="text-sm sm:text-base text-teal-50">
+              Kelola semua buku yang sudah diterbitkan di platform
+            </p>
           </div>
         </div>
 
@@ -164,7 +158,7 @@ export default function BukuTerbitAdminPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Total Pendapatan</p>
-                <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                   {formatRupiah(totalPendapatan)}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">Gross revenue</p>
@@ -180,13 +174,21 @@ export default function BukuTerbitAdminPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Rata-rata Harga</p>
-                <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                   {formatRupiah(Math.round(totalPendapatan / totalTerjual / totalBuku))}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">Per eksemplar</p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="flex justify-end">
+          <Button className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white shadow-md">
+            <Download className="w-4 h-4 mr-2" />
+            Export Data
+          </Button>
         </div>
 
         {/* Search & Filter */}

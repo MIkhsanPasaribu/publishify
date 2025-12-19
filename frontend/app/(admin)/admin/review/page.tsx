@@ -253,68 +253,89 @@ export default function AdminReviewPage() {
         </div>
 
         {/* Filter & Search */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <div className="flex flex-wrap gap-3 mb-4">
+        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-slate-200">
+          {/* Filter Buttons - Responsive Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-4">
             <button
               onClick={() => setFilter("semua")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
                 filter === "semua"
-                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md ring-2 ring-teal-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
               }`}
             >
-              Semua ({statistik.total})
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">Semua</span>
+                <span className="text-xs opacity-90">({statistik.total})</span>
+              </div>
             </button>
             <button
               onClick={() => setFilter("diajukan")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
                 filter === "diajukan"
-                  ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
               }`}
             >
-              Diajukan ({statistik.diajukan})
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">Diajukan</span>
+                <span className="text-xs opacity-90">({statistik.diajukan})</span>
+              </div>
             </button>
             <button
               onClick={() => setFilter("dalam_review")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
                 filter === "dalam_review"
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md ring-2 ring-blue-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
               }`}
             >
-              Dalam Review ({statistik.dalamReview})
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">Dalam Review</span>
+                <span className="text-xs opacity-90">({statistik.dalamReview})</span>
+              </div>
             </button>
             <button
               onClick={() => setFilter("disetujui")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
                 filter === "disetujui"
-                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md ring-2 ring-green-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
               }`}
             >
-              Disetujui ({statistik.disetujui})
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">Disetujui</span>
+                <span className="text-xs opacity-90">({statistik.disetujui})</span>
+              </div>
             </button>
             <button
               onClick={() => setFilter("ditolak")}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all col-span-2 sm:col-span-1 ${
                 filter === "ditolak"
-                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md ring-2 ring-red-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
               }`}
             >
-              Ditolak ({statistik.ditolak})
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">Ditolak</span>
+                <span className="text-xs opacity-90">({statistik.ditolak})</span>
+              </div>
             </button>
           </div>
 
           {/* Search Bar */}
-          <div className="mt-4 relative">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             <input
               type="text"
-              placeholder="🔍 Cari berdasarkan judul, sinopsis, atau penulis..."
+              placeholder="Cari berdasarkan judul, sinopsis, atau penulis..."
               value={pencarian}
               onChange={(e) => setPencarian(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
         </div>

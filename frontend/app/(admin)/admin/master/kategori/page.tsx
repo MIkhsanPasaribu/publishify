@@ -66,22 +66,13 @@ export default function MasterKategoriPage() {
           <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
           <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
 
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
-                Master Kategori & Genre
-              </h1>
-              <p className="text-sm sm:text-base text-teal-50">
-                Kelola kategori dan genre buku untuk sistem klasifikasi
-              </p>
-            </div>
-            <Button
-              onClick={() => setModalTambah(true)}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah {activeTab === "kategori" ? "Kategori" : "Genre"}
-            </Button>
+          <div className="relative z-10">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+              Master Kategori & Genre
+            </h1>
+            <p className="text-sm sm:text-base text-teal-50">
+              Kelola kategori dan genre buku untuk sistem klasifikasi
+            </p>
           </div>
         </div>
 
@@ -136,41 +127,60 @@ export default function MasterKategoriPage() {
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex gap-2 p-1 bg-slate-100 rounded-lg w-fit">
-          <button
-            onClick={() => setActiveTab("kategori")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
-              activeTab === "kategori"
-                ? "bg-white text-teal-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+        {/* Action Button */}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setModalTambah(true)}
+            className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white shadow-md"
           >
-            <FolderTree className="w-4 h-4" />
-            Kategori
-          </button>
-          <button
-            onClick={() => setActiveTab("genre")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
-              activeTab === "genre"
-                ? "bg-white text-teal-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Tags className="w-4 h-4" />
-            Genre
-          </button>
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah {activeTab === "kategori" ? "Kategori" : "Genre"}
+          </Button>
+        </div>
+
+        {/* Tab Switcher - Responsive Grid */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <button
+              onClick={() => setActiveTab("kategori")}
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                activeTab === "kategori"
+                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md ring-2 ring-teal-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <FolderTree className="w-4 h-4" />
+                <span className="font-semibold">Kategori</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("genre")}
+              className={`px-3 sm:px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                activeTab === "genre"
+                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md ring-2 ring-teal-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Tags className="w-4 h-4" />
+                <span className="font-semibold">Genre</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
             <Input
               placeholder={`Cari ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 border-slate-300 focus:border-teal-500 focus:ring-teal-500"
+              className="pl-10 pr-4 py-2.5 sm:py-3 w-full border-slate-300 focus:border-teal-500 focus:ring-teal-500 text-sm sm:text-base"
             />
           </div>
         </div>
