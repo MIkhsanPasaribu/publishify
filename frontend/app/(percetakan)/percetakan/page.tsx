@@ -161,9 +161,9 @@ export default function DashboardPercetakanPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
-      {/* Main Content */}
-      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="min-h-screen w-full">
+      {/* Main Content - Centered Container */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* Welcome Header */}
         <motion.div

@@ -6,6 +6,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { ambilPesananPercetakan } from "@/lib/api/percetakan";
+import {
+  ChevronDown,
+  ChevronRight,
+  Home,
+  FileText,
+  Settings as SettingsIcon,
+  DollarSign,
+  Wallet,
+  TrendingUp,
+  Package,
+  Truck,
+  CheckCircle,
+  Tag,
+  Store,
+} from "lucide-react";
 
 // Menu Item Types
 type MenuDivider = {
@@ -19,9 +34,18 @@ type MenuItem = {
   icon: React.ReactElement;
   href: string;
   badge?: number;
+  children?: MenuItem[];
 };
 
 type MenuItemOrDivider = MenuItem | MenuDivider;
+
+// Interface untuk menu section dengan dropdown
+interface MenuSection {
+  title: string;
+  icon: React.ReactNode;
+  items: MenuItem[];
+  defaultOpen?: boolean;
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -29,9 +53,22 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>(["Fulfillment"]);
   
   // Ambil data pengguna untuk cek role
   const { pengguna } = useAuthStore();
+  
+  // Toggle section
+  const toggleSection = (title: string) => {
+    setOpenSections((prev) =>
+      prev.includes(title) ? prev.filter((s) => s !== title) : [...prev, title]
+    );
+  };
+
+  // Cek apakah path aktif
+  const isActive = (href: string) => pathname === href;
+  const isSectionActive = (section: MenuSection) =>
+    section.items.some((item) => item.href && pathname === item.href);
   
   // Helper untuk cek apakah user memiliki role tertentu
   const hasRole = (role: "penulis" | "editor" | "percetakan" | "admin") => {
@@ -150,111 +187,88 @@ export function Sidebar() {
     }
   }, [pengguna]);
 
-  // Menu untuk Percetakan - Struktur Baru dengan 5 Groups
-  const menuPercetakan = [
-    // GROUP 1: UTAMA (Overview)
+  // Menu untuk Percetakan - Struktur Dropdown Sections
+  const menuPercetakanSections: MenuSection[] = [
     {
-      label: "Overview",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      ),
-      href: "/percetakan",
-    },
-    // GROUP 2: FULFILLMENT - Divider
-    {
-      isDivider: true,
-      label: "FULFILLMENT",
+      title: "Dashboard",
+      icon: <Home className="w-5 h-5" />,
+      items: [
+        {
+          label: "Overview",
+          icon: <Home className="w-4 h-4" />,
+          href: "/percetakan",
+        },
+      ],
+      defaultOpen: false,
     },
     {
-      label: "Pesanan Baru",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-        </svg>
-      ),
-      href: "/percetakan/pesanan/baru",
-      badge: pesananBaruCount,
+      title: "Fulfillment",
+      icon: <Package className="w-5 h-5" />,
+      items: [
+        {
+          label: "Pesanan Baru",
+          icon: <FileText className="w-4 h-4" />,
+          href: "/percetakan/pesanan/baru",
+          badge: pesananBaruCount,
+        },
+        {
+          label: "Dalam Produksi",
+          icon: <SettingsIcon className="w-4 h-4" />,
+          href: "/percetakan/pesanan/produksi",
+        },
+        {
+          label: "Pengiriman",
+          icon: <Truck className="w-4 h-4" />,
+          href: "/percetakan/pesanan/pengiriman",
+        },
+        {
+          label: "Riwayat Selesai",
+          icon: <CheckCircle className="w-4 h-4" />,
+          href: "/percetakan/pesanan/riwayat",
+        },
+      ],
+      defaultOpen: true,
     },
     {
-      label: "Dalam Produksi",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-      href: "/percetakan/pesanan/produksi",
+      title: "Layanan & Harga",
+      icon: <Tag className="w-5 h-5" />,
+      items: [
+        {
+          label: "Kelola Harga",
+          icon: <Tag className="w-4 h-4" />,
+          href: "/percetakan/harga",
+        },
+      ],
+      defaultOpen: false,
     },
     {
-      label: "Pengiriman",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-        </svg>
-      ),
-      href: "/percetakan/pesanan/pengiriman",
+      title: "Keuangan",
+      icon: <Wallet className="w-5 h-5" />,
+      items: [
+        {
+          label: "Saldo & Penarikan",
+          icon: <DollarSign className="w-4 h-4" />,
+          href: "/percetakan/keuangan/saldo",
+        },
+        {
+          label: "Laporan Penghasilan",
+          icon: <TrendingUp className="w-4 h-4" />,
+          href: "/percetakan/keuangan/laporan",
+        },
+      ],
+      defaultOpen: false,
     },
     {
-      label: "Riwayat Selesai",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      href: "/percetakan/pesanan/riwayat",
-    },
-    // GROUP 3: LAYANAN & HARGA - Divider
-    {
-      isDivider: true,
-      label: "LAYANAN & HARGA",
-    },
-    {
-      label: "Kelola Harga",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-      ),
-      href: "/percetakan/harga",
-    },
-    // GROUP 4: KEUANGAN - Divider
-    {
-      isDivider: true,
-      label: "KEUANGAN",
-    },
-    {
-      label: "Saldo & Penarikan",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      href: "/percetakan/keuangan/saldo",
-    },
-    {
-      label: "Laporan Penghasilan",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      href: "/percetakan/keuangan/laporan",
-    },
-    // GROUP 5: PENGATURAN - Divider
-    {
-      isDivider: true,
-      label: "PENGATURAN",
-    },
-    {
-      label: "Store Profile",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      ),
-      href: "/percetakan/settings/profile",
+      title: "Pengaturan",
+      icon: <SettingsIcon className="w-5 h-5" />,
+      items: [
+        {
+          label: "Store Profile",
+          icon: <Store className="w-4 h-4" />,
+          href: "/percetakan/settings/profile",
+        },
+      ],
+      defaultOpen: false,
     },
   ];
 
@@ -307,13 +321,91 @@ export function Sidebar() {
     },
   ];
 
-  // Gabungkan menu berdasarkan role
+  // Gabungkan menu berdasarkan role (percetakan tidak perlu karena pakai sections)
   const menuItems = [
     ...(hasRole("penulis") ? menuPenulis : []),
     ...(hasRole("editor") ? menuEditor : []),
-    ...(hasRole("percetakan") ? menuPercetakan : []),
     ...(hasRole("admin") ? menuAdmin : []),
   ];
+
+  // Render menu item untuk percetakan sections
+  const renderPercetakanMenuItem = (item: MenuItem, isNested: boolean = false) => {
+    const itemIsActive = isActive(item.href);
+    return (
+      <Link
+        href={item.href}
+        onClick={() => setIsMobileOpen(false)}
+        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 relative ${
+          isNested ? "ml-2 pl-8" : ""
+        } ${
+          itemIsActive
+            ? "bg-[#14b8a6] text-white shadow-lg"
+            : "hover:bg-white/10 text-white/80 hover:text-white"
+        } ${isCollapsed ? "justify-center" : ""}`}
+        title={isCollapsed ? item.label : ""}
+      >
+        {item.icon}
+        {!isCollapsed && (
+          <span className="font-medium flex-1 text-sm">{item.label}</span>
+        )}
+        {item.badge && item.badge > 0 && (
+          <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+            {item.badge > 99 ? "99+" : item.badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
+
+  // Render section untuk percetakan (accordion dropdown)
+  const renderPercetakanSection = (section: MenuSection, index: number) => {
+    const isOpen = openSections.includes(section.title);
+    const sectionActive = isSectionActive(section);
+
+    // Jika hanya ada 1 item, render langsung tanpa accordion
+    if (section.items.length === 1) {
+      return (
+        <li key={index}>
+          {renderPercetakanMenuItem(section.items[0], false)}
+        </li>
+      );
+    }
+
+    // Render dengan accordion untuk multiple items
+    return (
+      <li key={index}>
+        <button
+          onClick={() => toggleSection(section.title)}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full ${
+            sectionActive
+              ? "bg-white/10 text-white"
+              : "hover:bg-white/10 text-white/80 hover:text-white"
+          } ${isCollapsed ? "justify-center" : ""}`}
+        >
+          {section.icon}
+          {!isCollapsed && (
+            <>
+              <span className="font-medium flex-1 text-left">{section.title}</span>
+              {isOpen ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </>
+          )}
+        </button>
+        {!isCollapsed && isOpen && (
+          <ul className="mt-1 space-y-1">
+            {section.items.map((item, idx) => (
+              <li key={idx}>
+                {renderPercetakanMenuItem(item, true)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
+    );
+  };
 
   // Determine pengaturan href based on role
   const pengaturanHref = hasRole("admin")
@@ -433,7 +525,13 @@ export function Sidebar() {
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
           <ul className="space-y-2 pb-4">
-            {menuItems.map((item, index) => {
+            {/* Render untuk Percetakan dengan Sections (Dropdown) */}
+            {hasRole("percetakan") && menuPercetakanSections.map((section, index) => 
+              renderPercetakanSection(section, index)
+            )}
+            
+            {/* Render untuk Penulis, Editor, Admin (Flat Menu) */}
+            {!hasRole("percetakan") && menuItems.map((item, index) => {
               // Render divider with type guard
               if ("isDivider" in item && item.isDivider) {
                 return (

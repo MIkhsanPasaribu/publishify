@@ -20,14 +20,35 @@ export default function DetailNaskahPage() {
 
   useEffect(() => {
     const fetchNaskah = async () => {
-      if (!params.idnaskah || typeof params.idnaskah !== "string") return;
+      if (!params.idnaskah || typeof params.idnaskah !== "string") {
+        toast.error("ID naskah tidak valid");
+        router.replace("/penulis/draf");
+        return;
+      }
+      
       setLoading(true);
       try {
         const res = await ambilNaskahById(params.idnaskah);
-        setNaskah(res.data);
+        if (res && res.data) {
+          setNaskah(res.data);
+        } else {
+          throw new Error("Data naskah tidak ditemukan");
+        }
       } catch (e: any) {
-        toast.error("Gagal memuat detail naskah");
-        router.replace("/penulis/draf");
+        const errorStatus = e?.response?.status;
+        const errorMsg = e?.response?.data?.pesan || e?.message || "Gagal memuat detail naskah";
+        
+        // Handle 403 Forbidden specifically
+        if (errorStatus === 403) {
+          toast.error("Akses ditolak. Naskah ini mungkin sedang dalam proses review atau Anda tidak memiliki izin akses.");
+        } else {
+          toast.error(errorMsg);
+        }
+        
+        // Delay redirect sedikit agar toast terlihat
+        setTimeout(() => {
+          router.replace("/penulis/draf");
+        }, 2000);
       } finally {
         setLoading(false);
       }
