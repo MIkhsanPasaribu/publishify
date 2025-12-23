@@ -148,17 +148,6 @@ export function SidebarAdmin() {
         },
       ],
     },
-    {
-      title: "Pengaturan",
-      icon: <Settings className="w-5 h-5" />,
-      items: [
-        {
-          label: "Pengaturan Akun",
-          icon: <Settings className="w-4 h-4" />,
-          href: "/admin/pengaturan",
-        },
-      ],
-    },
   ];
 
   const handleLogout = () => {
@@ -246,30 +235,28 @@ export function SidebarAdmin() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo & Toggle */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-6 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <BookOpen className="w-6 h-6 text-teal-600" />
-              </div>
-              <div>
-                <span className="text-lg font-bold block">Publishify</span>
-                <span className="text-xs text-teal-200">Admin Panel</span>
-              </div>
-            </Link>
-          )}
-          {isCollapsed && (
-            <div className="mx-auto w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
               <BookOpen className="w-6 h-6 text-teal-600" />
             </div>
-          )}
+            <span className="text-xl font-bold">Publishify</span>
+          </Link>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="ml-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label={isCollapsed ? "Buka Sidebar" : "Tutup Sidebar"}
+            title={isCollapsed ? "Buka Sidebar" : "Tutup Sidebar"}
+          >
+            <ChevronRight className={`w-5 h-5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+          </button>
         </div>
       </div>
 
       {/* User Info */}
       {!isCollapsed && pengguna && (
-        <div className="px-4 py-3 border-b border-white/10">
+        <div className="px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-teal-400/30 flex items-center justify-center">
               <span className="text-sm font-bold text-white">
@@ -291,32 +278,11 @@ export function SidebarAdmin() {
         {menuSections.map(renderSection)}
       </nav>
 
-      {/* Logout Button */}
-      <div className="p-3 border-t border-white/10">
-        <button
-          onClick={() => setShowLogoutModal(true)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-red-500/20 text-red-200 hover:text-red-100 ${
-            isCollapsed ? "justify-center px-2" : ""
-          }`}
-          title={isCollapsed ? "Logout" : ""}
-        >
-          <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span className="font-medium">Logout</span>}
-        </button>
-      </div>
-
-      {/* Toggle Button */}
-      <div className="p-3 border-t border-white/10 hidden md:block">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center py-2 rounded-lg hover:bg-white/10 transition-colors"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronDown className="w-5 h-5 rotate-90" />
-          )}
-        </button>
+      {/* Bagian bawah sidebar: info versi aplikasi */}
+      <div className="flex-shrink-0 border-t border-white/10 px-6 py-4">
+        <div className="flex items-center justify-center text-xs text-white/60">
+          Publishify v1.0.0
+        </div>
       </div>
     </div>
   );
@@ -326,15 +292,16 @@ export function SidebarAdmin() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-teal-600 text-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+        aria-label="Toggle Menu"
       >
         {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      {/* Mobile Overlay */}
+      {/* Overlay untuk mobile */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -342,51 +309,11 @@ export function SidebarAdmin() {
       {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-teal-700 via-teal-800 to-teal-900 text-white transition-all duration-300 z-40 shadow-2xl ${
-          isCollapsed ? "w-20" : "w-72"
-        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+          isCollapsed ? "w-20" : "w-64"
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} flex flex-col`}
       >
         <SidebarContent />
       </aside>
-
-      {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowLogoutModal(false)}
-          />
-          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all animate-in zoom-in-95">
-            {/* Icon */}
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <LogOut className="w-10 h-10 text-red-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Yakin ingin keluar?
-              </h2>
-              <p className="text-gray-600">
-                Sesi Anda akan berakhir dan Anda harus login kembali untuk mengakses dashboard.
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="flex-1 px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-lg"
-              >
-                Ya, Keluar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

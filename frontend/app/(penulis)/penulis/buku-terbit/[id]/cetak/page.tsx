@@ -79,7 +79,7 @@ export default function CetakFisikPage() {
         const response = await ambilNaskahById(params.id);
         
         // Validasi ownership - pastikan naskah milik user yang login
-        if (pengguna && response.data.penulis?.id !== pengguna.id) {
+        if (pengguna && response.data.idPenulis !== pengguna.id) {
           toast.error("Anda hanya dapat mencetak naskah milik sendiri");
           router.push("/penulis/buku-terbit");
           return;
@@ -212,51 +212,103 @@ export default function CetakFisikPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0d7377]" />
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Memuat data naskah...</p>
+        </div>
       </div>
     );
   }
 
   if (!naskah) {
     return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">Naskah tidak ditemukan</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 text-slate-400 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Naskah tidak ditemukan</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden relative">
+      {/* Background Pola SVG ala /penulis */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full opacity-10">
+          <pattern id="polaPublishify" patternUnits="userSpaceOnUse" width="40" height="40">
+            <rect x="0" y="0" width="40" height="40" fill="white" />
+            <path d="M0 20h40M20 0v40" stroke="#0d7377" strokeWidth="0.5" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#polaPublishify)" />
+        </svg>
+      </div>
+      <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Panel Judul Cetak Buku */}
+        <div className="relative w-full mb-8">
+          <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg shadow-teal-500/20 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-1">Cetak Fisik Buku</h1>
+              <p className="text-sm sm:text-base text-teal-50">Formulir pemesanan cetak fisik untuk buku terbit</p>
+            </div>
+            <div className="flex-shrink-0 ml-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Book className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+       
+        <div className="relative w-full mb-8 bg-transparent">
+          {/* <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg shadow-teal-500/20 flex items-center justify-between" style={{background:'linear-gradient(to right, #14b8a6, #06b6d4)', position:'relative', zIndex:2}}>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-1">Buku Terbit</h1>
+              <p className="text-sm sm:text-base text-teal-50">Kelola buku yang telah diterbitkan dan siap dicetak</p>
+            </div>
+            <div className="flex-shrink-0 ml-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Book className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
+          </div> */}
+          {/* Pola SVG di bawah judul, absolute dan zIndex 1 */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none" style={{zIndex:1}}>
+            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full opacity-10">
+              <pattern id="polaPublishify" patternUnits="userSpaceOnUse" width="40" height="40">
+                <rect x="0" y="0" width="40" height="40" fill="white" />
+                <path d="M0 20h40M20 0v40" stroke="#0d7377" strokeWidth="0.5" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#polaPublishify)" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Header Form Cetak Fisik */}
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="outline"
             size="icon"
             onClick={() => router.back()}
+            className="border-slate-200 bg-white hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Cetak Fisik Buku</h1>
-            <p className="text-gray-600 mt-1">{naskah.judul}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Cetak Fisik Buku</h2>
+            <p className="text-slate-600 mt-1 font-medium line-clamp-1">{naskah.judul}</p>
           </div>
         </div>
 
         <div className="space-y-6">
           {/* Step 1: Pilih Percetakan */}
-          <Card>
+          <Card className="shadow-md border-slate-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-[#0d7377]" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Package className="h-5 w-5 text-teal-600" />
                 Langkah 1: Pilih Percetakan
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500">
                 Pilih percetakan untuk melihat harga dan membuat pesanan
               </p>
             </CardHeader>
@@ -271,25 +323,25 @@ export default function CetakFisikPage() {
           {/* Show form only if percetakan selected */}
           {formData.idPercetakan && selectedPercetakan && (
             <form onSubmit={handleSubmit}>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Kolom Kiri - Formulir (2 kolom) */}
                 <div className="md:col-span-2 space-y-6">
                   {/* Card Spesifikasi Cetak */}
-                  <Card>
+                  <Card className="shadow-md border-slate-200">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Book className="h-5 w-5 text-[#0d7377]" />
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Book className="h-5 w-5 text-teal-600" />
                         Langkah 2: Spesifikasi Cetak
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Alert Minimum Pesanan */}
                       {minimumPesanan > 1 && (
-                        <Alert>
-                          <AlertCircle className="h-4 w-4" />
+                        <Alert className="bg-orange-50 border-orange-200">
+                          <AlertCircle className="h-4 w-4 text-orange-500" />
                           <div>
-                            <p className="font-medium">Minimum Pesanan</p>
-                            <p className="text-sm">
+                            <p className="font-semibold text-orange-700">Minimum Pesanan</p>
+                            <p className="text-sm text-orange-700">
                               Percetakan {selectedPercetakan.nama} memiliki minimum pesanan {minimumPesanan} eksemplar
                             </p>
                           </div>

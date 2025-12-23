@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -29,6 +30,7 @@ interface UserHeaderProps {
 export function UserHeader({ userName, userRole, className = "" }: UserHeaderProps) {
   const router = useRouter();
   const { pengguna, logout } = useAuthStore();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -128,11 +130,11 @@ export function UserHeader({ userName, userRole, className = "" }: UserHeaderPro
                   className="cursor-pointer"
                 >
                   <User className="h-4 w-4 mr-2" />
-                  Pengaturan
+                  Pengaturan Akun
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -143,6 +145,43 @@ export function UserHeader({ userName, userRole, className = "" }: UserHeaderPro
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowLogoutModal(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all animate-in zoom-in-95">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <LogOut className="w-10 h-10 text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Yakin ingin keluar?
+              </h2>
+              <p className="text-gray-600">
+                Sesi Anda akan berakhir dan Anda harus login kembali untuk mengakses dashboard.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-lg"
+              >
+                Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
