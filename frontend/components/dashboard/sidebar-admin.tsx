@@ -159,7 +159,6 @@ export function SidebarAdmin() {
   // Render menu item
   const renderMenuItem = (item: MenuItem, depth: number = 0) => {
     const active = item.href ? isActive(item.href) : false;
-    const paddingLeft = depth > 0 ? `pl-${4 + depth * 4}` : "pl-4";
 
     if (item.href) {
       return (
@@ -169,9 +168,9 @@ export function SidebarAdmin() {
           onClick={() => setIsMobileOpen(false)}
           className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
             active
-              ? "bg-teal-500/20 text-teal-100 border-l-4 border-teal-400"
+              ? "bg-[#14b8a6] text-white shadow-lg"
               : "hover:bg-white/10 text-white/70 hover:text-white"
-          } ${isCollapsed ? "justify-center px-2" : paddingLeft}`}
+          } ${isCollapsed ? "justify-center px-2" : ""}`}
           title={isCollapsed ? item.label : ""}
         >
           {item.icon}
@@ -195,8 +194,8 @@ export function SidebarAdmin() {
           onClick={() => !isCollapsed && toggleSection(section.title)}
           className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
             sectionActive
-              ? "bg-white/15 text-white"
-              : "hover:bg-white/10 text-white/80 hover:text-white"
+              ? "bg-white/10 text-white"
+              : "hover:bg-white/10 text-white/70 hover:text-white"
           } ${isCollapsed ? "justify-center px-2" : ""}`}
           title={isCollapsed ? section.title : ""}
         >
@@ -237,41 +236,52 @@ export function SidebarAdmin() {
       {/* Logo & Toggle */}
       <div className="p-6 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-              <BookOpen className="w-6 h-6 text-teal-600" />
+          {!isCollapsed ? (
+            <>
+              <Link href="/" className="flex items-center gap-3 group">
+                <Image
+                  src="/logo.png"
+                  alt="Publishify Logo"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 transition-transform group-hover:scale-110"
+                />
+                <span className="text-xl font-bold">Publishify</span>
+              </Link>
+              {/* Toggle Button - Desktop Only */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Toggle Sidebar"
+                title="Tutup Sidebar"
+              >
+                <ChevronRight className="w-5 h-5 rotate-180" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center justify-between w-full">
+              <Link href="/" className="mx-auto">
+                <Image
+                  src="/logo.png"
+                  alt="Publishify Logo"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10"
+                />
+              </Link>
+              {/* Toggle Button - Collapsed State */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors absolute right-3"
+                aria-label="Toggle Sidebar"
+                title="Buka Sidebar"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
-            <span className="text-xl font-bold">Publishify</span>
-          </Link>
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="ml-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
-            aria-label={isCollapsed ? "Buka Sidebar" : "Tutup Sidebar"}
-            title={isCollapsed ? "Buka Sidebar" : "Tutup Sidebar"}
-          >
-            <ChevronRight className={`w-5 h-5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-          </button>
+          )}
         </div>
       </div>
-
-      {/* User Info */}
-      {!isCollapsed && pengguna && (
-        <div className="px-6 py-4 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal-400/30 flex items-center justify-center">
-              <span className="text-sm font-bold text-white">
-                {pengguna.profilPengguna?.namaDepan?.[0] || pengguna.email[0].toUpperCase()}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">
-                {pengguna.profilPengguna?.namaDepan || "Admin"}
-              </p>
-              <p className="text-xs text-teal-200 truncate">{pengguna.email}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-white/20">
@@ -279,7 +289,7 @@ export function SidebarAdmin() {
       </nav>
 
       {/* Bagian bawah sidebar: info versi aplikasi */}
-      <div className="flex-shrink-0 border-t border-white/10 px-6 py-4">
+      <div className="flex-shrink-0 border-t border-white/10 px-3 py-4">
         <div className="flex items-center justify-center text-xs text-white/60">
           Publishify v1.0.0
         </div>
@@ -308,9 +318,9 @@ export function SidebarAdmin() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-teal-700 via-teal-800 to-teal-900 text-white transition-all duration-300 z-40 shadow-2xl ${
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-[#0d7377] to-[#0a5c5f] text-white transition-all duration-300 z-40 ${
           isCollapsed ? "w-20" : "w-64"
-        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} flex flex-col`}
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col`}
       >
         <SidebarContent />
       </aside>
