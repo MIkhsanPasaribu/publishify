@@ -292,7 +292,7 @@ export default function AdminDashboardPage() {
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl">🎯</span>
+                <Settings className="h-6 w-6 sm:h-7 sm:w-7" />
                 Dashboard Admin
               </h1>
               <p className="text-sm sm:text-base text-teal-50">
