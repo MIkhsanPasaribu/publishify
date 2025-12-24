@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, User, Calendar, FileText, FileEdit, CheckCircle2, XCircle, Clock, FilePlus } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, BookOpen, User, Calendar, FileText, FileEdit, CheckCircle2, XCircle, Clock, FilePlus, ImageIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,8 @@ export default function DetailNaskahPage() {
   const router = useRouter();
   const [naskah, setNaskah] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   useEffect(() => {
     const fetchNaskah = async () => {
@@ -31,6 +34,9 @@ export default function DetailNaskahPage() {
         const res = await ambilNaskahById(params.idnaskah);
         if (res && res.data) {
           setNaskah(res.data);
+          // Reset image states ketika naskah baru dimuat
+          setImageError(false);
+          setImageLoading(true);
         } else {
           throw new Error("Data naskah tidak ditemukan");
         }
@@ -171,9 +177,48 @@ export default function DetailNaskahPage() {
                   <h3 className="font-semibold text-slate-800 mb-2">Sinopsis</h3>
                   <p className="text-slate-700 whitespace-pre-line">{naskah.sinopsis}</p>
                 </div>
+                
+                {/* Sampul Naskah */}
                 {naskah.urlSampul && (
-                  <div className="w-full max-w-xs mx-auto">
-                    <img src={naskah.urlSampul} alt="Sampul Naskah" className="rounded-lg shadow-md w-full object-cover aspect-[3/4]" />
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 text-teal-600" />
+                      Sampul Naskah
+                    </h3>
+                    <div className="w-full max-w-xs mx-auto relative">
+                      {imageLoading && !imageError && (
+                        <div className="absolute inset-0 bg-slate-100 rounded-lg flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                        </div>
+                      )}
+                      {imageError ? (
+                        <div className="w-full aspect-[3/4] bg-slate-100 rounded-lg flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-300">
+                          <ImageIcon className="h-12 w-12 text-slate-400" />
+                          <p className="text-sm text-slate-500">Gagal memuat sampul</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setImageError(false);
+                              setImageLoading(true);
+                            }}
+                          >
+                            Coba Lagi
+                          </Button>
+                        </div>
+                      ) : (
+                        <img 
+                          src={naskah.urlSampul} 
+                          alt={`Sampul ${naskah.judul}`}
+                          className="rounded-lg shadow-md w-full object-cover aspect-[3/4]"
+                          onLoad={() => setImageLoading(false)}
+                          onError={() => {
+                            setImageError(true);
+                            setImageLoading(false);
+                          }}
+                        />
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

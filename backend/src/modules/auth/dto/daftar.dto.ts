@@ -50,6 +50,14 @@ export const DaftarSchema = z
         invalid_type_error: 'Jenis peran tidak valid',
       })
       .default('penulis'),
+
+    alamat: z.string().max(255, 'Alamat maksimal 255 karakter').trim().optional(),
+
+    kota: z.string().max(100, 'Kota maksimal 100 karakter').trim().optional(),
+
+    provinsi: z.string().max(100, 'Provinsi maksimal 100 karakter').trim().optional(),
+
+    kodePos: z.string().max(10, 'Kode pos maksimal 10 karakter').trim().optional(),
   })
   .refine((data) => data.kataSandi === data.konfirmasiKataSandi, {
     message: 'Konfirmasi kata sandi tidak cocok',
@@ -123,4 +131,40 @@ export class DaftarDtoClass {
     type: String,
   })
   jenisPeran!: 'penulis' | 'editor' | 'percetakan';
+
+  @ApiProperty({
+    description: 'Alamat lengkap pengguna',
+    example: 'Jl. Merdeka No. 123',
+    required: false,
+    maxLength: 255,
+    type: String,
+  })
+  alamat?: string;
+
+  @ApiProperty({
+    description: 'Kota tempat tinggal',
+    example: 'Bandung',
+    required: false,
+    maxLength: 100,
+    type: String,
+  })
+  kota?: string;
+
+  @ApiProperty({
+    description: 'Provinsi tempat tinggal',
+    example: 'Jawa Barat',
+    required: false,
+    maxLength: 100,
+    type: String,
+  })
+  provinsi?: string;
+
+  @ApiProperty({
+    description: 'Kode pos',
+    example: '40123',
+    required: false,
+    maxLength: 10,
+    type: String,
+  })
+  kodePos?: string;
 }
