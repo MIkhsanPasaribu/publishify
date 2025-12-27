@@ -293,23 +293,13 @@ export default function DashboardPage() {
           {/* Content */}
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 flex items-center gap-2"
-              >
-                <span className="text-2xl sm:text-3xl">👋</span>
-                {getGreeting()}!
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-sm sm:text-base text-teal-50"
-              >
-                Semangat mengelola data seluruh Naskah untuk Kesuksesan hari ini!
-              </motion.p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 flex items-center gap-2">
+                <BookOpen className="h-6 w-6 sm:h-7 sm:w-7" />
+                Dashboard Penulis
+              </h1>
+              <p className="text-sm sm:text-base text-teal-50">
+                Kelola naskah dan pantau progres penerbitan Anda
+              </p>
             </div>
             <div className="flex-shrink-0 hidden lg:block ml-6">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">

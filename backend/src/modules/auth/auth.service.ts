@@ -99,6 +99,10 @@ export class AuthService {
           namaDepan: dto.namaDepan,
           namaBelakang: dto.namaBelakang,
           namaTampilan: `${dto.namaDepan}${dto.namaBelakang ? ' ' + dto.namaBelakang : ''}`,
+          alamat: dto.alamat || null,
+          kota: dto.kota || null,
+          provinsi: dto.provinsi || null,
+          kodePos: dto.kodePos || null,
         },
       });
 

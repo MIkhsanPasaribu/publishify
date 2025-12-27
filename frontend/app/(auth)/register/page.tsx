@@ -114,6 +114,10 @@ export default function RegisterPage() {
         namaBelakang: formData.namaBelakang || undefined,
         telepon: formData.telepon || undefined,
         jenisPeran: formData.jenisPeran,
+        alamat: formData.alamat || undefined,
+        kota: formData.kota || undefined,
+        provinsi: formData.provinsi || undefined,
+        kodePos: formData.kodePos || undefined,
       });
       toast.success("Registrasi berhasil. Silakan login.");
       router.replace("/login");

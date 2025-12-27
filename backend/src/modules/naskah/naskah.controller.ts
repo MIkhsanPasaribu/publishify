@@ -28,6 +28,7 @@ import {
 } from './dto';
 import { AturHargaJualDto, AturHargaJualDtoClass, AturHargaJualSchema } from './dto/atur-harga-jual.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '@/modules/auth/guards/optional-jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
 import { PenggunaSaatIni } from '@/modules/auth/decorators/pengguna-saat-ini.decorator';
@@ -231,8 +232,14 @@ export class NaskahController {
   /**
    * GET /naskah/:id - Ambil detail naskah
    */
+  /**
+   * GET /naskah/:id - Ambil detail naskah
+   * Public endpoint dengan optional authentication
+   * Authenticated user dapat akses naskah private mereka sendiri
+   */
   @Get(':id')
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @CacheTTL(600) // Cache 10 menit untuk detail naskah
   @ApiOperation({
     summary: 'Ambil detail naskah',

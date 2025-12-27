@@ -11,7 +11,17 @@ async function bootstrap() {
   });
 
   // Security
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin images
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'blob:', process.env.FRONTEND_URL || 'http://localhost:3000'],
+        },
+      },
+    }),
+  );
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,

@@ -59,18 +59,13 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    // Log error untuk debugging
+    // Log error untuk debugging (simplified)
     if (process.env.NODE_ENV === "development") {
-      console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message,
-        headers: error.response?.headers,
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        fullURL: `${error.config?.baseURL}${error.config?.url}`,
-      });
+      console.error(
+        `[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        error.response?.status,
+        error.response?.data || error.message
+      );
       
       // Special handling untuk Network Error
       if (error.message === "Network Error") {

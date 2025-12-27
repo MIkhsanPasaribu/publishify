@@ -121,14 +121,15 @@ export function PilihPercetakan({ onSelect, selectedId }: PilihPercetakanProps) 
               </CardHeader>
 
               <CardContent className="space-y-3">
-                {/* Alamat */}
-                {(percetakan.alamat || percetakan.kota) && (
+                {/* Alamat - Tampilkan jika ada kota atau provinsi */}
+                {(percetakan.kota || percetakan.provinsi) && (
                   <div className="flex items-start gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <span>
                       {percetakan.alamat && `${percetakan.alamat}, `}
-                      {percetakan.kota}
-                      {percetakan.provinsi && `, ${percetakan.provinsi}`}
+                      {percetakan.kota && `${percetakan.kota}`}
+                      {percetakan.provinsi && percetakan.kota && `, `}
+                      {percetakan.provinsi && `${percetakan.provinsi}`}
                     </span>
                   </div>
                 )}

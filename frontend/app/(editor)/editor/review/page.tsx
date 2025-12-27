@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import {
+  BookOpen,
+  FileText,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  ArrowLeft,
+  Search,
+  Filter,
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { reviewApi, type Review, type StatusReview, type StatistikReview } from "@/lib/api/review";
 
 export default function DaftarReviewPage() {
@@ -120,105 +134,130 @@ export default function DaftarReviewPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-6 md:p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+        {/* Stats Cards */}
+        {loadingStats ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            ))}
+          </div>
+        ) : statistik && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <button
+              onClick={() => handleFilterChange("semua")}
+              className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all text-left group ${
+                filter === "semua" ? "ring-2 ring-teal-400 ring-offset-2" : ""
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                    {statistik.totalReview}
+                  </div>
+                  <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                    Total Review
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleFilterChange("ditugaskan")}
+              className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all text-left group ${
+                filter === "ditugaskan" ? "ring-2 ring-blue-400 ring-offset-2" : ""
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                    {statistik.perStatus.ditugaskan || 0}
+                  </div>
+                  <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                    Ditugaskan
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleFilterChange("dalam_proses")}
+              className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all text-left group ${
+                filter === "dalam_proses" ? "ring-2 ring-amber-400 ring-offset-2" : ""
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                    {statistik.perStatus.dalam_proses || 0}
+                  </div>
+                  <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                    Dalam Proses
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleFilterChange("selesai")}
+              className={`bg-white rounded-lg p-3 sm:p-4 border border-slate-200 hover:shadow-md transition-all text-left group ${
+                filter === "selesai" ? "ring-2 ring-green-400 ring-offset-2" : ""
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">
+                    {statistik.perStatus.selesai || 0}
+                  </div>
+                  <div className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1">
+                    Selesai
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Cari berdasarkan judul atau sinopsis naskah..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 outline-none text-gray-900 placeholder-gray-400"
+            />
+            {searchQuery && (
               <button
-                onClick={() => router.push("/editor")}
-                className="p-2 hover:bg-white rounded-lg transition-colors shadow-sm"
+                onClick={() => setSearchQuery("")}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">📚 Daftar Review Naskah</h1>
-                <p className="text-gray-600 mt-1">Kelola dan review naskah yang ditugaskan kepada Anda</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Statistik Cards */}
-          {loadingStats ? (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                </div>
-              ))}
-            </div>
-          ) : statistik && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium opacity-90">Total Review</span>
-                  <span className="text-2xl">📊</span>
-                </div>
-                <div className="text-3xl font-bold">{statistik.totalReview}</div>
-                <div className="text-xs opacity-80 mt-1">Semua review Anda</div>
-              </div>
-
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium opacity-90">Review Aktif</span>
-                  <span className="text-2xl">⚡</span>
-                </div>
-                <div className="text-3xl font-bold">{statistik.reviewAktif}</div>
-                <div className="text-xs opacity-80 mt-1">Perlu dikerjakan</div>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium opacity-90">Selesai</span>
-                  <span className="text-2xl">✅</span>
-                </div>
-                <div className="text-3xl font-bold">{statistik.reviewSelesai}</div>
-                <div className="text-xs opacity-80 mt-1">Review diselesaikan</div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium opacity-90">Tingkat Penyelesaian</span>
-                  <span className="text-2xl">📈</span>
-                </div>
-                <div className="text-3xl font-bold">
-                  {statistik.totalReview > 0 
-                    ? Math.round((statistik.reviewSelesai / statistik.totalReview) * 100)
-                    : 0}%
-                </div>
-                <div className="text-xs opacity-80 mt-1">Completion rate</div>
-              </div>
-            </div>
-          )}
-
-          {/* Search Bar */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Cari berdasarkan judul atau sinopsis naskah..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 outline-none text-gray-900 placeholder-gray-400"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
 

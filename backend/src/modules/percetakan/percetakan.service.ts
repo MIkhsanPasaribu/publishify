@@ -98,15 +98,23 @@ export class PercetakanService {
       pesan: 'Daftar percetakan berhasil diambil',
       data: daftarPercetakan.map((p) => {
         const tarif = p.parameterHarga[0];
+        const profil = p.profilPengguna;
+        
+        // Construct nama dengan fallback
+        let nama = 'Percetakan';
+        if (profil?.namaTampilan) {
+          nama = profil.namaTampilan;
+        } else if (profil?.namaDepan || profil?.namaBelakang) {
+          nama = `${profil.namaDepan || ''} ${profil.namaBelakang || ''}`.trim();
+        }
+        
         return {
           id: p.id,
           email: p.email,
-          nama: p.profilPengguna?.namaTampilan || 
-                `${p.profilPengguna?.namaDepan || ''} ${p.profilPengguna?.namaBelakang || ''}`.trim() ||
-                'Percetakan',
-          alamat: p.profilPengguna?.alamat,
-          kota: p.profilPengguna?.kota,
-          provinsi: p.profilPengguna?.provinsi,
+          nama,
+          alamat: profil?.alamat || null,
+          kota: profil?.kota || null,
+          provinsi: profil?.provinsi || null,
           tarifAktif: tarif ? {
             ...tarif,
             hargaKertasA4: tarif.hargaKertasA4 ? Number(tarif.hargaKertasA4) : 0,

@@ -443,11 +443,13 @@ export class NaskahService {
 
     // Validasi akses
     // 1. Jika naskah publik atau sudah diterbitkan, semua bisa akses
-    // 2. Jika private dan belum diterbitkan, hanya penulis yang bisa akses
+    // 2. Jika private/belum diterbitkan, hanya penulis pemilik yang bisa akses
+    // 3. Penulis SELALU bisa akses naskah mereka sendiri (termasuk draft, diajukan, dll)
     const isPenulisNaskah = idPengguna && naskah.idPenulis === idPengguna;
     const isPublicAccess = naskah.publik || naskah.status === 'diterbitkan';
     
-    if (!isPublicAccess && !isPenulisNaskah) {
+    // Jika bukan penulis pemilik DAN bukan public access, tolak
+    if (!isPenulisNaskah && !isPublicAccess) {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
     }
 
