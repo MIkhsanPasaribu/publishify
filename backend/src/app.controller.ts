@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('health')
@@ -56,5 +56,13 @@ export class AppController {
         },
       },
     };
+  }
+
+  @Get('favicon.ico')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Favicon handler (returns 204)' })
+  getFavicon() {
+    // Return 204 No Content untuk favicon request dari browser
+    return;
   }
 }

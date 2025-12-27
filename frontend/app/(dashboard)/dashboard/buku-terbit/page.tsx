@@ -109,18 +109,22 @@ export default function BukuTerbitPage() {
     if (!bukuTerpilih) return;
     setProses(true);
     try {
+      // Gabungkan alamat menjadi string lengkap
+      const alamatLengkap = `${v.alamat}, ${v.kota}, ${v.provinsi} ${v.kodePos}`;
+      
       const payload: BuatPesananCetakPayload = {
         idNaskah: bukuTerpilih.id,
         jumlah: Number(v.jumlah),
-        alamatPengiriman: {
-          penerima: v.penerima,
-          telepon: v.telepon,
-          alamat: v.alamat,
-          kota: v.kota,
-          provinsi: v.provinsi,
-          kodePos: v.kodePos,
-        },
-        kurir: v.kurir,
+        // Format default untuk pesanan cetak
+        formatKertas: "A5",
+        jenisKertas: "HVS 80gsm",
+        jenisCover: "Soft Cover",
+        finishingTambahan: [],
+        hargaTotal: ringkasan.total,
+        // Alamat pengiriman sebagai string
+        alamatPengiriman: alamatLengkap,
+        namaPenerima: v.penerima,
+        teleponPenerima: v.telepon,
         catatan: v.catatan,
       };
 
@@ -206,15 +210,12 @@ export default function BukuTerbitPage() {
                 <div className="mt-1 text-sm text-gray-600">Terbit pada {formatTanggalIndo(buku.terbitPada)}</div>
 
                 <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => {
-                      setBukuTerpilih(buku);
-                      setValue("jumlah", 100 as any); // contoh default 100 eks
-                    }}
+                  <a
+                    href={`/dashboard/buku-terbit/${buku.id}/cetak`}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#14b8a6] text-white hover:bg-[#0d9488]"
                   >
                     <Printer className="w-4 h-4" /> Cetak Fisik
-                  </button>
+                  </a>
                   <a
                     href={`/dashboard/buku-terbit/${buku.id}`}
                     className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"

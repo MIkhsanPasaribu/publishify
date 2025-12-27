@@ -115,4 +115,34 @@ export const uploadApi = {
   async hapusFile(id: string): Promise<void> {
     await api.delete(`/upload/${id}`);
   },
+
+  /**
+   * POST /upload/konversi-pdf-url - Konversi DOCX ke PDF dari URL
+   * @param fileUrl - URL file DOCX/DOC (format: /uploads/naskah/filename.docx)
+   * @returns UploadFileResponse dengan URL PDF hasil konversi
+   */
+  async konversiDariUrl(fileUrl: string): Promise<UploadFileResponse> {
+    const response = await api.post<{
+      sukses: boolean;
+      pesan: string;
+      data: UploadFileResponse;
+    }>("/upload/konversi-pdf-url", { fileUrl });
+    
+    return response.data.data;
+  },
+
+  /**
+   * POST /upload/konversi-pdf/:id - Konversi DOCX ke PDF dari ID file
+   * @param id - ID file DOCX/DOC di database
+   * @returns UploadFileResponse dengan URL PDF hasil konversi
+   */
+  async konversiDariId(id: string): Promise<UploadFileResponse> {
+    const response = await api.post<{
+      sukses: boolean;
+      pesan: string;
+      data: UploadFileResponse;
+    }>(`/upload/konversi-pdf/${id}`);
+    
+    return response.data.data;
+  },
 };

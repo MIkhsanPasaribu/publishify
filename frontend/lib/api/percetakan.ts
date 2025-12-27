@@ -1,132 +1,313 @@
-import api from "./client";
+/**
+ * API Client untuk Module Percetakan
+ * Semua request ke backend API percetakan
+ */
 
-// ================================
-// TIPE DATA
-// ================================
+import client from "./client";
+import type {
+  PesananCetak,
+  ResponsePesananList,
+  ResponsePesananDetail,
+  ResponseStatistikPercetakan,
+  FilterPesanan,
+  UpdateStatusPesananDto,
+  KonfirmasiPesananDto,
+  BuatPengirimanDto,
+  BuatPesananCetakDto,
+  Pembayaran,
+  KonfirmasiPembayaranDto,
+  LogProduksi,
+  TambahLogProduksiDto,
+} from "@/types/percetakan";
 
-// Tipe payload untuk membuat pesanan cetak fisik
-export interface BuatPesananCetakPayload {
-  idNaskah: string; // atau idBuku jika backend memakai entitas buku terbit
-  jumlah: number;
-  alamatPengiriman: {
-    penerima: string;
-    telepon: string;
-    alamat: string;
-    kota: string;
-    provinsi: string;
-    kodePos: string;
-  };
-  kurir: string; // mis. "jne_reg", "sicepat_best"
-  catatan?: string;
+// Re-export types untuk backward compatibility
+export type { 
+  PesananCetak,
+  Pembayaran,
+  LogProduksi,
+} from "@/types/percetakan";
+
+// Alias untuk backward compatibility
+export type BuatPesananCetakPayload = BuatPesananCetakDto;
+
+// ============= PESANAN CETAK =============
+
+/**
+ * Buat pesanan cetak baru
+ */
+export async function buatPesananCetak(
+  dto: BuatPesananCetakDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.post("/percetakan", dto);
+  return response.data;
 }
 
-export interface ItemPesananCetak {
-  id: string;
-  idNaskah: string;
-  judul: string;
-  jumlah: number;
-  hargaSatuan: number;
+/**
+ * Ambil statistik dashboard percetakan
+ */
+export async function ambilStatistikPercetakan(): Promise<ResponseStatistikPercetakan> {
+  const response = await client.get("/percetakan/statistik");
+  return response.data;
 }
 
-export interface PesananCetak {
-  id: string;
-  nomorPesanan: string;
-  tanggalPesan: string; // ISO format dari backend
-  status: string; // tertunda | diterima | dalam_produksi | kontrol_kualitas | siap | dikirim | terkirim | dibatalkan
-  hargaTotal: number;
-  jumlah: number;
-  formatKertas?: string;
-  jenisKertas?: string;
-  jenisCover?: string;
-  finishingTambahan?: string[];
-  catatan?: string;
+/**
+ * Ambil daftar pesanan dengan pagination dan filter
+ */
+export async function ambilDaftarPesanan(
+  filter?: FilterPesanan
+): Promise<ResponsePesananList> {
+  // Bersihkan filter dari undefined values
+  const cleanFilter = filter ? Object.fromEntries(
+    Object.entries(filter).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+  ) : {};
   
-  // Nested relations dari backend
-  naskah: {
-    id: string;
-    judul: string;
-    jumlahHalaman?: number;
-    urlSampul?: string;
-    isbn?: string;
-  };
-  
-  pemesan?: {
-    id: string;
-    email: string;
-    telepon?: string;
-    profilPengguna?: {
-      namaDepan?: string;
-      namaBelakang?: string;
-    };
-  };
-  
-  pengiriman?: {
-    id: string;
-    namaEkspedisi: string;
-    nomorResi: string;
-    status: string;
-  };
-  
-  // Alamat pengiriman
-  namaPenerima?: string;
-  teleponPenerima?: string;
-  alamatPengiriman?: string;
-  kota?: string;
-  provinsi?: string;
-  kodePos?: string;
-  
-  // Timestamps
-  dibuatPada?: string;
-  diperbaruiPada?: string;
+  const response = await client.get("/percetakan", { params: cleanFilter });
+  return response.data;
 }
 
-export interface ResponseSukses<T> {
-  sukses: true;
-  pesan: string;
-  data: T;
+/**
+ * Ambil detail pesanan by ID
+ */
+export async function ambilDetailPesanan(
+  id: string
+): Promise<ResponsePesananDetail> {
+  const response = await client.get(`/percetakan/${id}`);
+  return response.data;
 }
 
-// ================================
-// API CLIENT
-// ================================
-export const percetakanApi = {
-  // Buat pesanan cetak baru
-  async buatPesananCetak(payload: BuatPesananCetakPayload): Promise<ResponseSukses<{ idPesanan: string }>> {
-    const { data } = await api.post<ResponseSukses<{ idPesanan: string }>>("/percetakan", payload);
-    return data;
-  },
+/**
+ * Update status pesanan (untuk tracking produksi)
+ */
+export async function updateStatusPesanan(
+  id: string,
+  dto: UpdateStatusPesananDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/status`, dto);
+  return response.data;
+}
 
-  // Ambil daftar pesanan milik penulis yang login
-  async ambilPesananSaya(): Promise<ResponseSukses<PesananCetak[]>> {
-    const { data } = await api.get<ResponseSukses<PesananCetak[]>>("/percetakan/penulis/saya");
-    return data;
-  },
+/**
+ * Alias untuk updateStatusPesanan (backward compatibility)
+ */
+export const perbaruiStatusPesanan = updateStatusPesanan;
 
-  // Ambil detail pesanan
-  async ambilPesananById(id: string): Promise<ResponseSukses<PesananCetak>> {
-    const { data } = await api.get<ResponseSukses<PesananCetak>>(`/percetakan/${id}`);
-    return data;
-  },
+/**
+ * Konfirmasi atau tolak pesanan oleh percetakan
+ */
+export async function konfirmasiPesanan(
+  id: string,
+  dto: KonfirmasiPesananDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/konfirmasi`, dto);
+  return response.data;
+}
 
-  // Batalkan pesanan (hanya status tertunda)
-  async batalkanPesanan(id: string, alasan?: string): Promise<ResponseSukses<{ status: string }>> {
-    const { data } = await api.put<ResponseSukses<{ status: string }>>(`/percetakan/${id}/batal`, { alasan });
-    return data;
-  },
+/**
+ * Batalkan pesanan
+ */
+export async function batalkanPesanan(
+  id: string,
+  alasan?: string
+): Promise<ResponsePesananDetail> {
+  const response = await client.put(`/percetakan/${id}/batal`, { alasan });
+  return response.data;
+}
 
-  // TODO: Endpoint ini belum tersedia di backend
-  // Konfirmasi pesanan diterima (ubah status menjadi selesai)
-  async konfirmasiPesananDiterima(id: string): Promise<ResponseSukses<{ status: string }>> {
-    // Endpoint ini perlu diimplementasikan di backend
-    const { data } = await api.post<ResponseSukses<{ status: string }>>(`/percetakan/${id}/diterima`, {});
-    return data;
-  },
+// ============= LOG PRODUKSI =============
 
-  // TODO: Endpoint ini belum tersedia di backend
-  // Bayar pesanan
-  async bayarPesanan(id: string): Promise<ResponseSukses<{ redirectUrl?: string }>> {
-    // Endpoint ini perlu diimplementasikan di backend (integrasi payment gateway)
-    const { data } = await api.post<ResponseSukses<{ redirectUrl?: string }>>(`/percetakan/${id}/bayar`, {});
-    return data;
-  },
+/**
+ * Ambil log produksi by ID pesanan
+ */
+export async function ambilLogProduksi(
+  idPesanan: string
+): Promise<{ sukses: boolean; data: LogProduksi[] }> {
+  const response = await client.get(`/percetakan/${idPesanan}/log-produksi`);
+  return response.data;
+}
+
+/**
+ * Tambah log produksi
+ */
+export async function tambahLogProduksi(
+  idPesanan: string,
+  dto: TambahLogProduksiDto
+): Promise<{ sukses: boolean; data: LogProduksi }> {
+  const response = await client.post(`/percetakan/${idPesanan}/log-produksi`, dto);
+  return response.data;
+}
+
+// ============= PENGIRIMAN =============
+
+/**
+ * Buat data pengiriman untuk pesanan
+ */
+export async function buatPengiriman(
+  idPesanan: string,
+  dto: BuatPengirimanDto
+): Promise<ResponsePesananDetail> {
+  const response = await client.post(`/percetakan/${idPesanan}/pengiriman`, dto);
+  return response.data;
+}
+
+// ============= PEMBAYARAN =============
+
+/**
+ * Ambil daftar pembayaran
+ */
+export async function ambilDaftarPembayaran(
+  filter?: { status?: string; halaman?: number; limit?: number }
+): Promise<{ sukses: boolean; data: Pembayaran[]; metadata: any }> {
+  const response = await client.get("/pembayaran", { params: filter });
+  return response.data;
+}
+
+/**
+ * Ambil detail pembayaran by ID
+ */
+export async function ambilDetailPembayaran(
+  id: string
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.get(`/pembayaran/${id}`);
+  return response.data;
+}
+
+/**
+ * Konfirmasi pembayaran
+ */
+export async function konfirmasiPembayaran(
+  id: string,
+  dto: KonfirmasiPembayaranDto
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.put(`/pembayaran/${id}/konfirmasi`, dto);
+  return response.data;
+}
+
+/**
+ * Batalkan pembayaran
+ */
+export async function batalkanPembayaran(
+  id: string,
+  alasan?: string
+): Promise<{ sukses: boolean; data: Pembayaran }> {
+  const response = await client.put(`/pembayaran/${id}/batal`, { alasan });
+  return response.data;
+}
+
+// ============================================
+// TARIF PERCETAKAN (NEW)
+// ============================================
+
+/**
+ * Buat tarif percetakan baru
+ */
+export async function buatTarif(dto: any) {
+  const response = await client.post("/percetakan/tarif", dto);
+  return response.data;
+}
+
+/**
+ * Ambil semua tarif percetakan
+ */
+export async function ambilSemuaTarif(params?: { idPercetakan?: string; aktif?: boolean }) {
+  const response = await client.get("/percetakan/tarif", { params });
+  return response.data;
+}
+
+/**
+ * Ambil detail tarif by ID
+ */
+export async function ambilTarifById(id: string) {
+  const response = await client.get(`/percetakan/tarif/${id}`);
+  return response.data;
+}
+
+/**
+ * Perbarui tarif
+ */
+export async function perbaruiTarif(id: string, dto: any) {
+  const response = await client.put(`/percetakan/tarif/${id}`, dto);
+  return response.data;
+}
+
+/**
+ * Hapus tarif
+ */
+export async function hapusTarif(id: string) {
+  const response = await client.put(`/percetakan/tarif/${id}/hapus`);
+  return response.data;
+}
+
+// ============================================
+// KALKULASI & PESANAN BARU (NEW)
+// ============================================
+
+/**
+ * Kalkulasi estimasi harga dari berbagai percetakan
+ */
+export async function kalkulasiOpsiHarga(dto: any) {
+  const response = await client.post("/percetakan/kalkulasi-harga", dto);
+  return response.data;
+}
+
+/**
+ * Buat pesanan baru dengan snapshot pattern
+ */
+export async function buatPesananBaru(dto: any) {
+  const response = await client.post("/percetakan/pesanan/baru", dto);
+  return response.data;
+}
+
+/**
+ * Ambil pesanan untuk percetakan dengan filter
+ */
+export async function ambilPesananPercetakan(status?: string) {
+  const response = await client.get("/percetakan/pesanan/percetakan", {
+    params: { status },
+  });
+  return response.data;
+}
+
+// ============= DEFAULT EXPORT =============
+// Export sebagai object untuk backward compatibility
+
+const percetakanApi = {
+  // Statistik
+  ambilStatistikPercetakan,
+  
+  // Pesanan
+  buatPesananCetak,
+  ambilDaftarPesanan,
+  ambilDetailPesanan,
+  updateStatusPesanan,
+  konfirmasiPesanan,
+  batalkanPesanan,
+  
+  // Log Produksi
+  ambilLogProduksi,
+  tambahLogProduksi,
+  
+  // Pengiriman
+  buatPengiriman,
+  
+  // Pembayaran
+  ambilDaftarPembayaran,
+  ambilDetailPembayaran,
+  konfirmasiPembayaran,
+  batalkanPembayaran,
+  
+  // Tarif (NEW)
+  buatTarif,
+  ambilSemuaTarif,
+  ambilTarifById,
+  perbaruiTarif,
+  hapusTarif,
+  
+  // Kalkulasi & Pesanan Baru (NEW)
+  kalkulasiOpsiHarga,
+  buatPesananBaru,
+  ambilPesananPercetakan,
 };
+
+export default percetakanApi;
+export { percetakanApi };
+

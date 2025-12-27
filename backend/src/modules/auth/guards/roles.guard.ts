@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { JenisPeran } from '@prisma/client';
 import { PERAN_KEY } from '../decorators/peran.decorator';
+import { IS_PUBLIC_KEY } from '@/common/decorators/public.decorator';
 
 /**
  * Roles Guard untuk Role-Based Access Control (RBAC)
@@ -32,6 +33,17 @@ export class PeranGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    // Check apakah route di-mark sebagai public
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Jika public, skip role checking
+    if (isPublic) {
+      return true;
+    }
+
     // Ambil peran yang diizinkan dari metadata
     const peranDiizinkan = this.reflector.getAllAndOverride<JenisPeran[]>(
       PERAN_KEY,

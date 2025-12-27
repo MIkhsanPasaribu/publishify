@@ -13,7 +13,7 @@ import {
   AjukanNaskahDto,
   TerbitkanNaskahDto,
 } from './dto';
-import { StatusNaskah } from '@prisma/client';
+import { StatusNaskah, StatusReview, Rekomendasi } from '@prisma/client';
 import {
   CursorPaginationDto,
   buildCursorPaginationResponse,
@@ -188,6 +188,8 @@ export class NaskahService {
           isbn: true,
           status: true,
           urlSampul: true,
+          urlFile: true,
+          formatBuku: true,
           jumlahHalaman: true,
           jumlahKata: true,
           publik: true,
@@ -317,6 +319,8 @@ export class NaskahService {
         isbn: true,
         status: true,
         urlSampul: true,
+        urlFile: true,
+        formatBuku: true,
         jumlahHalaman: true,
         jumlahKata: true,
         publik: true,
@@ -455,6 +459,91 @@ export class NaskahService {
   async ambilNaskahPenulis(idPenulis: string, filter: FilterNaskahDto) {
     // Override idPenulis di filter
     return this.ambilSemuaNaskah({ ...filter, idPenulis }, idPenulis);
+  }
+
+  /**
+   * Ambil naskah yang sudah diterbitkan dan siap cetak
+   * Role: penulis
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   */
+  async ambilNaskahDiterbitkan(idPenulis: string) {
+    const naskah = await this.prisma.naskah.findMany({
+      where: {
+        idPenulis,
+        status: StatusNaskah.disetujui,
+        review: {
+          some: {
+            status: StatusReview.selesai,
+            rekomendasi: Rekomendasi.setujui,
+          },
+        },
+      },
+      include: {
+        penulis: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+        kategori: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        genre: {
+          select: {
+            id: true,
+            nama: true,
+            slug: true,
+          },
+        },
+        review: {
+          where: {
+            status: StatusReview.selesai,
+            rekomendasi: Rekomendasi.setujui,
+          },
+          include: {
+            editor: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            selesaiPada: 'desc',
+          },
+          take: 1, // Ambil review terakhir saja
+        },
+      },
+      orderBy: {
+        diperbaruiPada: 'desc',
+      },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Daftar naskah diterbitkan berhasil diambil',
+      data: naskah,
+      metadata: {
+        total: naskah.length,
+      },
+    };
   }
 
   /**
@@ -630,11 +719,19 @@ export class NaskahService {
   async terbitkanNaskah(id: string, dto: TerbitkanNaskahDto, idPengguna: string) {
     const naskah = await this.prisma.naskah.findUnique({
       where: { id },
-      select: {
-        id: true,
-        status: true,
-        judul: true,
-        isbn: true,
+      include: {
+        penulis: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -658,18 +755,32 @@ export class NaskahService {
       }
     }
 
-    // Update naskah dengan ISBN dan status diterbitkan
+    // Update naskah dengan ISBN, format buku, jumlah halaman, dan status diterbitkan
     const naskahUpdated = await this.prisma.naskah.update({
       where: { id },
       data: {
         isbn: dto.isbn,
+        formatBuku: dto.formatBuku,
+        jumlahHalaman: dto.jumlahHalaman,
         status: StatusNaskah.diterbitkan,
-        publik: true, // Auto set publik saat diterbitkan
+        diterbitkanPada: new Date(),
+        // Catatan: publik akan di-set true setelah penulis set harga jual
       },
       include: {
         penulis: true,
         kategori: true,
         genre: true,
+      },
+    });
+
+    // Kirim notifikasi ke penulis
+    await this.prisma.notifikasi.create({
+      data: {
+        idPengguna: naskah.idPenulis,
+        judul: 'Naskah Anda Telah Diterbitkan!',
+        pesan: `Selamat! Naskah "${naskah.judul}" telah diterbitkan dengan ISBN ${dto.isbn}. Jumlah halaman: ${dto.jumlahHalaman} halaman. Silakan atur harga jual buku Anda.`,
+        tipe: 'info',
+        url: `/dashboard/penulis/atur-harga`,
       },
     });
 
@@ -681,13 +792,99 @@ export class NaskahService {
         aksi: 'Terbitkan Naskah',
         entitas: 'Naskah',
         idEntitas: id,
-        deskripsi: `Naskah "${naskah.judul}" berhasil diterbitkan dengan ISBN ${dto.isbn}. ${dto.catatan || ''}`,
+        deskripsi: `Naskah "${naskah.judul}" berhasil diterbitkan dengan ISBN ${dto.isbn}, ${dto.jumlahHalaman} halaman`,
       },
     });
 
     return {
       sukses: true,
-      pesan: 'Naskah berhasil diterbitkan',
+      pesan: 'Naskah berhasil diterbitkan. Penulis akan menerima notifikasi untuk mengatur harga jual.',
+      data: naskahUpdated,
+    };
+  }
+
+  /**
+   * Penulis atur harga jual setelah naskah diterbitkan
+   * Role: penulis (owner)
+   */
+  async aturHargaJual(id: string, hargaJual: number, idPengguna: string) {
+    const naskah = await this.prisma.naskah.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        idPenulis: true,
+        judul: true,
+        status: true,
+        biayaProduksi: true,
+        hargaJual: true,
+      },
+    });
+
+    if (!naskah) {
+      throw new NotFoundException('Naskah tidak ditemukan');
+    }
+
+    // Validasi: naskah harus milik penulis yang login
+    if (naskah.idPenulis !== idPengguna) {
+      throw new ForbiddenException('Anda tidak memiliki akses untuk mengatur harga naskah ini');
+    }
+
+    // Validasi: status harus "diterbitkan"
+    if (naskah.status !== StatusNaskah.diterbitkan) {
+      throw new BadRequestException('Harga jual hanya bisa diatur untuk naskah yang sudah diterbitkan');
+    }
+
+    // Validasi: harga jual harus lebih besar dari biaya produksi
+    const biayaProduksi = naskah.biayaProduksi ? parseFloat(naskah.biayaProduksi.toString()) : 0;
+    if (hargaJual <= biayaProduksi) {
+      throw new BadRequestException(
+        `Harga jual (Rp ${hargaJual.toLocaleString('id-ID')}) harus lebih besar dari biaya produksi (Rp ${biayaProduksi.toLocaleString('id-ID')})`
+      );
+    }
+
+    // Update harga jual dan set publik = true
+    const naskahUpdated = await this.prisma.naskah.update({
+      where: { id },
+      data: {
+        hargaJual,
+        publik: true, // Sekarang buku bisa dijual ke publik
+      },
+      include: {
+        penulis: true,
+        kategori: true,
+        genre: true,
+      },
+    });
+
+    // Kirim notifikasi ke penulis
+    const margin = hargaJual - biayaProduksi;
+    const marginPercentage = ((margin / biayaProduksi) * 100).toFixed(1);
+    
+    await this.prisma.notifikasi.create({
+      data: {
+        idPengguna: naskah.idPenulis,
+        judul: 'Harga Jual Berhasil Ditetapkan!',
+        pesan: `Harga jual buku "${naskah.judul}" telah ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')}. Estimasi keuntungan Anda: Rp ${margin.toLocaleString('id-ID')} (${marginPercentage}%). Buku sekarang tersedia di katalog!`,
+        tipe: 'info',
+        url: `/dashboard/buku-terbit`,
+      },
+    });
+
+    // Log activity
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna,
+        jenis: 'atur_harga_jual',
+        aksi: 'Atur Harga Jual',
+        entitas: 'Naskah',
+        idEntitas: id,
+        deskripsi: `Harga jual buku "${naskah.judul}" ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')} (margin: Rp ${margin.toLocaleString('id-ID')})`,
+      },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Harga jual berhasil ditetapkan. Buku Anda sekarang tersedia di katalog!',
       data: naskahUpdated,
     };
   }

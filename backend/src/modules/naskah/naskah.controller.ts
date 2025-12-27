@@ -26,6 +26,7 @@ import {
   TerbitkanNaskahDto,
   TerbitkanNaskahDtoClass,
 } from './dto';
+import { AturHargaJualDto, AturHargaJualDtoClass, AturHargaJualSchema } from './dto/atur-harga-jual.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { PeranGuard } from '@/modules/auth/guards/roles.guard';
 import { Peran } from '@/modules/auth/decorators/peran.decorator';
@@ -179,6 +180,29 @@ export class NaskahController {
   ) {
     // Admin bisa lihat semua naskah apapun statusnya
     return await this.naskahService.ambilSemuaNaskah(filter, idPengguna);
+  }
+
+  /**
+   * GET /naskah/penulis/diterbitkan - Ambil naskah yang sudah diterbitkan (siap cetak)
+   * Role: penulis
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   * HARUS DI ATAS :id untuk mencegah conflict routing
+   */
+  @Get('penulis/diterbitkan')
+  @ApiBearerAuth()
+  @Peran('penulis')
+  @ApiOperation({
+    summary: 'Ambil naskah yang sudah diterbitkan dan siap dicetak',
+    description: 'Penulis mengambil daftar naskah yang sudah disetujui dan selesai direview dengan rekomendasi setujui. Naskah ini siap untuk dicetak.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daftar naskah diterbitkan berhasil diambil',
+  })
+  async ambilNaskahDiterbitkan(
+    @PenggunaSaatIni('id') idPenulis: string,
+  ) {
+    return await this.naskahService.ambilNaskahDiterbitkan(idPenulis);
   }
 
   /**
@@ -363,6 +387,42 @@ export class NaskahController {
     @PenggunaSaatIni('id') idPengguna: string,
   ) {
     return await this.naskahService.terbitkanNaskah(id, dto, idPengguna);
+  }
+
+  /**
+   * PUT /naskah/:id/harga-jual - Penulis atur harga jual
+   * Role: penulis (owner)
+   */
+  @Put(':id/harga-jual')
+  @ApiBearerAuth()
+  @Peran('penulis')
+  @ApiOperation({
+    summary: 'Atur harga jual buku',
+    description: 'Penulis menentukan harga jual untuk buku yang sudah diterbitkan. Harga harus lebih tinggi dari biaya produksi.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Harga jual berhasil ditetapkan',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Naskah tidak ditemukan',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Tidak memiliki akses untuk mengatur harga naskah ini',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Harga jual hanya bisa diatur untuk naskah yang sudah diterbitkan atau harga jual harus lebih besar dari biaya produksi',
+  })
+  async aturHargaJual(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ValidasiZodPipe(AturHargaJualSchema)) dto: AturHargaJualDto,
+    @PenggunaSaatIni('id') idPengguna: string,
+  ) {
+    return await this.naskahService.aturHargaJual(id, dto.hargaJual, idPengguna);
   }
 
   /**

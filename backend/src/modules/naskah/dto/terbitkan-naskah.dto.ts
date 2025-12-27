@@ -1,27 +1,28 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { FormatBukuEnum } from './buat-naskah.dto';
 
 /**
- * Schema Zod untuk menerbitkan naskah
+ * Schema Zod untuk Admin terbitkan naskah
+ * Admin mengisi ISBN, format buku, dan jumlah halaman
+ * Biaya produksi ditentukan oleh mitra percetakan, bukan admin
  */
 export const TerbitkanNaskahSchema = z.object({
   isbn: z
     .string({
       required_error: 'ISBN wajib diisi untuk penerbitan',
     })
-    .regex(
-      /^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/,
-      'Format ISBN tidak valid',
-    )
+    .min(1, 'ISBN tidak boleh kosong')
     .trim(),
 
-  tanggalTerbit: z
-    .string()
-    .datetime('Format tanggal tidak valid')
-    .optional()
-    .default(() => new Date().toISOString()),
+  formatBuku: FormatBukuEnum.optional(),
 
-  catatan: z.string().max(500, 'Catatan maksimal 500 karakter').trim().optional().nullable(),
+  jumlahHalaman: z
+    .number({
+      required_error: 'Jumlah halaman wajib diisi',
+    })
+    .int('Jumlah halaman harus bilangan bulat')
+    .min(1, 'Jumlah halaman minimal 1'),
 });
 
 /**
@@ -34,26 +35,25 @@ export type TerbitkanNaskahDto = z.infer<typeof TerbitkanNaskahSchema>;
  */
 export class TerbitkanNaskahDtoClass {
   @ApiProperty({
-    description: 'ISBN naskah (International Standard Book Number)',
-    example: '978-3-16-148410-0',
+    description: 'Nomor ISBN yang sudah diurus di Perpusnas',
+    example: '978-602-xxxxx-x-x',
     type: String,
   })
   isbn!: string;
 
   @ApiProperty({
-    description: 'Tanggal penerbitan (ISO 8601 format)',
-    example: '2025-10-29T00:00:00.000Z',
+    description: 'Format/ukuran buku (A4, A5, atau B5)',
+    example: 'A5',
+    enum: ['A4', 'A5', 'B5'],
     required: false,
     type: String,
   })
-  tanggalTerbit?: string;
+  formatBuku?: 'A4' | 'A5' | 'B5';
 
   @ApiProperty({
-    description: 'Catatan penerbitan',
-    example: 'Edisi pertama - Cetakan pertama',
-    required: false,
-    maxLength: 500,
-    type: String,
+    description: 'Jumlah halaman buku setelah final layout',
+    example: 250,
+    type: Number,
   })
-  catatan?: string;
+  jumlahHalaman!: number;
 }

@@ -15,6 +15,7 @@ import {
   Res,
   StreamableFile,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -409,6 +410,119 @@ export class UploadController {
     return {
       sukses: true,
       pesan: `Gambar berhasil diproses dengan preset "${preset}"`,
+      data: result,
+    };
+  }
+
+  /**
+   * POST /upload/konversi-pdf/:id - Konversi file DOCX ke PDF berdasarkan ID file
+   */
+  @Post('konversi-pdf/:id')
+  @HttpCode(HttpStatus.CREATED)
+  @Peran('admin', 'penulis', 'editor')
+  @ApiOperation({
+    summary: 'Konversi DOCX ke PDF',
+    description:
+      'Konversi file DOCX/DOC ke PDF menggunakan LibreOffice. Membutuhkan LibreOffice terinstall di server.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'File ID (DOCX/DOC)' })
+  @ApiResponse({
+    status: 201,
+    description: 'File berhasil dikonversi ke PDF',
+    type: UploadResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'File bukan DOCX/DOC',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'File tidak ditemukan',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'LibreOffice tidak terinstall atau error konversi',
+  })
+  async konversiDocxKePdf(
+    @Param('id') id: string,
+    @PenggunaSaatIni('id') idPengguna: string,
+  ) {
+    const result = await this.uploadService.konversiDocxKePdf(id, idPengguna);
+    return {
+      sukses: true,
+      pesan: 'File berhasil dikonversi ke PDF',
+      data: result,
+    };
+  }
+
+  /**
+   * POST /upload/konversi-pdf-url - Konversi file DOCX ke PDF berdasarkan URL file
+   */
+  @Post('konversi-pdf-url')
+  @HttpCode(HttpStatus.CREATED)
+  @Peran('admin', 'penulis', 'editor')
+  @ApiOperation({
+    summary: 'Konversi DOCX ke PDF dari URL',
+    description:
+      'Konversi file DOCX/DOC ke PDF menggunakan LibreOffice berdasarkan URL file. Membutuhkan LibreOffice terinstall di server.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['fileUrl'],
+      properties: {
+        fileUrl: {
+          type: 'string',
+          description: 'URL file DOCX/DOC (format: /uploads/naskah/filename.docx)',
+          example: '/uploads/naskah/2024-01-15_file_abc123.docx',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'File berhasil dikonversi ke PDF',
+    schema: {
+      type: 'object',
+      properties: {
+        sukses: { type: 'boolean', example: true },
+        pesan: { type: 'string', example: 'File berhasil dikonversi ke PDF' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            url: { type: 'string', example: '/uploads/naskah/2024-01-15_file_abc123.pdf' },
+            namaFileAsli: { type: 'string' },
+            ukuran: { type: 'number' },
+            mimeType: { type: 'string', example: 'application/pdf' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'File bukan DOCX/DOC',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'File tidak ditemukan',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'LibreOffice tidak terinstall atau error konversi',
+  })
+  async konversiDocxKePdfDariUrl(
+    @Body('fileUrl') fileUrl: string,
+    @PenggunaSaatIni('id') idPengguna: string,
+  ) {
+    if (!fileUrl) {
+      throw new BadRequestException('fileUrl harus diisi');
+    }
+    const result = await this.uploadService.konversiDocxKePdfDariUrl(fileUrl, idPengguna);
+    return {
+      sukses: true,
+      pesan: 'File berhasil dikonversi ke PDF',
       data: result,
     };
   }

@@ -34,6 +34,7 @@ export interface Naskah {
   isbn?: string;
   idKategori: string;
   idGenre: string;
+  formatBuku?: 'A4' | 'A5' | 'B5';
   bahasaTulis: string;
   jumlahHalaman?: number;
   jumlahKata?: number;
@@ -41,6 +42,9 @@ export interface Naskah {
   urlSampul?: string;
   urlFile?: string;
   publik: boolean;
+  biayaProduksi?: number | string;
+  hargaJual?: number | string;
+  diterbitkanPada?: string;
   dibuatPada: string;
   diperbaruiPada: string;
   review?: Array<{
@@ -59,6 +63,7 @@ export interface BuatNaskahPayload {
   sinopsis: string;
   idKategori: string;
   idGenre: string;
+  formatBuku?: 'A4' | 'A5' | 'B5';
   bahasaTulis?: string;
   jumlahHalaman?: number;
   jumlahKata?: number;
@@ -133,6 +138,15 @@ export const naskahApi = {
   },
 
   /**
+   * GET /naskah/penulis/diterbitkan - Ambil naskah yang sudah diterbitkan (siap cetak)
+   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   */
+  async ambilNaskahDiterbitkan(): Promise<ResponseSukses<Naskah[]>> {
+    const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/diterbitkan");
+    return data;
+  },
+
+  /**
    * GET /naskah/:id - Ambil detail naskah by ID
    */
   async ambilNaskahById(id: string): Promise<ResponseSukses<Naskah>> {
@@ -154,6 +168,20 @@ export const naskahApi = {
   async ajukanNaskah(id: string, catatan?: string): Promise<ResponseSukses<Naskah>> {
     const payload = catatan ? { catatan } : {};
     const { data } = await api.put<ResponseSukses<Naskah>>(`/naskah/${id}/ajukan`, payload);
+    return data;
+  },
+
+  /**
+   * PUT /naskah/:id/terbitkan - Admin terbitkan naskah (dari disetujui ke diterbitkan)
+   * Role: admin, editor
+   * Field: isbn, formatBuku (opsional), jumlahHalaman
+   */
+  async terbitkanNaskah(id: string, payload: { 
+    isbn: string; 
+    formatBuku?: 'A4' | 'A5' | 'B5';
+    jumlahHalaman: number;
+  }): Promise<ResponseSukses<Naskah>> {
+    const { data } = await api.put<ResponseSukses<Naskah>>(`/naskah/${id}/terbitkan`, payload);
     return data;
   },
 
@@ -189,3 +217,19 @@ export const naskahApi = {
     return data;
   },
 };
+
+/**
+ * GET /naskah/:id - Ambil detail naskah by ID
+ */
+export async function ambilNaskahById(id: string): Promise<ResponseSukses<Naskah>> {
+  const { data } = await api.get<ResponseSukses<Naskah>>(`/naskah/${id}`);
+  return data;
+}
+
+/**
+ * GET /naskah/penulis/saya - Ambil naskah milik penulis yang login
+ */
+export async function ambilNaskahPenulis(): Promise<ResponseSukses<Naskah[]>> {
+  const { data } = await api.get<ResponseSukses<Naskah[]>>("/naskah/penulis/saya");
+  return data;
+}

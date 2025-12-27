@@ -156,7 +156,7 @@ export default function MonitoringReviewPage() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => router.push("/dashboard/admin")}
+            onClick={() => router.push("/admin")}
             className="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,7 +373,7 @@ export default function MonitoringReviewPage() {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => router.push(`/dashboard/admin/review/${review.id}`)}
+                          onClick={() => router.push(`/admin/review/${review.id}`)}
                           className="text-purple-600 hover:text-purple-700 font-medium text-sm transition-colors"
                         >
                           Lihat Detail →

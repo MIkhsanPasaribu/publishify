@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsOptional, IsDateString, MinLength, MaxLength, Matches, Min } from 'class-validator';
 
 /**
  * DTO untuk membuat data pengiriman pesanan
@@ -60,6 +61,9 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 3,
     maxLength: 100,
   })
+  @IsString({ message: 'Nama ekspedisi harus berupa string' })
+  @MinLength(3, { message: 'Nama ekspedisi minimal 3 karakter' })
+  @MaxLength(100, { message: 'Nama ekspedisi maksimal 100 karakter' })
   namaEkspedisi!: string;
 
   @ApiProperty({
@@ -69,6 +73,10 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     maxLength: 50,
     required: false,
   })
+  @IsOptional()
+  @IsString({ message: 'Nomor resi harus berupa string' })
+  @MinLength(5, { message: 'Nomor resi minimal 5 karakter' })
+  @MaxLength(50, { message: 'Nomor resi maksimal 50 karakter' })
   nomorResi?: string;
 
   @ApiProperty({
@@ -76,6 +84,8 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     example: 50000,
     minimum: 0,
   })
+  @IsNumber({}, { message: 'Biaya pengiriman harus berupa angka' })
+  @Min(0, { message: 'Biaya pengiriman tidak boleh negatif' })
   biayaPengiriman!: number;
 
   @ApiProperty({
@@ -84,6 +94,9 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 10,
     maxLength: 500,
   })
+  @IsString({ message: 'Alamat tujuan harus berupa string' })
+  @MinLength(10, { message: 'Alamat tujuan minimal 10 karakter' })
+  @MaxLength(500, { message: 'Alamat tujuan maksimal 500 karakter' })
   alamatTujuan!: string;
 
   @ApiProperty({
@@ -92,6 +105,9 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     minLength: 3,
     maxLength: 100,
   })
+  @IsString({ message: 'Nama penerima harus berupa string' })
+  @MinLength(3, { message: 'Nama penerima minimal 3 karakter' })
+  @MaxLength(100, { message: 'Nama penerima maksimal 100 karakter' })
   namaPenerima!: string;
 
   @ApiProperty({
@@ -99,6 +115,8 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     example: '081234567890',
     pattern: '^(\\+62|62|0)[0-9]{9,12}$',
   })
+  @IsString({ message: 'Nomor telepon harus berupa string' })
+  @Matches(/^(\+62|62|0)[0-9]{9,12}$/, { message: 'Format telepon tidak valid' })
   teleponPenerima!: string;
 
   @ApiProperty({
@@ -107,5 +125,7 @@ export class BuatPengirimanDtoClass implements BuatPengirimanDto {
     format: 'date-time',
     required: false,
   })
+  @IsOptional()
+  @IsDateString({}, { message: 'Format tanggal harus ISO 8601' })
   estimasiTiba?: string;
 }

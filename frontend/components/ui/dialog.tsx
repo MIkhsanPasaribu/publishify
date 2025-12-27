@@ -80,5 +80,26 @@ const DialogDescription = ({
   <p className={`text-sm text-gray-500 ${className}`} {...props} />
 );
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription };
+const DialogFooter = ({
+  className = "",
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={`flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 ${className}`}
+    {...props}
+  />
+);
+
+const DialogTrigger = ({
+  children,
+  onClick,
+  className = "",
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button className={className} onClick={onClick} {...props}>
+    {children}
+  </button>
+);
+
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger };
 

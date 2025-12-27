@@ -67,8 +67,8 @@ export default function LoginPage() {
       
       // Redirect based on user role
       if (pengguna?.peran?.includes("admin")) {
-        console.log("↪️ Redirect ke: /dashboard/admin");
-        router.replace("/dashboard/admin");
+        console.log("↪️ Redirect ke: /admin");
+        router.replace("/admin");
       } else if (pengguna?.peran?.includes("editor")) {
         console.log("↪️ Redirect ke: /dashboard/editor");
         router.replace("/dashboard/editor");

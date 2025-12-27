@@ -114,6 +114,29 @@ enum Platform {
   @@map("platform")
 }
 
+enum FormatBuku {
+  A4
+  A5
+  B5
+
+  @@map("format_buku")
+}
+
+enum JenisKertas {
+  HVS
+  BOOKPAPER
+  ART_PAPER
+
+  @@map("jenis_kertas")
+}
+
+enum JenisCover {
+  SOFTCOVER
+  HARDCOVER
+
+  @@map("jenis_cover")
+}
+
 // ============================================
 // CORE USER MANAGEMENT (4 tabel)
 // ============================================
@@ -146,11 +169,13 @@ model Pengguna {
   naskah           Naskah[]
   review           ReviewNaskah[]
   pesananCetak     PesananCetak[]
+  pesananPercetakan PesananCetak[] @relation("PesananPercetakan")
   pembayaran       Pembayaran[]
   notifikasi       Notifikasi[]
   logAktivitas     LogAktivitas[]
   tokenRefresh     TokenRefresh[]
   file             File[]
+  tarifPercetakan  TarifPercetakan[]
 
   @@index([googleId], map: "idx_pengguna_google_id")
   @@index([provider], map: "idx_pengguna_provider")
@@ -227,6 +252,7 @@ model Naskah {
   isbn           String?      @unique
   idKategori     String
   idGenre        String
+  formatBuku     FormatBuku   @default(A5)
   bahasaTulis    String       @default("id")
   jumlahHalaman  Int?
   jumlahKata     Int?
@@ -234,6 +260,8 @@ model Naskah {
   urlSampul      String?
   urlFile        String?
   publik         Boolean      @default(false)
+  biayaProduksi  Decimal?     @db.Decimal(10, 2)
+  hargaJual      Decimal?     @db.Decimal(10, 2)
   diterbitkanPada DateTime?
   dibuatPada     DateTime     @default(now())
   diperbaruiPada DateTime     @updatedAt
@@ -374,33 +402,44 @@ model FeedbackReview {
 // ============================================
 
 model PesananCetak {
-  id                  String        @id @default(uuid())
-  idNaskah            String
-  idPemesan           String
-  idPercetakan        String?
-  nomorPesanan        String        @unique
-  jumlah              Int
-  formatKertas        String        // A4, A5, dll
-  jenisKertas         String        // HVS, Art Paper, dll
-  jenisCover          String        // Soft cover, Hard cover
-  finishingTambahan   String[]      // Laminasi, emboss, dll
-  catatan             String?       @db.Text
-  hargaTotal          Decimal       @db.Decimal(10, 2)
-  status              StatusPesanan @default(tertunda)
-  tanggalPesan        DateTime      @default(now())
-  estimasiSelesai     DateTime?
-  tanggalSelesai      DateTime?
-  diperbaruiPada      DateTime      @updatedAt
+  id                     String        @id @default(uuid())
+  idNaskah               String
+  idPemesan              String
+  idPercetakan           String?       // Percetakan yang dipilih
+  nomorPesanan           String        @unique
+  jumlah                 Int
+  
+  // Snapshot data dari Naskah (disalin saat order dibuat)
+  judulSnapshot          String
+  formatSnapshot         String
+  jumlahHalamanSnapshot  Int
+  
+  // Spesifikasi pesanan
+  formatKertas           String        // A4, A5, dll
+  jenisKertas            String        // HVS, Art Paper, dll
+  jenisCover             String        // Soft cover, Hard cover
+  finishingTambahan      String[]      // Laminasi, emboss, dll
+  catatan                String?       @db.Text
+  hargaTotal             Decimal       @db.Decimal(10, 2)
+  
+  status                 StatusPesanan @default(tertunda)
+  tanggalPesan           DateTime      @default(now())
+  estimasiSelesai        DateTime?
+  tanggalSelesai         DateTime?
+  diperbaruiPada         DateTime      @updatedAt
 
-  naskah      Naskah          @relation(fields: [idNaskah], references: [id])
-  pemesan     Pengguna        @relation(fields: [idPemesan], references: [id])
-  pembayaran  Pembayaran?
-  pengiriman  Pengiriman?
-  logProduksi LogProduksi[]
+  // Relations
+  naskah                 Naskah          @relation(fields: [idNaskah], references: [id])
+  pemesan                Pengguna        @relation(fields: [idPemesan], references: [id])
+  percetakan             Pengguna?       @relation("PesananPercetakan", fields: [idPercetakan], references: [id])
+  pembayaran             Pembayaran?
+  pengiriman             Pengiriman?
+  logProduksi            LogProduksi[]
 
   @@index([nomorPesanan])
   @@index([status])
   @@index([idPemesan, status]) // User orders: filter by user + status
+  @@index([idPercetakan, status]) // Percetakan orders: filter by percetakan + status
   @@index([status, tanggalPesan]) // Production queue: filter by status + sort by date
   @@index([tanggalPesan]) // Order history: sort by order date
   @@map("pesanan_cetak")
@@ -451,6 +490,27 @@ model TrackingLog {
   pengiriman Pengiriman @relation(fields: [idPengiriman], references: [id], onDelete: Cascade)
 
   @@map("tracking_log")
+}
+
+model TarifPercetakan {
+  id                String   @id @default(uuid())
+  idPercetakan      String
+  formatBuku        String   // A4, A5, B5
+  jenisKertas       String   // HVS, BOOKPAPER, ART_PAPER
+  jenisCover        String   // SOFTCOVER, HARDCOVER
+  hargaPerHalaman   Decimal  @db.Decimal(10, 2)
+  biayaJilid        Decimal  @db.Decimal(10, 2)
+  minimumPesanan    Int      @default(1)
+  aktif             Boolean  @default(true)
+  dibuatPada        DateTime @default(now())
+  diperbaruiPada    DateTime @updatedAt
+
+  percetakan Pengguna @relation(fields: [idPercetakan], references: [id], onDelete: Cascade)
+
+  @@unique([idPercetakan, formatBuku, jenisKertas, jenisCover])
+  @@index([idPercetakan])
+  @@index([aktif])
+  @@map("tarif_percetakan")
 }
 
 // ============================================
