@@ -484,213 +484,210 @@ export default function NaskahSiapTerbitPage() {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-700 to-gray-700 bg-clip-text text-transparent">
-              Naskah Siap Terbit
-            </h1>
-            <p className="text-gray-600 mt-1 text-sm md:text-base">
-              Naskah yang sudah disetujui editor dan siap untuk diterbitkan
-            </p>
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+                Naskah Siap Terbit
+              </h1>
+              <p className="text-sm sm:text-base text-teal-50">
+                Naskah yang sudah disetujui editor dan siap untuk diterbitkan
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden lg:block">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <BookCheck className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <Card className="border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-gray-50 hover:shadow-lg transition-all">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2.5 bg-slate-100 rounded-lg">
-                  <BookCheck className="h-5 w-5 text-slate-600" />
-                </div>
-                <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-slate-700 font-medium">Menunggu Penerbitan</p>
-              <p className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">
-                {filteredNaskah.length}
-              </p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{filteredNaskah.length}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Menunggu Penerbitan</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg transition-all">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2.5 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-green-700 font-medium">Status</p>
-              <p className="text-xl md:text-2xl font-bold text-green-900 mt-1">Disetujui</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">Disetujui</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Status Review</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 hover:shadow-lg transition-all sm:col-span-2 lg:col-span-1">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2.5 bg-blue-100 rounded-lg">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all sm:col-span-2 lg:col-span-1">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-blue-700 font-medium">Langkah Selanjutnya</p>
-              <p className="text-xl md:text-2xl font-bold text-blue-900 mt-1">PDF & ISBN</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">PDF & ISBN</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Langkah Selanjutnya</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Search */}
-        <Card className="border-2">
-          <CardContent className="pt-4 pb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Cari berdasarkan judul naskah..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg sm:rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input
+              placeholder="Cari berdasarkan judul naskah..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11 border-slate-300 focus:border-teal-500 focus:ring-teal-500"
+            />
+          </div>
+        </div>
 
         {/* Loading State */}
         {isLoading && (
-          <Card className="border-2">
-            <CardContent className="p-12">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-slate-400" />
-                <p className="text-gray-500">Memuat data naskah...</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-xl border border-slate-200 p-12 shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-slate-400" />
+              <p className="text-slate-600">Memuat data naskah...</p>
+            </div>
+          </div>
         )}
 
         {/* Error State */}
         {error && (
-          <Card className="border-2 border-red-200 bg-red-50">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-red-900">Gagal memuat data</p>
-                  <p className="text-sm text-red-700">{(error as any).message}</p>
-                </div>
+          <div className="bg-red-50 rounded-xl border-2 border-red-200 p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="font-semibold text-red-900">Gagal memuat data</p>
+                <p className="text-sm text-red-700">{(error as any).message}</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && filteredNaskah.length === 0 && (
-          <Card className="border-2">
-            <CardContent className="p-12">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <div className="p-4 bg-slate-100 rounded-full">
-                  <BookCheck className="h-10 w-10 text-slate-400" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-gray-900">Tidak ada naskah siap terbit</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Semua naskah yang disetujui sudah diterbitkan
-                  </p>
-                </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-12 shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="p-4 bg-slate-100 rounded-full">
+                <BookCheck className="h-10 w-10 text-slate-400" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-center">
+                <p className="font-semibold text-slate-900">Tidak ada naskah siap terbit</p>
+                <p className="text-sm text-slate-600 mt-1">
+                  Semua naskah yang disetujui sudah diterbitkan
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* List Naskah */}
         {!isLoading && !error && filteredNaskah.length > 0 && (
           <div className="space-y-4">
             {filteredNaskah.map((naskah: Naskah) => (
-              <Card key={naskah.id} className="border-2 hover:shadow-lg transition-all">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                    {/* Cover */}
-                    <div className="flex-shrink-0 flex justify-center lg:justify-start">
-                      {naskah.urlSampul ? (
-                        <img
-                          src={naskah.urlSampul}
-                          alt={naskah.judul}
-                          className="w-24 h-36 md:w-28 md:h-42 lg:w-32 lg:h-48 object-cover rounded-lg shadow-md"
-                        />
-                      ) : (
-                        <div className="w-24 h-36 md:w-28 md:h-42 lg:w-32 lg:h-48 bg-gradient-to-br from-slate-200 to-gray-300 rounded-lg flex items-center justify-center">
-                          <BookOpen className="h-10 w-10 text-slate-400" />
-                        </div>
+              <div key={naskah.id} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                  {/* Cover */}
+                  <div className="flex-shrink-0 flex justify-center lg:justify-start">
+                    {naskah.urlSampul ? (
+                      <img
+                        src={naskah.urlSampul}
+                        alt={naskah.judul}
+                        className="w-24 h-36 md:w-28 md:h-42 lg:w-32 lg:h-48 object-cover rounded-lg shadow-md"
+                      />
+                    ) : (
+                      <div className="w-24 h-36 md:w-28 md:h-42 lg:w-32 lg:h-48 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg flex items-center justify-center">
+                        <BookOpen className="h-10 w-10 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 space-y-3">
+                    {/* Title & Badge */}
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1">
+                        <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-slate-900">
+                          {naskah.judul}
+                        </h3>
+                        <Badge className="bg-green-100 text-green-800 border border-green-200 self-start">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Disetujui
+                        </Badge>
+                      </div>
+                      {naskah.subJudul && (
+                        <p className="text-sm md:text-base text-slate-600 italic">
+                          {naskah.subJudul}
+                        </p>
                       )}
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 space-y-3">
-                      {/* Title & Badge */}
-                      <div>
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1">
-                          <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">
-                            {naskah.judul}
-                          </h3>
-                          <Badge className="bg-green-100 text-green-800 border border-green-200 self-start">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Disetujui
-                          </Badge>
-                        </div>
-                        {naskah.subJudul && (
-                          <p className="text-sm md:text-base text-gray-600 italic">
-                            {naskah.subJudul}
-                          </p>
-                        )}
-                      </div>
+                    {/* Sinopsis */}
+                    <p className="text-sm text-slate-700 line-clamp-2">{naskah.sinopsis}</p>
 
-                      {/* Sinopsis */}
-                      <p className="text-sm text-gray-700 line-clamp-2">{naskah.sinopsis}</p>
+                    {/* Metadata */}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs md:text-sm text-slate-600">
+                      <span>
+                        <span className="text-slate-400">Format:</span>{" "}
+                        <span className="font-medium text-slate-700">{naskah.formatBuku || "A5"}</span>
+                      </span>
+                      <span>
+                        <span className="text-slate-400">Halaman:</span>{" "}
+                        <span className="font-medium text-slate-700">{naskah.jumlahHalaman || "-"}</span>
+                      </span>
+                      <span>
+                        <span className="text-slate-400">Kata:</span>{" "}
+                        <span className="font-medium text-slate-700">
+                          {naskah.jumlahKata?.toLocaleString("id-ID") || "-"}
+                        </span>
+                      </span>
+                      <span>
+                        <span className="text-slate-400">File:</span>{" "}
+                        <span className="font-medium text-slate-700">
+                          {naskah.urlFile ? getFileExtension(naskah.urlFile).toUpperCase() : "-"}
+                        </span>
+                      </span>
+                    </div>
 
-                      {/* Metadata */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs md:text-sm text-gray-600">
-                        <span>
-                          <span className="text-gray-400">Format:</span>{" "}
-                          <span className="font-medium">{naskah.formatBuku || "A5"}</span>
-                        </span>
-                        <span>
-                          <span className="text-gray-400">Halaman:</span>{" "}
-                          <span className="font-medium">{naskah.jumlahHalaman || "-"}</span>
-                        </span>
-                        <span>
-                          <span className="text-gray-400">Kata:</span>{" "}
-                          <span className="font-medium">
-                            {naskah.jumlahKata?.toLocaleString("id-ID") || "-"}
-                          </span>
-                        </span>
-                        <span>
-                          <span className="text-gray-400">File:</span>{" "}
-                          <span className="font-medium">
-                            {naskah.urlFile ? getFileExtension(naskah.urlFile).toUpperCase() : "-"}
-                          </span>
-                        </span>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                        <Button
-                          onClick={() => handleOpenTerbitkan(naskah)}
-                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                          size="sm"
-                        >
-                          <BookCheck className="h-4 w-4 mr-2" />
-                          Terbitkan Naskah
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Detail
-                        </Button>
-                      </div>
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                      <Button
+                        onClick={() => handleOpenTerbitkan(naskah)}
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                        size="sm"
+                      >
+                        <BookCheck className="h-4 w-4 mr-2" />
+                        Terbitkan Naskah
+                      </Button>
+                      <Button variant="outline" size="sm" className="hover:bg-teal-50 hover:text-teal-600 hover:border-teal-300">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Detail
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -701,45 +698,43 @@ export default function NaskahSiapTerbitPage() {
       {/* ============================================ */}
       <Dialog open={modalTerbitkan} onOpenChange={(open) => !open && resetModal()}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0">
-          <DialogHeader className="p-6 pb-4 border-b bg-gradient-to-r from-slate-50 to-gray-50">
-            <DialogTitle className="text-xl md:text-2xl font-bold">Terbitkan Naskah</DialogTitle>
-            <DialogDescription>
+          <DialogHeader className="p-6 pb-4 border-b bg-gradient-to-r from-slate-50 to-slate-100">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-slate-900">Terbitkan Naskah</DialogTitle>
+            <DialogDescription className="text-slate-600">
               Finalisasi file PDF, upload cover final, lalu isi data penerbitan
             </DialogDescription>
           </DialogHeader>
 
           <div className="p-6 space-y-6">
             {/* Naskah Info */}
-            <Card className="border-2 border-slate-200 bg-slate-50">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  {selectedNaskah?.urlSampul ? (
-                    <img
-                      src={selectedNaskah.urlSampul}
-                      alt={selectedNaskah.judul}
-                      className="w-16 h-24 object-cover rounded-lg shadow"
-                    />
-                  ) : (
-                    <div className="w-16 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <BookOpen className="h-6 w-6 text-gray-400" />
-                    </div>
+            <div className="border-2 border-slate-200 bg-slate-50 rounded-lg p-4">
+              <div className="flex items-start gap-4">
+                {selectedNaskah?.urlSampul ? (
+                  <img
+                    src={selectedNaskah.urlSampul}
+                    alt={selectedNaskah.judul}
+                    className="w-16 h-24 object-cover rounded-lg shadow"
+                  />
+                ) : (
+                  <div className="w-16 h-24 bg-slate-200 rounded-lg flex items-center justify-center">
+                    <BookOpen className="h-6 w-6 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 truncate">{selectedNaskah?.judul}</h3>
+                  {selectedNaskah?.subJudul && (
+                    <p className="text-sm text-slate-600 italic truncate">
+                      {selectedNaskah.subJudul}
+                    </p>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 truncate">{selectedNaskah?.judul}</h3>
-                    {selectedNaskah?.subJudul && (
-                      <p className="text-sm text-gray-600 italic truncate">
-                        {selectedNaskah.subJudul}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-500">
-                      <span>Format: {selectedNaskah?.formatBuku || "A5"}</span>
-                      <span>•</span>
-                      <span>{selectedNaskah?.jumlahKata?.toLocaleString("id-ID") || "-"} kata</span>
-                    </div>
+                  <div className="flex flex-wrap gap-2 mt-2 text-xs text-slate-500">
+                    <span className="text-slate-700 font-medium">Format: {selectedNaskah?.formatBuku || "A5"}</span>
+                    <span>•</span>
+                    <span>{selectedNaskah?.jumlahKata?.toLocaleString("id-ID") || "-"} kata</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* ============================================ */}
             {/* LANGKAH 1: FILE PDF FINAL */}
@@ -756,57 +751,56 @@ export default function NaskahSiapTerbitPage() {
                   {isPdfLocked ? <CheckCircle2 className="h-4 w-4" /> : "1"}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">File PDF Final</h4>
-                  <p className="text-xs text-gray-500">
+                  <h4 className="font-semibold text-slate-900">File PDF Final</h4>
+                  <p className="text-xs text-slate-600">
                     Pilih metode untuk menghasilkan PDF siap cetak
                   </p>
                 </div>
+            </div>
+
+            {/* Card File Sumber */}
+            <div className="border-2 border-blue-200 bg-blue-50 rounded-lg overflow-hidden">
+              <div className="px-6 pt-6 pb-2">
+                <h3 className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  File Sumber (Naskah Asli)
+                </h3>
               </div>
-
-              {/* Card File Sumber */}
-              <Card className="border-2 border-blue-200 bg-blue-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold text-blue-900 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    File Sumber (Naskah Asli)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  {selectedNaskah?.urlFile ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <File className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-blue-900 truncate max-w-[200px]">
-                            {getFileName(selectedNaskah.urlFile)}
-                          </p>
-                          <p className="text-xs text-blue-600">
-                            Format: {getFileExtension(selectedNaskah.urlFile).toUpperCase()}
-                          </p>
-                        </div>
+              <div className="px-6 pb-6">
+                {selectedNaskah?.urlFile ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <File className="h-5 w-5 text-blue-600" />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadOriginal}
-                        className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                        disabled={isPdfLocked}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 truncate max-w-[200px]">
+                          {getFileName(selectedNaskah.urlFile)}
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          Format: {getFileExtension(selectedNaskah.urlFile).toUpperCase()}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-amber-800">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="text-sm">Tidak ada file naskah yang terunggah</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadOriginal}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                      disabled={isPdfLocked}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm">Tidak ada file naskah yang terunggah</span>
+                  </div>
+                )}
+              </div>
+            </div>
               {/* Tabs: Konversi Otomatis / Upload Manual */}
               {!isPdfLocked && (
                 <Tabs
@@ -826,12 +820,11 @@ export default function NaskahSiapTerbitPage() {
 
                   {/* Tab: Konversi Otomatis */}
                   <TabsContent value="konversi" className="mt-4 space-y-4">
-                    <Card className="border-2">
-                      <CardContent className="p-4">
+                    <div className="border border-slate-200 rounded-lg p-4 bg-white shadow-sm">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">Konversi Word ke PDF</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="font-medium text-slate-900">Konversi Word ke PDF</p>
+                            <p className="text-xs text-slate-600">
                               Sistem akan mengkonversi file .docx secara otomatis
                             </p>
                           </div>
@@ -863,8 +856,7 @@ export default function NaskahSiapTerbitPage() {
                             )}
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
                   </TabsContent>
 
                   {/* Tab: Upload Manual */}
@@ -874,7 +866,7 @@ export default function NaskahSiapTerbitPage() {
                       accept=".pdf"
                       label="Drag & drop file PDF di sini"
                       helperText="Gunakan ini jika Anda telah melakukan layout manual di luar sistem (misal: InDesign)"
-                      icon={<Upload className="h-6 w-6 text-gray-400" />}
+                      icon={<Upload className="h-6 w-6 text-slate-400" />}
                       selectedFile={uploadedPdfFile}
                       onClear={() => {
                         setUploadedPdfFile(null);
@@ -887,8 +879,7 @@ export default function NaskahSiapTerbitPage() {
 
               {/* Area Preview & Konfirmasi PDF */}
               {hasFinalPdf && !isPdfLocked && (
-                <Card className="border-2 border-amber-200 bg-amber-50">
-                  <CardContent className="p-4 space-y-4">
+                <div className="border-2 border-amber-200 bg-amber-50 rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-2 text-amber-800">
                       <Eye className="h-4 w-4" />
                       <span className="font-medium text-sm">Preview & Konfirmasi PDF</span>
@@ -900,10 +891,10 @@ export default function NaskahSiapTerbitPage() {
                           <FileText className="h-5 w-5 text-red-600" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-slate-900">
                             {activeTab === "konversi" ? "PDF Hasil Konversi" : uploadedPdfFile?.name}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-600">
                             {activeTab === "konversi"
                               ? "Dikonversi dari file naskah asli"
                               : `${((uploadedPdfFile?.size || 0) / 1024 / 1024).toFixed(2)} MB`}
@@ -946,37 +937,34 @@ export default function NaskahSiapTerbitPage() {
                       <Lock className="h-4 w-4 mr-1.5" />
                       Kunci File PDF Ini
                     </Button>
-                  </CardContent>
-                </Card>
+                </div>
               )}
 
               {/* Status PDF Terkunci */}
               {isPdfLocked && (
-                <Card className="border-2 border-green-300 bg-green-50">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Lock className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-green-900">File PDF Terkunci</p>
-                          <p className="text-xs text-green-600">
-                            {activeTab === "konversi" ? "PDF Hasil Konversi" : uploadedPdfFile?.name}
-                          </p>
-                        </div>
+                <div className="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <Lock className="h-5 w-5 text-green-600" />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleUnlockPdf}
-                        className="text-green-700 hover:text-green-900 hover:bg-green-100"
-                      >
-                        Buka Kunci
-                      </Button>
+                      <div>
+                        <p className="font-medium text-green-900">File PDF Terkunci</p>
+                        <p className="text-xs text-green-600">
+                          {activeTab === "konversi" ? "PDF Hasil Konversi" : uploadedPdfFile?.name}
+                        </p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleUnlockPdf}
+                      className="text-green-700 hover:text-green-900 hover:bg-green-100"
+                    >
+                      Buka Kunci
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -991,8 +979,8 @@ export default function NaskahSiapTerbitPage() {
                   <ImageIcon className="h-4 w-4 text-slate-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">Cover Final (Opsional)</h4>
-                  <p className="text-xs text-gray-500">
+                  <h4 className="font-semibold text-slate-900">Cover Final (Opsional)</h4>
+                  <p className="text-xs text-slate-600">
                     Upload cover yang sudah dilengkapi ISBN/Barcode
                   </p>
                 </div>
@@ -1003,7 +991,7 @@ export default function NaskahSiapTerbitPage() {
                 accept=".jpg,.jpeg,.png,.pdf"
                 label="Drag & drop file cover di sini"
                 helperText="Format: JPG, PNG, atau PDF (dengan ISBN/Barcode)"
-                icon={<ImageIcon className="h-6 w-6 text-gray-400" />}
+                icon={<ImageIcon className="h-6 w-6 text-slate-400" />}
                 selectedFile={uploadedCoverFile}
                 onClear={() => {
                   setUploadedCoverFile(null);
@@ -1013,7 +1001,7 @@ export default function NaskahSiapTerbitPage() {
               />
 
               {!isPdfLocked && (
-                <p className="text-xs text-gray-400 italic">
+                <p className="text-xs text-slate-500 italic">
                   * Kunci file PDF terlebih dahulu untuk mengupload cover
                 </p>
               )}
@@ -1036,10 +1024,10 @@ export default function NaskahSiapTerbitPage() {
                   2
                 </div>
                 <div>
-                  <h4 className={`font-semibold ${isPdfLocked ? "text-gray-900" : "text-gray-400"}`}>
+                  <h4 className={`font-semibold ${isPdfLocked ? "text-slate-900" : "text-slate-400"}`}>
                     Data Penerbitan
                   </h4>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-600">
                     Isi informasi ISBN dan detail buku
                   </p>
                 </div>
@@ -1059,7 +1047,7 @@ export default function NaskahSiapTerbitPage() {
                     className="mt-1.5"
                     disabled={!isPdfLocked}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-600 mt-1">
                     Nomor ISBN yang sudah terdaftar di Perpusnas
                   </p>
                 </div>
@@ -1079,7 +1067,7 @@ export default function NaskahSiapTerbitPage() {
                         className={`relative p-3 rounded-xl border-2 transition-all text-center ${
                           formData.formatBuku === format.kode
                             ? "border-teal-500 bg-teal-50 shadow-md"
-                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                         } ${!isPdfLocked ? "cursor-not-allowed" : ""}`}
                       >
                         {formData.formatBuku === format.kode && (
@@ -1089,16 +1077,16 @@ export default function NaskahSiapTerbitPage() {
                         )}
                         <p
                           className={`font-bold text-sm ${
-                            formData.formatBuku === format.kode ? "text-teal-600" : "text-gray-900"
+                            formData.formatBuku === format.kode ? "text-teal-600" : "text-slate-900"
                           }`}
                         >
                           {format.nama}
                         </p>
-                        <p className="text-xs text-gray-500">{format.ukuran}</p>
+                        <p className="text-xs text-slate-600">{format.ukuran}</p>
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-slate-600 mt-2">
                     {formatBukuList.find((f) => f.kode === formData.formatBuku)?.deskripsi}
                   </p>
                 </div>
@@ -1118,7 +1106,7 @@ export default function NaskahSiapTerbitPage() {
                     min={1}
                     disabled={!isPdfLocked}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-600 mt-1">
                     Jumlah halaman buku setelah layout final
                   </p>
                 </div>
@@ -1126,18 +1114,16 @@ export default function NaskahSiapTerbitPage() {
             </div>
 
             {/* Info */}
-            <Card className="border-2 border-blue-200 bg-blue-50">
-              <CardContent className="p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>ℹ️ Info:</strong> Setelah diterbitkan, penulis akan mendapat notifikasi
-                  untuk mengatur harga jual. Harga cetak ditentukan oleh mitra percetakan saat
-                  penulis melakukan checkout.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>ℹ️ Info:</strong> Setelah diterbitkan, penulis akan mendapat notifikasi
+                untuk mengatur harga jual. Harga cetak ditentukan oleh mitra percetakan saat
+                penulis melakukan checkout.
+              </p>
+            </div>
           </div>
 
-          <DialogFooter className="p-6 pt-4 border-t bg-gray-50">
+          <DialogFooter className="p-6 pt-4 border-t bg-slate-50">
             <Button
               variant="outline"
               onClick={resetModal}
@@ -1188,14 +1174,14 @@ export default function NaskahSiapTerbitPage() {
                     title="PDF Preview"
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 p-8">
                     <div className="text-center space-y-4">
                       <div className="p-4 bg-blue-100 rounded-full inline-block">
                         <FileText className="h-12 w-12 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 mb-2">Preview File PDF</p>
-                        <p className="text-sm text-gray-600 mb-4">
+                        <p className="font-semibold text-slate-900 mb-2">Preview File PDF</p>
+                        <p className="text-sm text-slate-600 mb-4">
                           File tersimpan di server. Klik tombol di bawah untuk membuka preview.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -1229,27 +1215,27 @@ export default function NaskahSiapTerbitPage() {
                             Download File
                           </Button>
                         </div>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-4">
-                        URL: {finalPdfUrl.length > 60 ? finalPdfUrl.substring(0, 60) + "..." : finalPdfUrl}
-                      </p>
                     </div>
+                    <p className="text-xs text-slate-500 mt-4">
+                      URL: {finalPdfUrl.length > 60 ? finalPdfUrl.substring(0, 60) + "..." : finalPdfUrl}
+                    </p>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                <p className="text-gray-500">Tidak ada file PDF untuk ditampilkan</p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalPreviewPdf(false)}>
-              Tutup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 rounded-lg">
+              <p className="text-slate-600">Tidak ada file PDF untuk ditampilkan</p>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setModalPreviewPdf(false)}>
+            Tutup
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+);
 }

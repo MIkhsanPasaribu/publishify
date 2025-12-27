@@ -37,7 +37,7 @@ export function CTASection() {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
-            href="/register"
+            href="/login"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className={`group relative w-full sm:w-auto bg-white text-[#0d7377] px-10 py-5 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 overflow-hidden ${

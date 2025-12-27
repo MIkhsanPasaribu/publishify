@@ -215,15 +215,15 @@ export default function PesananSayaPage() {
                         {item.naskah?.judul || "N/A"}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {item.ukuranKertas} • {item.jenisCover}
+                        {item.formatKertas} • {item.jenisCover}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{item.jumlahCetak} pcs</div>
+                      <div className="text-sm text-gray-900">{item.jumlah} pcs</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {formatRupiah(item.totalHarga)}
+                        {formatRupiah(item.hargaTotal)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -231,7 +231,7 @@ export default function PesananSayaPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600">
-                        {formatTanggal(item.dibuatPada)}
+                        {formatTanggal(item.tanggalPesan)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -272,25 +272,25 @@ export default function PesananSayaPage() {
                   <div>
                     <p className="text-xs text-gray-500">Jumlah</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {item.jumlahCetak} pcs
+                      {item.jumlah} pcs
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {formatRupiah(item.totalHarga)}
+                      {formatRupiah(item.hargaTotal)}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Format</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {item.ukuranKertas}
+                      {item.formatKertas}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Tanggal</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {formatTanggal(item.dibuatPada)}
+                      {formatTanggal(item.tanggalPesan)}
                     </p>
                   </div>
                 </div>

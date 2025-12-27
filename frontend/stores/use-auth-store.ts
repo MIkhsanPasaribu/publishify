@@ -38,7 +38,17 @@ export const useAuthStore = create<AuthState>()(
           if (typeof window !== "undefined") {
             localStorage.setItem("accessToken", accessToken);
             localStorage.setItem("refreshToken", refreshToken);
-            console.log("💾 Token disimpan ke localStorage");
+            
+            // PENTING: Set cookie untuk middleware Next.js
+            const isSecure = window.location.protocol === 'https:';
+            const secureFlag = isSecure ? 'Secure; ' : '';
+            
+            document.cookie = `token=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax; ${secureFlag}`;
+            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax; ${secureFlag}`;
+            
+            console.log("💾 Token disimpan ke localStorage dan cookie", {
+              cookieSet: document.cookie.includes('token='),
+            });
           }
           
           set({ accessToken, refreshToken, pengguna, loading: false });
@@ -53,6 +63,10 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== "undefined") {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          
+          // Hapus cookies juga
+          document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         }
         set({ pengguna: null, accessToken: null, refreshToken: null });
       },
@@ -64,6 +78,13 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== "undefined") {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
+          
+          // Set cookie untuk middleware
+          const isSecure = window.location.protocol === 'https:';
+          const secureFlag = isSecure ? 'Secure; ' : '';
+          
+          document.cookie = `token=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax; ${secureFlag}`;
+          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax; ${secureFlag}`;
         }
         set({ accessToken, refreshToken });
       },

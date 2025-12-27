@@ -131,157 +131,157 @@ export default function PesananCetakAdminPage() {
   const totalPendapatan = dummyPesanan.reduce((acc, p) => acc + p.hargaTotal, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 p-6 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Pesanan Cetak
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Kelola pesanan cetak dari penulis dan pemesan
-            </p>
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+                Pesanan Cetak
+              </h1>
+              <p className="text-sm sm:text-base text-teal-50">
+                Kelola pesanan cetak dari penulis dan pemesan
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden lg:block">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+            </div>
           </div>
-          <Button variant="outline" className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <ShoppingCart className="h-6 w-6 text-orange-600" />
-                </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-orange-700 font-medium">Total Pesanan</p>
-              <p className="text-3xl font-bold text-orange-900 mt-1">{totalPesanan}</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{totalPesanan}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Pesanan</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                {pesananBaru > 0 && (
-                  <span className="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full animate-pulse">
-                    {pesananBaru}
-                  </span>
-                )}
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-yellow-700 font-medium">Menunggu Verifikasi</p>
-              <p className="text-3xl font-bold text-yellow-900 mt-1">{pesananBaru}</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{pesananBaru}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Menunggu</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Printer className="h-6 w-6 text-purple-600" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Printer className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-purple-700 font-medium">Dalam Produksi</p>
-              <p className="text-3xl font-bold text-purple-900 mt-1">{dalamProduksi}</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-0.5">{dalamProduksi}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Produksi</div>
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="text-sm text-green-700 font-medium">Total Nilai Pesanan</p>
-              <p className="text-xl font-bold text-green-900 mt-1">{formatRupiah(totalPendapatan)}</p>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <div className="text-base sm:text-lg font-bold text-slate-900 mb-0.5">{formatRupiah(totalPendapatan)}</div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">Total Nilai</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Search & Filter */}
-        <Card className="border-2">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Cari berdasarkan nomor pesanan, judul buku, atau pemesan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11"
-                />
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semua">Semua Status</SelectItem>
-                  <SelectItem value="tertunda">Tertunda</SelectItem>
-                  <SelectItem value="diterima">Diterima</SelectItem>
-                  <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
-                  <SelectItem value="siap">Siap Kirim</SelectItem>
-                  <SelectItem value="dikirim">Dikirim</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="bg-white rounded-lg sm:rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm">
+        {/* Search & Filter */}
+        <div className="bg-white rounded-lg sm:rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input
+                placeholder="Cari berdasarkan nomor pesanan, judul buku, atau pemesan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 border-slate-300 focus:ring-teal-500"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full md:w-48 border-slate-300">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Status</SelectItem>
+                <SelectItem value="tertunda">Tertunda</SelectItem>
+                <SelectItem value="diterima">Diterima</SelectItem>
+                <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
+                <SelectItem value="siap">Siap Kirim</SelectItem>
+                <SelectItem value="dikirim">Dikirim</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Pesanan List */}
-        <Card className="border-2">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       No. Pesanan
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Buku
                     </th>
-                    <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Pemesan
                     </th>
-                    <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Jumlah
                     </th>
-                    <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Tanggal
                     </th>
-                    <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Aksi
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-slate-200">
                   {filteredPesanan.map((pesanan) => {
                     const status = statusConfig[pesanan.status];
                     return (
-                      <tr key={pesanan.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={pesanan.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4">
-                          <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                          <code className="text-sm font-mono bg-slate-100 px-2 py-1 rounded">
                             {pesanan.nomorPesanan}
                           </code>
                         </td>
-                        <td className="px-6 py-4 font-medium text-gray-900">
+                        <td className="px-6 py-4 font-medium text-slate-900">
                           {pesanan.judulBuku}
                         </td>
-                        <td className="px-6 py-4 text-gray-600">{pesanan.pemesan}</td>
+                        <td className="px-6 py-4 text-slate-600">{pesanan.pemesan}</td>
                         <td className="px-6 py-4 text-center font-semibold">
                           {pesanan.jumlah}
                         </td>
@@ -294,11 +294,11 @@ export default function PesananCetakAdminPage() {
                             {status.label}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td className="px-6 py-4 text-center text-sm text-slate-500">
                           {formatTanggal(pesanan.tanggalPesan)}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <Button size="sm" variant="ghost">
+                          <Button size="sm" variant="ghost" className="hover:bg-teal-50 hover:text-teal-600">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </td>
@@ -308,26 +308,24 @@ export default function PesananCetakAdminPage() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Info Card */}
-        <Card className="border-2 border-dashed border-gray-300 bg-gray-50/50">
-          <CardContent className="p-8">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                <ShoppingCart className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Fitur dalam pengembangan
-              </h3>
-              <p className="text-gray-500 text-sm max-w-md mx-auto">
-                Data yang ditampilkan adalah data dummy. Integrasi dengan backend percetakan
-                akan ditambahkan untuk mengelola pesanan cetak secara real-time.
-              </p>
+        <div className="bg-white rounded-xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <ShoppingCart className="w-8 h-8 text-slate-400" />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              Fitur dalam pengembangan
+            </h3>
+            <p className="text-slate-500 text-sm max-w-md mx-auto">
+              Data yang ditampilkan adalah data dummy. Integrasi dengan backend percetakan
+              akan ditambahkan untuk mengelola pesanan cetak secara real-time.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

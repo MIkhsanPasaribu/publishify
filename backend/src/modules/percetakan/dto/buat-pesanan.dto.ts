@@ -1,5 +1,17 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
+import { 
+  IsString, 
+  IsUUID, 
+  IsNumber, 
+  IsEnum, 
+  IsArray, 
+  IsOptional, 
+  Min, 
+  Max, 
+  MinLength, 
+  MaxLength 
+} from 'class-validator';
 
 /**
  * DTO untuk membuat pesanan cetak buku
@@ -11,6 +23,11 @@ export const BuatPesananSchema = z.object({
     .uuid('ID naskah harus berupa UUID yang valid')
     .describe('ID naskah yang akan dicetak'),
 
+  idPercetakan: z
+    .string()
+    .uuid('ID percetakan harus berupa UUID yang valid')
+    .describe('ID percetakan yang dipilih untuk mencetak'),
+
   jumlah: z
     .number()
     .int('Jumlah harus berupa bilangan bulat')
@@ -19,15 +36,15 @@ export const BuatPesananSchema = z.object({
     .describe('Jumlah eksemplar yang dicetak'),
 
   formatKertas: z
-    .enum(['A4', 'A5', 'B5', 'Letter', 'Custom'])
+    .enum(['A4', 'A5', 'B5'])
     .describe('Format/ukuran kertas cetak'),
 
   jenisKertas: z
-    .enum(['HVS 70gr', 'HVS 80gr', 'Art Paper 120gr', 'Art Paper 150gr', 'Bookpaper'])
+    .enum(['HVS', 'BOOKPAPER', 'ART_PAPER'])
     .describe('Jenis kertas yang digunakan'),
 
   jenisCover: z
-    .enum(['Soft Cover', 'Hard Cover', 'Board Cover'])
+    .enum(['SOFTCOVER', 'HARDCOVER'])
     .describe('Jenis cover/jilid buku'),
 
   finishingTambahan: z
@@ -52,11 +69,6 @@ export const BuatPesananSchema = z.object({
     .optional()
     .describe('Catatan tambahan untuk pesanan'),
 
-  hargaTotal: z
-    .number()
-    .positive('Harga total harus lebih dari 0')
-    .describe('Total harga pesanan cetak'),
-
   alamatPengiriman: z
     .string()
     .min(10, 'Alamat pengiriman minimal 10 karakter')
@@ -79,9 +91,10 @@ export const BuatPesananSchema = z.object({
 export type BuatPesananDto = z.infer<typeof BuatPesananSchema>;
 
 /**
- * Class untuk Swagger documentation
+ * Class untuk Swagger documentation dan validation
  */
-export class BuatPesananDtoClass implements BuatPesananDto {
+export class BuatPesananDtoClass {
+  @IsUUID('4', { message: 'ID naskah harus berupa UUID yang valid' })
   @ApiProperty({
     description: 'ID naskah yang akan dicetak (harus berstatus diterbitkan)',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -89,6 +102,17 @@ export class BuatPesananDtoClass implements BuatPesananDto {
   })
   idNaskah!: string;
 
+  @IsUUID('4', { message: 'ID percetakan harus berupa UUID yang valid' })
+  @ApiProperty({
+    description: 'ID percetakan yang dipilih',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
+  })
+  idPercetakan!: string;
+
+  @IsNumber({}, { message: 'Jumlah harus berupa angka' })
+  @Min(1, { message: 'Jumlah minimal 1 eksemplar' })
+  @Max(10000, { message: 'Jumlah maksimal 10.000 eksemplar' })
   @ApiProperty({
     description: 'Jumlah eksemplar yang dicetak',
     example: 100,
@@ -97,27 +121,32 @@ export class BuatPesananDtoClass implements BuatPesananDto {
   })
   jumlah!: number;
 
+  @IsEnum(['A4', 'A5', 'B5'], { message: 'Format kertas harus A4, A5, atau B5' })
   @ApiProperty({
     description: 'Format/ukuran kertas',
-    enum: ['A4', 'A5', 'B5', 'Letter', 'Custom'],
+    enum: ['A4', 'A5', 'B5'],
     example: 'A5',
   })
-  formatKertas!: 'A4' | 'A5' | 'B5' | 'Letter' | 'Custom';
+  formatKertas!: 'A4' | 'A5' | 'B5';
 
+  @IsEnum(['HVS', 'BOOKPAPER', 'ART_PAPER'], { message: 'Jenis kertas tidak valid' })
   @ApiProperty({
     description: 'Jenis kertas yang digunakan',
-    enum: ['HVS 70gr', 'HVS 80gr', 'Art Paper 120gr', 'Art Paper 150gr', 'Bookpaper'],
-    example: 'HVS 80gr',
+    enum: ['HVS', 'BOOKPAPER', 'ART_PAPER'],
+    example: 'HVS',
   })
-  jenisKertas!: 'HVS 70gr' | 'HVS 80gr' | 'Art Paper 120gr' | 'Art Paper 150gr' | 'Bookpaper';
+  jenisKertas!: 'HVS' | 'BOOKPAPER' | 'ART_PAPER';
 
+  @IsEnum(['SOFTCOVER', 'HARDCOVER'], { message: 'Jenis cover harus SOFTCOVER atau HARDCOVER' })
   @ApiProperty({
     description: 'Jenis cover/jilid buku',
-    enum: ['Soft Cover', 'Hard Cover', 'Board Cover'],
-    example: 'Soft Cover',
+    enum: ['SOFTCOVER', 'HARDCOVER'],
+    example: 'SOFTCOVER',
   })
-  jenisCover!: 'Soft Cover' | 'Hard Cover' | 'Board Cover';
+  jenisCover!: 'SOFTCOVER' | 'HARDCOVER';
 
+  @IsOptional()
+  @IsArray({ message: 'Finishing tambahan harus berupa array' })
   @ApiProperty({
     description: 'Finishing tambahan untuk cover',
     enum: ['Laminasi Glossy', 'Laminasi Doff', 'Emboss', 'Deboss', 'Spot UV', 'Foil', 'Tidak Ada'],
@@ -126,10 +155,13 @@ export class BuatPesananDtoClass implements BuatPesananDto {
     default: [],
     example: ['Laminasi Glossy', 'Spot UV'],
   })
-  finishingTambahan!: Array<
+  finishingTambahan?: Array<
     'Laminasi Glossy' | 'Laminasi Doff' | 'Emboss' | 'Deboss' | 'Spot UV' | 'Foil' | 'Tidak Ada'
   >;
 
+  @IsOptional()
+  @IsString({ message: 'Catatan harus berupa teks' })
+  @MaxLength(1000, { message: 'Catatan maksimal 1000 karakter' })
   @ApiProperty({
     description: 'Catatan tambahan untuk pesanan',
     example: 'Mohon diproses dengan hati-hati',
@@ -138,13 +170,9 @@ export class BuatPesananDtoClass implements BuatPesananDto {
   })
   catatan?: string;
 
-  @ApiProperty({
-    description: 'Total harga pesanan cetak',
-    example: 500000,
-    minimum: 0,
-  })
-  hargaTotal!: number;
-
+  @IsString({ message: 'Alamat pengiriman harus berupa teks' })
+  @MinLength(10, { message: 'Alamat pengiriman minimal 10 karakter' })
+  @MaxLength(500, { message: 'Alamat pengiriman maksimal 500 karakter' })
   @ApiProperty({
     description: 'Alamat lengkap pengiriman',
     example: 'Jl. Merdeka No. 123, RT 01/RW 02, Kelurahan Sukamaju, Kecamatan Bandung Utara, Kota Bandung, Jawa Barat 40123',
@@ -153,6 +181,9 @@ export class BuatPesananDtoClass implements BuatPesananDto {
   })
   alamatPengiriman!: string;
 
+  @IsString({ message: 'Nama penerima harus berupa teks' })
+  @MinLength(3, { message: 'Nama penerima minimal 3 karakter' })
+  @MaxLength(100, { message: 'Nama penerima maksimal 100 karakter' })
   @ApiProperty({
     description: 'Nama lengkap penerima',
     example: 'Budi Santoso',
@@ -161,6 +192,9 @@ export class BuatPesananDtoClass implements BuatPesananDto {
   })
   namaPenerima!: string;
 
+  @IsString({ message: 'Nomor telepon harus berupa teks' })
+  @MinLength(8, { message: 'Nomor telepon minimal 8 karakter' })
+  @MaxLength(20, { message: 'Nomor telepon maksimal 20 karakter' })
   @ApiProperty({
     description: 'Nomor telepon penerima',
     example: '081234567890',

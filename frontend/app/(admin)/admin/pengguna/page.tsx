@@ -161,23 +161,39 @@ export default function KelolaPenggunaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">👥 Kelola Pengguna</h1>
-          <p className="text-gray-600 mt-1">
-            Kelola pengguna sistem berdasarkan peran (Editor, Penulis, Percetakan)
-          </p>
+    <div className="min-h-screen w-full bg-transparent overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Gradient Header */}
+        <div className="relative w-full bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/3" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+                Kelola Pengguna
+              </h1>
+              <p className="text-sm sm:text-base text-teal-50">
+                Kelola pengguna sistem berdasarkan peran (Editor, Penulis, Percetakan)
+              </p>
+            </div>
+            <div className="flex-shrink-0 hidden lg:block">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Editor</p>
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-sm text-slate-600 mb-1">Total Editor</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                   {allPengguna.filter((p) => p.peranPengguna?.some((r) => r.jenisPeran === "editor")).length}
                 </p>
               </div>

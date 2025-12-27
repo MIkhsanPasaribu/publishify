@@ -8,6 +8,7 @@ export type StatusPesanan =
   | "siap"
   | "dikirim"
   | "terkirim"
+  | "selesai"
   | "dibatalkan";
 
 export type StatusPembayaran =
@@ -48,6 +49,11 @@ export interface PesananCetak {
   finishingTambahan: string[] | null; // Array of finishing options
   catatan: string | null; // Database field name
   
+  // Shipping information (from database)
+  alamatPengiriman: string;
+  namaPenerima: string;
+  teleponPenerima: string;
+  
   // Pricing
   hargaTotal: number; // Database field name (Decimal/numeric in DB)
   
@@ -56,6 +62,7 @@ export interface PesananCetak {
   tanggalPesan: string; // Database field name (timestamp)
   estimasiSelesai: string | null; // timestamp
   tanggalSelesai: string | null; // timestamp
+  catatanPenerimaan: string | null; // Catatan saat konfirmasi penerimaan
   diperbaruiPada: string; // timestamp
   
   // Relations (jika di-include dari API)
@@ -166,13 +173,14 @@ export interface LogProduksi {
 // DTOs untuk request API
 export interface BuatPesananCetakDto {
   idNaskah: string;
+  idPercetakan: string; // NEW: ID percetakan yang dipilih
   jumlah: number;
-  formatKertas: string;
-  jenisKertas: string;
-  jenisCover: string;
+  formatKertas: "A4" | "A5" | "B5";
+  jenisKertas: "HVS" | "BOOKPAPER" | "ART_PAPER";
+  jenisCover: "SOFTCOVER" | "HARDCOVER";
   finishingTambahan?: string[];
   catatan?: string;
-  hargaTotal: number;
+  // hargaTotal DIHAPUS - akan dikalkulasi otomatis di backend
   alamatPengiriman: string;
   namaPenerima: string;
   teleponPenerima: string;

@@ -65,17 +65,26 @@ export default function LoginPage() {
       
       toast.success("Login berhasil. Selamat datang kembali!");
       
-      // Redirect based on user role
+      // Tunggu sebentar untuk memastikan cookie tersimpan
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect based on user role (priority: admin > percetakan > editor > penulis)
       if (pengguna?.peran?.includes("admin")) {
         console.log("↪️ Redirect ke: /admin");
-        router.replace("/admin");
+        router.push("/admin");
+      } else if (pengguna?.peran?.includes("percetakan")) {
+        console.log("↪️ Redirect ke: /percetakan");
+        router.push("/percetakan");
       } else if (pengguna?.peran?.includes("editor")) {
-        console.log("↪️ Redirect ke: /dashboard/editor");
-        router.replace("/dashboard/editor");
+        console.log("↪️ Redirect ke: /editor");
+        router.push("/editor");
+      } else if (pengguna?.peran?.includes("penulis")) {
+        console.log("↪️ Redirect ke: /penulis");
+        router.push("/penulis");
       } else {
-        // Penulis & Percetakan redirect ke dashboard umum
-        console.log("↪️ Redirect ke: /dashboard");
-        router.replace("/dashboard");
+        // Fallback ke penulis jika tidak ada role
+        console.log("↪️ Redirect fallback ke: /penulis");
+        router.push("/penulis");
       }
     } catch (err: any) {
       console.error("❌ Login error:", err);

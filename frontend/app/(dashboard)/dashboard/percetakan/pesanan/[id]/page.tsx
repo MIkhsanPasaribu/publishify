@@ -298,8 +298,8 @@ export default function DetailPesananPage() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Ukuran Kertas</p>
-                  <p className="font-medium">{pesanan.ukuranKertas}</p>
+                  <p className="text-sm text-muted-foreground">Format Kertas</p>
+                  <p className="font-medium">{pesanan.formatKertas}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Jenis Kertas</p>
@@ -310,23 +310,23 @@ export default function DetailPesananPage() {
                   <p className="font-medium">{pesanan.jenisCover}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Finishing</p>
-                  <p className="font-medium">{pesanan.finishing}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Warna Cetak</p>
-                  <p className="font-medium">{pesanan.warnaCetak}</p>
+                  <p className="text-sm text-muted-foreground">Finishing Tambahan</p>
+                  <p className="font-medium">
+                    {pesanan.finishingTambahan && pesanan.finishingTambahan.length > 0 
+                      ? pesanan.finishingTambahan.join(", ") 
+                      : "-"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Jumlah Cetak</p>
-                  <p className="font-medium text-lg">{pesanan.jumlahCetak} eksemplar</p>
+                  <p className="font-medium text-lg">{pesanan.jumlah} eksemplar</p>
                 </div>
               </div>
 
-              {pesanan.catatanTambahan && (
+              {pesanan.catatan && (
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">Catatan Tambahan</p>
-                  <p className="mt-1">{pesanan.catatanTambahan}</p>
+                  <p className="text-sm text-muted-foreground">Catatan</p>
+                  <p className="mt-1">{pesanan.catatan}</p>
                 </div>
               )}
             </CardContent>
@@ -432,15 +432,15 @@ export default function DetailPesananPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Nama</p>
-                <p className="font-medium">{pesanan.namaPemesan}</p>
+                <p className="text-sm text-muted-foreground">Nama Penerima</p>
+                <p className="font-medium">{pesanan.namaPenerima}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Phone className="h-4 w-4" />
-                  Telepon
+                  Telepon Penerima
                 </p>
-                <p className="font-medium">{pesanan.teleponPemesan}</p>
+                <p className="font-medium">{pesanan.teleponPenerima}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -463,16 +463,16 @@ export default function DetailPesananPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Harga per Unit</span>
-                <span className="font-medium">{formatRupiah(pesanan.hargaPerUnit)}</span>
+                <span className="font-medium">{formatRupiah(pesanan.hargaTotal / pesanan.jumlah)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Jumlah Cetak</span>
-                <span className="font-medium">{pesanan.jumlahCetak}x</span>
+                <span className="font-medium">{pesanan.jumlah}x</span>
               </div>
               <div className="flex justify-between pt-3 border-t">
                 <span className="font-semibold">Total</span>
                 <span className="font-bold text-lg text-[#0d7377]">
-                  {formatRupiah(pesanan.totalHarga)}
+                  {formatRupiah(pesanan.hargaTotal)}
                 </span>
               </div>
 
@@ -503,14 +503,8 @@ export default function DetailPesananPage() {
             <CardContent className="space-y-2 text-sm">
               <div>
                 <p className="text-muted-foreground">Tanggal Pesanan</p>
-                <p>{formatTanggalWaktu(pesanan.dibuatPada)}</p>
+                <p>{formatTanggalWaktu(pesanan.tanggalPesan)}</p>
               </div>
-              {pesanan.tanggalDiterima && (
-                <div>
-                  <p className="text-muted-foreground">Tanggal Diterima</p>
-                  <p>{formatTanggalWaktu(pesanan.tanggalDiterima)}</p>
-                </div>
-              )}
               {pesanan.estimasiSelesai && (
                 <div>
                   <p className="text-muted-foreground">Estimasi Selesai</p>

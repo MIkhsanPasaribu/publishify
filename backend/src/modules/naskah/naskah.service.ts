@@ -441,8 +441,13 @@ export class NaskahService {
       throw new NotFoundException('Naskah tidak ditemukan');
     }
 
-    // Validasi akses (jika private, hanya penulis yang bisa akses)
-    if (!naskah.publik && (!idPengguna || naskah.idPenulis !== idPengguna)) {
+    // Validasi akses
+    // 1. Jika naskah publik atau sudah diterbitkan, semua bisa akses
+    // 2. Jika private dan belum diterbitkan, hanya penulis yang bisa akses
+    const isPenulisNaskah = idPengguna && naskah.idPenulis === idPengguna;
+    const isPublicAccess = naskah.publik || naskah.status === 'diterbitkan';
+    
+    if (!isPublicAccess && !isPenulisNaskah) {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
     }
 

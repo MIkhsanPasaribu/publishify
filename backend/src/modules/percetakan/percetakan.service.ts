@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
@@ -12,28 +13,203 @@ import {
   UpdateStatusDto,
   BuatPengirimanDto,
   KonfirmasiPesananDto,
+  KonfirmasiPenerimaanDto,
 } from './dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import { NotifikasiService } from '@/modules/notifikasi/notifikasi.service';
+import { NotifikasiGateway } from '@/modules/notifikasi/notifikasi.gateway';
+import { EmailService } from '@/modules/notifikasi/email.service';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
 
 /**
  * Service untuk mengelola pesanan cetak buku
- * Menangani pembuatan, update, konfirmasi, dan tracking pesanan
+ * Menangani pembuatan, update, konfirmasi, tracking pesanan, email & WebSocket notifications
  */
 @Injectable()
 export class PercetakanService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PercetakanService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifikasiService: NotifikasiService,
+    private readonly notifikasiGateway: NotifikasiGateway,
+    private readonly emailService: EmailService,
+  ) {}
 
   /**
-   * Buat pesanan cetak baru
-   * Validasi: naskah harus berstatus 'diterbitkan'
+   * Ambil daftar percetakan yang tersedia dengan info tarif aktif
+   * Untuk ditampilkan saat penulis akan membuat pesanan cetak
+   */
+  async ambilDaftarPercetakan() {
+    console.log('\n🏭 [PERCETAKAN] Mengambil Daftar Percetakan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Ambil semua user dengan peran percetakan
+    const daftarPercetakan = await this.prisma.pengguna.findMany({
+      where: {
+        peranPengguna: {
+          some: {
+            jenisPeran: 'percetakan',
+            aktif: true,
+          },
+        },
+        aktif: true,
+      },
+      include: {
+        profilPengguna: {
+          select: {
+            namaDepan: true,
+            namaBelakang: true,
+            namaTampilan: true,
+            alamat: true,
+            kota: true,
+            provinsi: true,
+          },
+        },
+        parameterHarga: {
+          where: {
+            aktif: true,
+          },
+          select: {
+            id: true,
+            namaKombinasi: true,
+            deskripsi: true,
+            hargaKertasA4: true,
+            hargaKertasA5: true,
+            hargaKertasB5: true,
+            hargaSoftcover: true,
+            hargaHardcover: true,
+            biayaJilid: true,
+            minimumPesanan: true,
+          },
+        },
+      },
+      orderBy: {
+        dibuatPada: 'desc',
+      },
+    });
+
+    console.log(`✅ Ditemukan ${daftarPercetakan.length} percetakan aktif`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    return {
+      sukses: true,
+      pesan: 'Daftar percetakan berhasil diambil',
+      data: daftarPercetakan.map((p) => {
+        const tarif = p.parameterHarga[0];
+        return {
+          id: p.id,
+          email: p.email,
+          nama: p.profilPengguna?.namaTampilan || 
+                `${p.profilPengguna?.namaDepan || ''} ${p.profilPengguna?.namaBelakang || ''}`.trim() ||
+                'Percetakan',
+          alamat: p.profilPengguna?.alamat,
+          kota: p.profilPengguna?.kota,
+          provinsi: p.profilPengguna?.provinsi,
+          tarifAktif: tarif ? {
+            ...tarif,
+            hargaKertasA4: tarif.hargaKertasA4 ? Number(tarif.hargaKertasA4) : 0,
+            hargaKertasA5: tarif.hargaKertasA5 ? Number(tarif.hargaKertasA5) : 0,
+            hargaKertasB5: tarif.hargaKertasB5 ? Number(tarif.hargaKertasB5) : 0,
+            hargaSoftcover: tarif.hargaSoftcover ? Number(tarif.hargaSoftcover) : 0,
+            hargaHardcover: tarif.hargaHardcover ? Number(tarif.hargaHardcover) : 0,
+            biayaJilid: tarif.biayaJilid ? Number(tarif.biayaJilid) : 0,
+          } : null,
+        };
+      }),
+      total: daftarPercetakan.length,
+    };
+  }
+
+  /**
+   * Ambil detail tarif percetakan tertentu (skema aktif)
+   */
+  async ambilTarifPercetakan(idPercetakan: string) {
+    console.log('\n💰 [PERCETAKAN] Mengambil Tarif Percetakan');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🏭 ID Percetakan:', idPercetakan);
+
+    // Validasi percetakan exists dan aktif
+    const percetakan = await this.prisma.pengguna.findFirst({
+      where: {
+        id: idPercetakan,
+        aktif: true,
+        peranPengguna: {
+          some: {
+            jenisPeran: 'percetakan',
+            aktif: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        profilPengguna: {
+          select: {
+            namaDepan: true,
+            namaBelakang: true,
+            namaTampilan: true,
+          },
+        },
+      },
+    });
+
+    if (!percetakan) {
+      throw new NotFoundException('Percetakan tidak ditemukan atau tidak aktif');
+    }
+
+    // Ambil tarif aktif
+    const tarifAktif = await this.prisma.parameterHargaPercetakan.findFirst({
+      where: {
+        idPercetakan,
+        aktif: true,
+      },
+    });
+
+    if (!tarifAktif) {
+      throw new NotFoundException('Percetakan belum memiliki tarif aktif');
+    }
+
+    console.log('✅ Tarif ditemukan:', tarifAktif.namaKombinasi);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // Transform Decimal to number untuk frontend
+    return {
+      sukses: true,
+      pesan: 'Tarif percetakan berhasil diambil',
+      data: {
+        percetakan: {
+          id: percetakan.id,
+          nama: percetakan.profilPengguna?.namaTampilan ||
+                `${percetakan.profilPengguna?.namaDepan || ''} ${percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
+                'Percetakan',
+        },
+        tarif: {
+          ...tarifAktif,
+          hargaKertasA4: tarifAktif.hargaKertasA4 ? Number(tarifAktif.hargaKertasA4) : 0,
+          hargaKertasA5: tarifAktif.hargaKertasA5 ? Number(tarifAktif.hargaKertasA5) : 0,
+          hargaKertasB5: tarifAktif.hargaKertasB5 ? Number(tarifAktif.hargaKertasB5) : 0,
+          hargaSoftcover: tarifAktif.hargaSoftcover ? Number(tarifAktif.hargaSoftcover) : 0,
+          hargaHardcover: tarifAktif.hargaHardcover ? Number(tarifAktif.hargaHardcover) : 0,
+          biayaJilid: tarifAktif.biayaJilid ? Number(tarifAktif.biayaJilid) : 0,
+        },
+      },
+    };
+  }
+
+  /**
+   * Buat pesanan cetak baru dengan validasi percetakan dan kalkulasi harga otomatis
+   * Validasi: naskah harus berstatus 'diterbitkan', percetakan harus aktif, jumlah >= minimum
    */
   async buatPesanan(idPemesan: string, dto: BuatPesananDto) {
     console.log('\n🎯 [PERCETAKAN] Membuat Pesanan Baru');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('👤 ID Pemesan:', idPemesan);
+    console.log('🏭 ID Percetakan:', dto.idPercetakan);
     console.log('📝 DTO:', JSON.stringify(dto, null, 2));
 
-    // Validasi naskah exists dan status diterbitkan
+    // 1. Validasi naskah exists dan status diterbitkan
     const naskah = await this.prisma.naskah.findUnique({
       where: { id: dto.idNaskah },
       include: {
@@ -56,33 +232,99 @@ export class PercetakanService {
       throw new BadRequestException('Hanya naskah dengan status "diterbitkan" yang dapat dicetak');
     }
 
-    // Validasi pemesan adalah penulis naskah
+    // 2. Validasi pemesan adalah penulis naskah
     if (naskah.idPenulis !== idPemesan) {
       throw new ForbiddenException('Anda hanya dapat memesan cetak untuk naskah Anda sendiri');
     }
 
-    // Generate nomor pesanan unik (format: PO-YYYYMMDD-XXXX)
+    // 3. Validasi percetakan exists dan aktif
+    const percetakan = await this.prisma.pengguna.findFirst({
+      where: {
+        id: dto.idPercetakan,
+        aktif: true,
+        peranPengguna: {
+          some: {
+            jenisPeran: 'percetakan',
+            aktif: true,
+          },
+        },
+      },
+    });
+
+    if (!percetakan) {
+      throw new NotFoundException('Percetakan tidak ditemukan atau tidak aktif');
+    }
+
+    console.log('🏭 Percetakan:', percetakan.email);
+
+    // 4. Ambil tarif aktif percetakan
+    const tarifAktif = await this.prisma.parameterHargaPercetakan.findFirst({
+      where: {
+        idPercetakan: dto.idPercetakan,
+        aktif: true,
+      },
+    });
+
+    if (!tarifAktif) {
+      throw new NotFoundException('Percetakan belum memiliki tarif aktif');
+    }
+
+    console.log('💰 Tarif:', tarifAktif.namaKombinasi);
+    console.log('📦 Minimum Pesanan:', tarifAktif.minimumPesanan);
+
+    // 5. Validasi jumlah pesanan terhadap minimum
+    if (dto.jumlah < tarifAktif.minimumPesanan) {
+      throw new BadRequestException(
+        `Jumlah pesanan minimal ${tarifAktif.minimumPesanan} eksemplar`
+      );
+    }
+
+    // 6. Kalkulasi harga otomatis berdasarkan tarif
+    let hargaKertasPerLembar = 0;
+    if (dto.formatKertas === 'A4') {
+      hargaKertasPerLembar = Number(tarifAktif.hargaKertasA4);
+    } else if (dto.formatKertas === 'A5') {
+      hargaKertasPerLembar = Number(tarifAktif.hargaKertasA5);
+    } else if (dto.formatKertas === 'B5') {
+      hargaKertasPerLembar = Number(tarifAktif.hargaKertasB5);
+    }
+
+    let hargaCoverPerUnit = 0;
+    if (dto.jenisCover === 'SOFTCOVER') {
+      hargaCoverPerUnit = Number(tarifAktif.hargaSoftcover);
+    } else if (dto.jenisCover === 'HARDCOVER') {
+      hargaCoverPerUnit = Number(tarifAktif.hargaHardcover);
+    }
+
+    const hargaJilid = Number(tarifAktif.biayaJilid);
+    const jumlahHalaman = naskah.jumlahHalaman || 100;
+
+    // Rumus: (Harga Kertas/lembar * Jumlah Halaman + Harga Cover + Biaya Jilid) * Jumlah Buku
+    const biayaPerUnit = hargaKertasPerLembar * jumlahHalaman + hargaCoverPerUnit + hargaJilid;
+    const hargaTotal = biayaPerUnit * dto.jumlah;
+
+    console.log('\n💵 Kalkulasi Harga:');
+    console.log('  - Harga Kertas/lembar:', hargaKertasPerLembar);
+    console.log('  - Jumlah Halaman:', jumlahHalaman);
+    console.log('  - Harga Cover:', hargaCoverPerUnit);
+    console.log('  - Biaya Jilid:', hargaJilid);
+    console.log('  - Biaya/Unit:', biayaPerUnit);
+    console.log('  - Jumlah Buku:', dto.jumlah);
+    console.log('  - TOTAL:', hargaTotal);
+
+    // 7. Generate nomor pesanan unik (format: PO-YYYYMMDD-XXXX)
     const tanggal = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const nomorPesanan = `PO-${tanggal}-${randomNum}`;
 
-    // Hitung biaya cetak
-    const hargaTotal = await this.hitungBiayaCetak({
-      jumlah: dto.jumlah,
-      formatKertas: dto.formatKertas,
-      jenisKertas: dto.jenisKertas,
-      jenisCover: dto.jenisCover,
-      finishingTambahan: dto.finishingTambahan || [],
-      jumlahHalaman: naskah.jumlahHalaman || 100, // Default 100 halaman
-    });
-
-    // Buat pesanan dengan pengiriman
+    // 8. Buat pesanan dengan pengiriman
     const pesanan = await this.prisma.$transaction(async (prisma) => {
       // Buat pesanan cetak
       const pesanan = await prisma.pesananCetak.create({
         data: {
           idNaskah: dto.idNaskah,
           idPemesan,
+          idPercetakan: dto.idPercetakan,
           nomorPesanan,
           jumlah: dto.jumlah,
           formatKertas: dto.formatKertas,
@@ -90,12 +332,11 @@ export class PercetakanService {
           jenisCover: dto.jenisCover,
           finishingTambahan: dto.finishingTambahan || [],
           catatan: dto.catatan,
-          hargaTotal: new Decimal(dto.hargaTotal || hargaTotal),
+          hargaTotal: new Decimal(hargaTotal),
           status: 'tertunda',
-          // Tambahkan snapshot fields yang required
           judulSnapshot: naskah.judul,
           formatSnapshot: dto.formatKertas,
-          jumlahHalamanSnapshot: naskah.jumlahHalaman || 0,
+          jumlahHalamanSnapshot: jumlahHalaman,
         },
       });
 
@@ -613,6 +854,27 @@ export class PercetakanService {
   async updateStatusPesanan(id: string, idPercetakan: string, dto: UpdateStatusDto) {
     const pesanan = await this.prisma.pesananCetak.findUnique({
       where: { id },
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+      },
     });
 
     if (!pesanan) {
@@ -650,13 +912,30 @@ export class PercetakanService {
       updateData.estimasiSelesai = new Date(dto.estimasiSelesai);
     }
 
-    if (dto.status === 'terkirim') {
-      updateData.tanggalSelesai = new Date();
-    }
-
     const pesananUpdated = await this.prisma.pesananCetak.update({
       where: { id },
       data: updateData,
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+      },
     });
 
     // Buat log produksi
@@ -688,6 +967,56 @@ export class PercetakanService {
         deskripsi: `Memperbarui status pesanan ${pesanan.nomorPesanan} menjadi ${dto.status}`,
       },
     });
+
+    // 🔔 PRIORITY 1: Email & WebSocket Notification saat status = "terkirim"
+    if (dto.status === 'terkirim' && pesananUpdated.pengiriman) {
+      this.logger.log(`📧 Mengirim email & notifikasi untuk pesanan terkirim: ${pesanan.nomorPesanan}`);
+
+      const penulis = pesananUpdated.naskah.penulis;
+      const namaPenerima = penulis.profilPengguna?.namaTampilan ||
+        `${penulis.profilPengguna?.namaDepan || ''} ${penulis.profilPengguna?.namaBelakang || ''}`.trim() ||
+        'Pengguna';
+
+      // Format tanggal estimasi sampai
+      const estimasiSampai = pesananUpdated.pengiriman.estimasiTiba
+        ? format(new Date(pesananUpdated.pengiriman.estimasiTiba), 'd MMMM yyyy', { locale: idLocale })
+        : 'Segera';
+
+      // Kirim email notification
+      try {
+        await this.emailService.kirimEmailPesananDikirim({
+          emailPenerima: penulis.email,
+          namaPenerima,
+          nomorPesanan: pesananUpdated.nomorPesanan,
+          judulBuku: pesananUpdated.naskah.judul,
+          nomorResi: pesananUpdated.pengiriman.nomorResi || '-',
+          kurir: pesananUpdated.pengiriman.namaEkspedisi,
+          estimasiSampai,
+        });
+
+        this.logger.log(`✅ Email pesanan dikirim terkirim ke ${penulis.email}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Kirim database notification
+      try {
+        const notifikasi = await this.notifikasiService.kirimNotifikasi({
+          idPengguna: penulis.id,
+          judul: 'Pesanan Telah Dikirim! 📦',
+          pesan: `Pesanan "${pesananUpdated.naskah.judul}" telah dikirim dengan resi ${pesananUpdated.pengiriman.nomorResi}. Estimasi tiba: ${estimasiSampai}.`,
+          tipe: 'info',
+          url: `/penulis/pesanan-cetak`,
+        });
+
+        // Emit via WebSocket
+        await this.notifikasiGateway.emitKeUser(penulis.id, notifikasi.data);
+
+        this.logger.log(`✅ WebSocket notification dikirim ke user ${penulis.id}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim notifikasi: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
 
     return {
       sukses: true,
@@ -976,50 +1305,18 @@ export class PercetakanService {
 
   /**
    * ============================================
-   * TARIF PERCETAKAN - CRUD Operations
+   * TARIF PERCETAKAN - CRUD Operations (DEPRECATED)
+   * Use buatKombinasiTarif instead
    * ============================================
    */
 
   /**
-   * Buat tarif percetakan baru
+   * @deprecated Use buatKombinasiTarif instead
    */
   async buatTarif(idPercetakan: string, dto: any) {
-    // Check if tarif sudah ada dengan kombinasi yang sama
-    const tarifExists = await this.prisma.tarifPercetakan.findUnique({
-      where: {
-        idPercetakan_formatBuku_jenisKertas_jenisCover: {
-          idPercetakan,
-          formatBuku: dto.formatBuku,
-          jenisKertas: dto.jenisKertas,
-          jenisCover: dto.jenisCover,
-        },
-      },
-    });
-
-    if (tarifExists) {
-      throw new BadRequestException(
-        'Tarif dengan kombinasi format, jenis kertas, dan cover ini sudah ada',
-      );
-    }
-
-    const tarif = await this.prisma.tarifPercetakan.create({
-      data: {
-        idPercetakan,
-        formatBuku: dto.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        hargaPerHalaman: new Decimal(dto.hargaPerHalaman),
-        biayaJilid: new Decimal(dto.biayaJilid),
-        minimumPesanan: dto.minimumPesanan || 1,
-        aktif: dto.aktif !== undefined ? dto.aktif : true,
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif percetakan berhasil dibuat',
-      data: tarif,
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use buatKombinasiTarif instead.',
+    );
   }
 
   /**
@@ -1028,50 +1325,14 @@ export class PercetakanService {
   async ambilSemuaTarif(idPercetakan?: string, aktif?: boolean) {
     const where: any = {};
     
-    if (idPercetakan) {
-      where.idPercetakan = idPercetakan;
-    }
-    
-    if (aktif !== undefined) {
-      where.aktif = aktif;
-    }
-
-    const tarif = await this.prisma.tarifPercetakan.findMany({
-      where,
-      include: {
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: {
-              select: {
-                namaDepan: true,
-                namaBelakang: true,
-                namaTampilan: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: [
-        { formatBuku: 'asc' },
-        { jenisKertas: 'asc' },
-        { jenisCover: 'asc' },
-      ],
-    });
-
-    return {
-      sukses: true,
-      data: tarif,
-      total: tarif.length,
-    };
+    return this.ambilSemuaKombinasi(idPercetakan || '');
   }
 
   /**
-   * Ambil tarif by ID
+   * @deprecated Use parameterHargaPercetakan instead
    */
   async ambilTarifById(id: string) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
+    const tarif = await this.prisma.parameterHargaPercetakan.findUnique({
       where: { id },
       include: {
         percetakan: {
@@ -1095,67 +1356,19 @@ export class PercetakanService {
   }
 
   /**
-   * Perbarui tarif
+   * @deprecated Table tarifPercetakan removed
    */
   async perbaruiTarif(id: string, idPercetakan: string, dto: any) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
-      where: { id },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif tidak ditemukan');
-    }
-
-    // Validasi ownership
-    if (tarif.idPercetakan !== idPercetakan) {
-      throw new ForbiddenException('Anda tidak memiliki akses untuk mengubah tarif ini');
-    }
-
-    const updated = await this.prisma.tarifPercetakan.update({
-      where: { id },
-      data: {
-        ...(dto.formatBuku && { formatBuku: dto.formatBuku }),
-        ...(dto.jenisKertas && { jenisKertas: dto.jenisKertas }),
-        ...(dto.jenisCover && { jenisCover: dto.jenisCover }),
-        ...(dto.hargaPerHalaman && { hargaPerHalaman: new Decimal(dto.hargaPerHalaman) }),
-        ...(dto.biayaJilid && { biayaJilid: new Decimal(dto.biayaJilid) }),
-        ...(dto.minimumPesanan && { minimumPesanan: dto.minimumPesanan }),
-        ...(dto.aktif !== undefined && { aktif: dto.aktif }),
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif berhasil diperbarui',
-      data: updated,
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use buatKombinasiTarif to create new tariff schemes.',
+    );
   }
 
   /**
-   * Hapus tarif
+   * @deprecated Use hapusKombinasi instead
    */
   async hapusTarif(id: string, idPercetakan: string) {
-    const tarif = await this.prisma.tarifPercetakan.findUnique({
-      where: { id },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif tidak ditemukan');
-    }
-
-    // Validasi ownership
-    if (tarif.idPercetakan !== idPercetakan) {
-      throw new ForbiddenException('Anda tidak memiliki akses untuk menghapus tarif ini');
-    }
-
-    await this.prisma.tarifPercetakan.delete({
-      where: { id },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Tarif berhasil dihapus',
-    };
+    return this.hapusKombinasi(id);
   }
 
   /**
@@ -1165,209 +1378,19 @@ export class PercetakanService {
    */
 
   /**
-   * Kalkulasi opsi harga dari berbagai percetakan
-   * Dipanggil saat penulis memilih bahan di frontend
+   * @deprecated tarifPercetakan table removed. Use kalkulasiHargaOtomatis instead
    */
   async kalkulasiOpsiHarga(dto: any) {
-    // 1. Ambil data naskah
-    const naskah = await this.prisma.naskah.findUnique({
-      where: { id: dto.naskahId },
-      select: {
-        id: true,
-        judul: true,
-        formatBuku: true,
-        jumlahHalaman: true,
-        status: true,
-      },
-    });
-
-    if (!naskah) {
-      throw new NotFoundException('Naskah tidak ditemukan');
-    }
-
-    if (naskah.status !== 'diterbitkan') {
-      throw new BadRequestException('Hanya naskah yang sudah diterbitkan yang bisa dicetak');
-    }
-
-    if (!naskah.jumlahHalaman) {
-      throw new BadRequestException('Naskah belum memiliki data jumlah halaman');
-    }
-
-    // 2. Query tarif yang cocok
-    const tarifList = await this.prisma.tarifPercetakan.findMany({
-      where: {
-        formatBuku: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        aktif: true,
-      },
-      include: {
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: {
-              select: {
-                namaDepan: true,
-                namaBelakang: true,
-                namaTampilan: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (tarifList.length === 0) {
-      return {
-        sukses: true,
-        pesan: 'Tidak ada percetakan yang tersedia untuk kombinasi ini',
-        data: [],
-      };
-    }
-
-    // 3. Hitung estimasi harga untuk setiap percetakan
-    const opsiHarga = tarifList.map((tarif) => {
-      const jumlahHalaman = naskah.jumlahHalaman || 0;
-      const biayaCetak = tarif.hargaPerHalaman.toNumber() * jumlahHalaman;
-      const totalHarga = biayaCetak + tarif.biayaJilid.toNumber();
-
-      return {
-        percetakanId: tarif.idPercetakan,
-        namaPercetakan:
-          tarif.percetakan.profilPengguna?.namaTampilan ||
-          `${tarif.percetakan.profilPengguna?.namaDepan || ''} ${tarif.percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
-          tarif.percetakan.email,
-        tarifId: tarif.id,
-        formatBuku: tarif.formatBuku,
-        jenisKertas: tarif.jenisKertas,
-        jenisCover: tarif.jenisCover,
-        hargaPerHalaman: tarif.hargaPerHalaman.toNumber(),
-        biayaJilid: tarif.biayaJilid.toNumber(),
-        minimumPesanan: tarif.minimumPesanan,
-        estimasiHarga: totalHarga,
-        breakdown: {
-          biayaCetak,
-          biayaJilid: tarif.biayaJilid.toNumber(),
-          totalHarga,
-        },
-      };
-    });
-
-    // Sort by harga (termurah dulu)
-    opsiHarga.sort((a, b) => a.estimasiHarga - b.estimasiHarga);
-
-    return {
-      sukses: true,
-      pesan: `Ditemukan ${opsiHarga.length} percetakan`,
-      data: opsiHarga,
-      naskahInfo: {
-        id: naskah.id,
-        judul: naskah.judul,
-        formatBuku: naskah.formatBuku,
-        jumlahHalaman: naskah.jumlahHalaman,
-      },
-    };
+    throw new BadRequestException(
+      'Method deprecated. Use kalkulasiHargaOtomatis instead.',
+    );
   }
 
   /**
-   * Buat pesanan baru dengan SNAPSHOT pattern
-   * Dipanggil saat penulis klik "Buat Pesanan"
+   * @deprecated Use buatPesanan instead
    */
   async buatPesananBaru(idPenulis: string, dto: any) {
-    // 1. Validasi naskah
-    const naskah = await this.prisma.naskah.findUnique({
-      where: { id: dto.naskahId },
-    });
-
-    if (!naskah) {
-      throw new NotFoundException('Naskah tidak ditemukan');
-    }
-
-    if (naskah.status !== 'diterbitkan') {
-      throw new BadRequestException('Hanya naskah yang sudah diterbitkan yang bisa dicetak');
-    }
-
-    if (naskah.idPenulis !== idPenulis) {
-      throw new ForbiddenException('Anda hanya dapat memesan cetak untuk naskah Anda sendiri');
-    }
-
-    // 2. Validasi tarif percetakan
-    const tarif = await this.prisma.tarifPercetakan.findFirst({
-      where: {
-        idPercetakan: dto.percetakanId,
-        formatBuku: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        aktif: true,
-      },
-    });
-
-    if (!tarif) {
-      throw new NotFoundException('Tarif percetakan tidak ditemukan atau tidak aktif');
-    }
-
-    if (dto.jumlahOrder < tarif.minimumPesanan) {
-      throw new BadRequestException(
-        `Jumlah order minimum adalah ${tarif.minimumPesanan} eksemplar`,
-      );
-    }
-
-    // 3. Hitung total harga
-    const biayaCetak = tarif.hargaPerHalaman.toNumber() * (naskah.jumlahHalaman || 0);
-    const totalHarga = (biayaCetak + tarif.biayaJilid.toNumber()) * dto.jumlahOrder;
-
-    // 4. Generate nomor pesanan
-    const tanggal = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const nomorPesanan = `PO-${tanggal}-${randomNum}`;
-
-    // 5. Buat pesanan dengan SNAPSHOT
-    const pesanan = await this.prisma.pesananCetak.create({
-      data: {
-        idNaskah: dto.naskahId,
-        idPemesan: idPenulis,
-        idPercetakan: dto.percetakanId,
-        nomorPesanan,
-        jumlah: dto.jumlahOrder,
-        
-        // SNAPSHOT: Copy data dari Naskah
-        judulSnapshot: naskah.judul,
-        formatSnapshot: naskah.formatBuku,
-        jumlahHalamanSnapshot: naskah.jumlahHalaman || 0,
-        
-        // Spesifikasi pesanan
-        formatKertas: naskah.formatBuku,
-        jenisKertas: dto.jenisKertas,
-        jenisCover: dto.jenisCover,
-        finishingTambahan: [],
-        catatan: dto.catatan,
-        hargaTotal: new Decimal(totalHarga),
-        status: 'tertunda',
-      },
-      include: {
-        naskah: {
-          select: {
-            id: true,
-            judul: true,
-            urlSampul: true,
-          },
-        },
-        percetakan: {
-          select: {
-            id: true,
-            email: true,
-            profilPengguna: true,
-          },
-        },
-      },
-    });
-
-    return {
-      sukses: true,
-      pesan: 'Pesanan berhasil dibuat',
-      data: pesanan,
-    };
+    return this.buatPesanan(idPenulis, dto);
   }
 
   /**
@@ -1380,7 +1403,8 @@ export class PercetakanService {
       if (status === 'baru') {
         where.status = { in: ['tertunda', 'diterima'] };
       } else if (status === 'produksi') {
-        where.status = { in: ['dalam_produksi', 'kontrol_kualitas'] };
+        // Include pesanan yang baru diterima + dalam produksi + kontrol kualitas
+        where.status = { in: ['diterima', 'dalam_produksi', 'kontrol_kualitas'] };
       } else if (status === 'pengiriman') {
         where.status = { in: ['siap', 'dikirim'] };
       } else if (status === 'selesai') {
@@ -1420,6 +1444,510 @@ export class PercetakanService {
       sukses: true,
       data: pesanan,
       total: pesanan.length,
+    };
+  }
+
+  // ============================================
+  // PARAMETER HARGA MANAGEMENT
+  // ============================================
+
+  /**
+   * Buat atau update parameter harga percetakan
+   * Satu percetakan hanya punya 1 set parameter harga
+   */
+  async simpanParameterHarga(idPercetakan: string, dto: any) {
+    console.log('\n💰 [PERCETAKAN] Simpan Parameter Harga');
+    console.log('🏢 ID Percetakan:', idPercetakan);
+
+    // Check existing parameter
+    const existing = await this.prisma.parameterHargaPercetakan.findFirst({
+      where: { idPercetakan },
+    });
+
+    if (existing) {
+      // Update existing parameter
+      const updated = await this.prisma.parameterHargaPercetakan.update({
+        where: { id: existing.id },
+        data: {
+          hargaKertasA4: new Decimal(dto.hargaKertasA4),
+          hargaKertasA5: new Decimal(dto.hargaKertasA5),
+          hargaKertasB5: dto.hargaKertasB5 ? new Decimal(dto.hargaKertasB5) : new Decimal(0),
+          hargaSoftcover: new Decimal(dto.hargaSoftcover),
+          hargaHardcover: new Decimal(dto.hargaHardcover),
+          biayaJilid: new Decimal(dto.biayaJilid),
+          minimumPesanan: dto.minimumPesanan,
+        },
+      });
+
+      return {
+        sukses: true,
+        pesan: 'Parameter harga berhasil diperbarui',
+        data: updated,
+      };
+    } else {
+      // Create new parameter
+      const created = await this.prisma.parameterHargaPercetakan.create({
+        data: {
+          idPercetakan,
+          hargaKertasA4: new Decimal(dto.hargaKertasA4),
+          hargaKertasA5: new Decimal(dto.hargaKertasA5),
+          hargaKertasB5: dto.hargaKertasB5 ? new Decimal(dto.hargaKertasB5) : new Decimal(0),
+          hargaSoftcover: new Decimal(dto.hargaSoftcover),
+          hargaHardcover: new Decimal(dto.hargaHardcover),
+          biayaJilid: new Decimal(dto.biayaJilid),
+          minimumPesanan: dto.minimumPesanan,
+        },
+      });
+
+      return {
+        sukses: true,
+        pesan: 'Parameter harga berhasil dibuat',
+        data: created,
+      };
+    }
+  }
+
+  /**
+   * Ambil parameter harga percetakan
+   */
+  async ambilParameterHarga(idPercetakan: string) {
+    const parameter = await this.prisma.parameterHargaPercetakan.findFirst({
+      where: { idPercetakan },
+      include: {
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!parameter) {
+      throw new NotFoundException('Parameter harga belum diatur');
+    }
+
+    return {
+      sukses: true,
+      data: parameter,
+    };
+  }
+
+  // ============================================
+  // KOMBINASI TARIF MANAGEMENT
+  // ============================================
+
+  /**
+   * Buat skema tarif baru
+   * Langsung save ke ParameterHargaPercetakan dengan semua komponen harga
+   */
+  async buatKombinasiTarif(idPercetakan: string, dto: any) {
+    console.log('\n🎯 [PERCETAKAN] Buat Skema Tarif');
+    console.log('📝 Data:', JSON.stringify(dto, null, 2));
+
+    // Jika aktif = true (default), nonaktifkan skema lain
+    if (dto.aktif !== false) {
+      await this.prisma.parameterHargaPercetakan.updateMany({
+        where: { idPercetakan, aktif: true },
+        data: { aktif: false },
+      });
+    }
+
+    // Buat skema tarif baru
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.create({
+      data: {
+        idPercetakan,
+        namaKombinasi: dto.namaKombinasi,
+        deskripsi: dto.deskripsi,
+        hargaKertasA4: new Decimal(dto.hargaKertasA4),
+        hargaKertasA5: new Decimal(dto.hargaKertasA5),
+        hargaKertasB5: new Decimal(dto.hargaKertasB5 || 0),
+        hargaSoftcover: new Decimal(dto.hargaSoftcover),
+        hargaHardcover: new Decimal(dto.hargaHardcover),
+        biayaJilid: new Decimal(dto.biayaJilid),
+        minimumPesanan: dto.minimumPesanan,
+        aktif: dto.aktif !== false, // Default true
+      },
+      include: {
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: true,
+          },
+        },
+      },
+    });
+
+    console.log('✅ Skema tarif berhasil dibuat:', skemaTarif.namaKombinasi);
+
+    return {
+      sukses: true,
+      pesan: 'Skema tarif berhasil dibuat',
+      data: skemaTarif,
+    };
+  }
+
+  /**
+   * Ambil semua skema tarif percetakan
+   */
+  async ambilSemuaKombinasi(idPercetakan: string) {
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findMany({
+      where: { idPercetakan },
+      include: {
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: true,
+          },
+        },
+      },
+      orderBy: [
+        { aktif: 'desc' }, // Aktif di atas
+        { dibuatPada: 'desc' },
+      ],
+    });
+
+    return {
+      sukses: true,
+      data: skemaTarif,
+      total: skemaTarif.length,
+    };
+  }
+
+  /**
+   * Toggle status aktif skema tarif
+   * Hanya 1 skema yang boleh aktif per percetakan
+   */
+  async toggleAktifKombinasi(idKombinasi: string, aktif: boolean) {
+    console.log('\n🔄 [PERCETAKAN] Toggle Aktif Skema Tarif');
+
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findUnique({
+      where: { id: idKombinasi },
+    });
+
+    if (!skemaTarif) {
+      throw new NotFoundException('Skema tarif tidak ditemukan');
+    }
+
+    // Jika mau aktifkan, nonaktifkan skema lain dulu
+    if (aktif) {
+      await this.prisma.parameterHargaPercetakan.updateMany({
+        where: {
+          idPercetakan: skemaTarif.idPercetakan,
+          id: { not: idKombinasi },
+        },
+        data: { aktif: false },
+      });
+    }
+
+    // Update skema ini
+    const updated = await this.prisma.parameterHargaPercetakan.update({
+      where: { id: idKombinasi },
+      data: { aktif },
+    });
+
+    return {
+      sukses: true,
+      pesan: aktif
+        ? 'Skema tarif berhasil diaktifkan'
+        : 'Skema tarif berhasil dinonaktifkan',
+      data: updated,
+    };
+  }
+
+  /**
+   * Hapus skema tarif
+   */
+  async hapusKombinasi(idKombinasi: string) {
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findUnique({
+      where: { id: idKombinasi },
+    });
+
+    if (!skemaTarif) {
+      throw new NotFoundException('Skema tarif tidak ditemukan');
+    }
+
+    await this.prisma.parameterHargaPercetakan.delete({
+      where: { id: idKombinasi },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Kombinasi tarif berhasil dihapus',
+    };
+  }
+
+  /**
+   * Kalkulasi harga otomatis berdasarkan spesifikasi pesanan
+   * Menggunakan skema tarif yang aktif dari percetakan
+   */
+  async kalkulasiHargaOtomatis(idPercetakan: string, dto: any) {
+    console.log('\n💰 [PERCETAKAN] Kalkulasi Harga Otomatis');
+
+    // Cari skema tarif yang aktif
+    const skemaTarif = await this.prisma.parameterHargaPercetakan.findFirst({
+      where: {
+        idPercetakan,
+        aktif: true,
+      },
+      include: {
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: true,
+          },
+        },
+      },
+    });
+
+    if (!skemaTarif) {
+      throw new NotFoundException(
+        'Skema tarif tidak ditemukan atau belum diaktifkan',
+      );
+    }
+
+    // Tentukan harga kertas berdasarkan format
+    let hargaKertasPerLembar = 0;
+    if (dto.formatBuku === 'A4') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasA4);
+    } else if (dto.formatBuku === 'A5') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasA5);
+    } else if (dto.formatBuku === 'B5') {
+      hargaKertasPerLembar = Number(skemaTarif.hargaKertasB5);
+    }
+
+    // Tentukan harga cover berdasarkan jenis
+    let hargaCoverPerUnit = 0;
+    if (dto.jenisCover === 'SOFTCOVER') {
+      hargaCoverPerUnit = Number(skemaTarif.hargaSoftcover);
+    } else if (dto.jenisCover === 'HARDCOVER') {
+      hargaCoverPerUnit = Number(skemaTarif.hargaHardcover);
+    }
+
+    // Hitung total harga
+    const hargaKertas = hargaKertasPerLembar * dto.jumlahHalaman * dto.jumlahBuku;
+    const hargaCover = hargaCoverPerUnit * dto.jumlahBuku;
+    const hargaJilid = dto.denganJilid ? Number(skemaTarif.biayaJilid) * dto.jumlahBuku : 0;
+
+    const totalHarga = hargaKertas + hargaCover + hargaJilid;
+
+    return {
+      sukses: true,
+      data: {
+        skemaTarif: {
+          id: skemaTarif.id,
+          namaKombinasi: skemaTarif.namaKombinasi,
+        },
+        spesifikasi: {
+          formatBuku: dto.formatBuku,
+          jenisKertas: dto.jenisKertas,
+          jenisCover: dto.jenisCover,
+          jumlahHalaman: dto.jumlahHalaman,
+          jumlahBuku: dto.jumlahBuku,
+          denganJilid: dto.denganJilid,
+        },
+        rincianHarga: {
+          hargaKertasPerLembar,
+          totalHargaKertas: hargaKertas,
+          hargaCoverPerUnit,
+          totalHargaCover: hargaCover,
+          biayaJilidPerBuku: Number(skemaTarif.biayaJilid),
+          totalBiayaJilid: hargaJilid,
+        },
+        totalHarga,
+        minimumPesanan: skemaTarif.minimumPesanan,
+      },
+    };
+  }
+
+  /**
+   * 🎯 PRIORITY 1: Konfirmasi penerimaan pesanan oleh penulis
+   * Update status dari "terkirim" menjadi "selesai"
+   * Kirim email notification dan WebSocket update
+   * 
+   * Endpoint: POST /api/pesanan/:id/konfirmasi-terima
+   */
+  async konfirmasiPenerimaanPesanan(id: string, idPenulis: string, dto: KonfirmasiPenerimaanDto) {
+    this.logger.log(`\n✅ [KONFIRMASI] Penulis konfirmasi penerimaan pesanan: ${id}`);
+    this.logger.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Ambil pesanan dengan relasi lengkap
+    const pesanan = await this.prisma.pesananCetak.findUnique({
+      where: { id },
+      include: {
+        naskah: {
+          select: {
+            judul: true,
+            penulis: {
+              select: {
+                id: true,
+                email: true,
+                profilPengguna: {
+                  select: {
+                    namaDepan: true,
+                    namaBelakang: true,
+                    namaTampilan: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        pengiriman: true,
+        percetakan: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!pesanan) {
+      throw new NotFoundException('Pesanan tidak ditemukan');
+    }
+
+    // Validasi: hanya pemesan yang bisa konfirmasi
+    if (pesanan.idPemesan !== idPenulis) {
+      throw new ForbiddenException('Anda tidak memiliki akses untuk konfirmasi pesanan ini');
+    }
+
+    // Validasi: status harus "terkirim"
+    if (pesanan.status !== 'terkirim') {
+      throw new BadRequestException(
+        `Pesanan hanya bisa dikonfirmasi jika status "terkirim". Status saat ini: "${pesanan.status}"`,
+      );
+    }
+
+    this.logger.log(`📦 Pesanan: ${pesanan.nomorPesanan}`);
+    this.logger.log(`📖 Buku: ${pesanan.naskah.judul}`);
+    this.logger.log(`👤 Penulis: ${idPenulis}`);
+
+    // Update status menjadi "selesai"
+    const tanggalSelesai = new Date();
+    const pesananUpdated = await this.prisma.pesananCetak.update({
+      where: { id },
+      data: {
+        status: 'selesai',
+        tanggalSelesai,
+        catatanPenerimaan: dto.catatan || null,
+      },
+    });
+
+    // Buat log produksi
+    await this.prisma.logProduksi.create({
+      data: {
+        idPesanan: id,
+        tahapan: 'Pesanan Selesai',
+        deskripsi: dto.catatan
+          ? `Pesanan dikonfirmasi selesai oleh penulis. Catatan: ${dto.catatan}`
+          : 'Pesanan dikonfirmasi selesai oleh penulis',
+      },
+    });
+
+    // Log aktivitas penulis
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna: idPenulis,
+        jenis: 'pesanan_cetak',
+        aksi: 'konfirmasi_penerimaan',
+        entitas: 'pesanan_cetak',
+        idEntitas: id,
+        deskripsi: `Mengkonfirmasi penerimaan pesanan ${pesanan.nomorPesanan}`,
+      },
+    });
+
+    this.logger.log(`✅ Status updated: terkirim → selesai`);
+
+    // 🔔 PRIORITY 1: Email & WebSocket Notification saat konfirmasi selesai
+    // Gunakan data dari pesanan awal yang sudah include naskah
+    const penulis = pesanan.naskah.penulis;
+    const namaPenerima = penulis.profilPengguna?.namaTampilan ||
+      `${penulis.profilPengguna?.namaDepan || ''} ${penulis.profilPengguna?.namaBelakang || ''}`.trim() ||
+      'Pengguna';
+
+    const tanggalSelesaiStr = format(tanggalSelesai, 'd MMMM yyyy, HH:mm', { locale: idLocale });
+
+    // Kirim email notification ke penulis
+    try {
+      await this.emailService.kirimEmailPesananSelesai({
+        emailPenerima: penulis.email,
+        namaPenerima,
+        nomorPesanan: pesanan.nomorPesanan,
+        judulBuku: pesanan.naskah.judul,
+        tanggalSelesai: tanggalSelesaiStr,
+      });
+
+      this.logger.log(`✅ Email pesanan selesai terkirim ke ${penulis.email}`);
+    } catch (error) {
+      this.logger.error(`❌ Gagal kirim email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Kirim database notification ke penulis
+    try {
+      const notifikasiPenulis = await this.notifikasiService.kirimNotifikasi({
+        idPengguna: penulis.id,
+        judul: 'Pesanan Selesai! 🎉',
+        pesan: `Terima kasih telah mengkonfirmasi penerimaan "${pesanan.naskah.judul}". Pesanan Anda telah selesai dengan sukses.`,
+        tipe: 'sukses',
+        url: `/penulis/pesanan-cetak`,
+      });
+
+      // Emit via WebSocket ke penulis
+      await this.notifikasiGateway.emitKeUser(penulis.id, notifikasiPenulis.data);
+
+      this.logger.log(`✅ WebSocket notification dikirim ke penulis ${penulis.id}`);
+    } catch (error) {
+      this.logger.error(`❌ Gagal kirim notifikasi ke penulis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Kirim notifikasi ke percetakan juga
+    if (pesanan.percetakan) {
+      try {
+        const namaPercetakan = pesanan.percetakan.profilPengguna?.namaTampilan ||
+          `${pesanan.percetakan.profilPengguna?.namaDepan || ''} ${pesanan.percetakan.profilPengguna?.namaBelakang || ''}`.trim() ||
+          'Percetakan';
+
+        const notifikasiPercetakan = await this.notifikasiService.kirimNotifikasi({
+          idPengguna: pesanan.percetakan.id,
+          judul: 'Pesanan Dikonfirmasi Diterima ✅',
+          pesan: `Penulis telah mengkonfirmasi penerimaan pesanan ${pesanan.nomorPesanan} untuk buku "${pesanan.naskah.judul}". Pesanan selesai.`,
+          tipe: 'sukses',
+          url: `/percetakan/pesanan/${id}`,
+        });
+
+        // Emit via WebSocket ke percetakan
+        await this.notifikasiGateway.emitKeUser(pesanan.percetakan.id, notifikasiPercetakan.data);
+
+        this.logger.log(`✅ WebSocket notification dikirim ke percetakan ${pesanan.percetakan.id}`);
+      } catch (error) {
+        this.logger.error(`❌ Gagal kirim notifikasi ke percetakan: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    this.logger.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    return {
+      sukses: true,
+      pesan: 'Terima kasih! Penerimaan pesanan telah dikonfirmasi. Status pesanan diperbarui menjadi "selesai".',
+      data: pesananUpdated,
     };
   }
 }

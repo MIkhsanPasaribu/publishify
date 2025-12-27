@@ -77,9 +77,24 @@ export default function AuthCallbackPage() {
       setStatus('success');
       toast.success('Login berhasil! Selamat datang di Publishify');
 
-      // Redirect ke dashboard
+      // Decode token untuk ambil role
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      const userRoles = payload.peran || [];
+
+      // Redirect berdasarkan role (priority: admin > percetakan > editor > penulis)
       setTimeout(() => {
-        router.replace('/dashboard');
+        if (userRoles.includes('admin')) {
+          router.replace('/admin');
+        } else if (userRoles.includes('percetakan')) {
+          router.replace('/percetakan');
+        } else if (userRoles.includes('editor')) {
+          router.replace('/editor');
+        } else if (userRoles.includes('penulis')) {
+          router.replace('/penulis');
+        } else {
+          // Fallback
+          router.replace('/penulis');
+        }
       }, 1000);
 
     } catch (err: any) {

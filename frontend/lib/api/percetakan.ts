@@ -19,6 +19,10 @@ import type {
   LogProduksi,
   TambahLogProduksiDto,
 } from "@/types/percetakan";
+import type {
+  PercetakanDenganTarif,
+  DetailTarifPercetakan,
+} from "@/types/tarif";
 
 // Re-export types untuk backward compatibility
 export type { 
@@ -30,15 +34,47 @@ export type {
 // Alias untuk backward compatibility
 export type BuatPesananCetakPayload = BuatPesananCetakDto;
 
+// ============= PERCETAKAN & TARIF =============
+
+/**
+ * Ambil daftar percetakan yang tersedia dengan tarif aktif
+ * Untuk ditampilkan saat penulis akan membuat pesanan cetak
+ */
+export async function ambilDaftarPercetakan(): Promise<{
+  sukses: boolean;
+  pesan: string;
+  data: PercetakanDenganTarif[];
+  total: number;
+}> {
+  const response = await client.get("/percetakan/daftar");
+  return response.data;
+}
+
+/**
+ * Ambil detail tarif percetakan tertentu
+ * Untuk kalkulasi harga sebelum buat pesanan
+ */
+export async function ambilTarifPercetakan(
+  idPercetakan: string
+): Promise<{
+  sukses: boolean;
+  pesan: string;
+  data: DetailTarifPercetakan;
+}> {
+  const response = await client.get(`/percetakan/tarif/${idPercetakan}`);
+  return response.data;
+}
+
 // ============= PESANAN CETAK =============
 
 /**
- * Buat pesanan cetak baru
+ * Buat pesanan cetak baru dengan pilihan percetakan
+ * Endpoint baru: POST /percetakan/pesanan
  */
 export async function buatPesananCetak(
   dto: BuatPesananCetakDto
 ): Promise<ResponsePesananDetail> {
-  const response = await client.post("/percetakan", dto);
+  const response = await client.post("/percetakan/pesanan", dto);
   return response.data;
 }
 
@@ -62,6 +98,14 @@ export async function ambilDaftarPesanan(
   ) : {};
   
   const response = await client.get("/percetakan", { params: cleanFilter });
+  return response.data;
+}
+
+/**
+ * Ambil daftar pesanan milik penulis (untuk halaman /dashboard/pesanan-cetak)
+ */
+export async function ambilDaftarPesananPenulis(): Promise<ResponsePesananList> {
+  const response = await client.get("/percetakan/penulis/saya");
   return response.data;
 }
 
@@ -110,6 +154,19 @@ export async function batalkanPesanan(
   alasan?: string
 ): Promise<ResponsePesananDetail> {
   const response = await client.put(`/percetakan/${id}/batal`, { alasan });
+  return response.data;
+}
+
+/**
+ * 🎯 PRIORITY 1: Konfirmasi penerimaan pesanan oleh penulis
+ * Update status dari "terkirim" menjadi "selesai"
+ * POST /api/percetakan/:id/konfirmasi-terima
+ */
+export async function konfirmasiPenerimaanPesanan(
+  id: string,
+  catatan?: string
+): Promise<ResponsePesananDetail> {
+  const response = await client.post(`/percetakan/${id}/konfirmasi-terima`, { catatan });
   return response.data;
 }
 
@@ -238,7 +295,67 @@ export async function hapusTarif(id: string) {
 }
 
 // ============================================
-// KALKULASI & PESANAN BARU (NEW)
+// PARAMETER HARGA & KOMBINASI TARIF (NEW SYSTEM)
+// ============================================
+
+/**
+ * Simpan parameter harga percetakan (create/update)
+ */
+export async function simpanParameterHarga(dto: any) {
+  const response = await client.post("/percetakan/parameter-harga", dto);
+  return response.data;
+}
+
+/**
+ * Ambil parameter harga percetakan
+ */
+export async function ambilParameterHarga() {
+  const response = await client.get("/percetakan/parameter-harga");
+  return response.data;
+}
+
+/**
+ * Buat kombinasi tarif baru
+ */
+export async function buatKombinasiTarif(dto: any) {
+  const response = await client.post("/percetakan/kombinasi-tarif", dto);
+  return response.data;
+}
+
+/**
+ * Ambil semua kombinasi tarif percetakan
+ */
+export async function ambilSemuaKombinasi() {
+  const response = await client.get("/percetakan/kombinasi-tarif");
+  return response.data;
+}
+
+/**
+ * Toggle status aktif kombinasi tarif
+ */
+export async function toggleAktifKombinasi(id: string, aktif: boolean) {
+  const response = await client.put(`/percetakan/kombinasi-tarif/${id}/toggle-aktif`, { aktif });
+  return response.data;
+}
+
+/**
+ * Hapus kombinasi tarif
+ */
+export async function hapusKombinasi(id: string) {
+  const response = await client.put(`/percetakan/kombinasi-tarif/${id}/hapus`);
+  return response.data;
+}
+
+/**
+ * Kalkulasi harga otomatis dari kombinasi aktif
+ */
+export async function kalkulasiHargaOtomatis(dto: any) {
+  const response = await client.post("/percetakan/kalkulasi-harga-otomatis", dto);
+  return response.data;
+}
+
+// ============================================
+// KALKULASI & PESANAN BARU (OLD SYSTEM)
 // ============================================
 
 /**
@@ -295,14 +412,23 @@ const percetakanApi = {
   konfirmasiPembayaran,
   batalkanPembayaran,
   
-  // Tarif (NEW)
+  // Tarif (OLD SYSTEM - Deprecated)
   buatTarif,
   ambilSemuaTarif,
   ambilTarifById,
   perbaruiTarif,
   hapusTarif,
   
-  // Kalkulasi & Pesanan Baru (NEW)
+  // Parameter Harga & Kombinasi Tarif (NEW SYSTEM)
+  simpanParameterHarga,
+  ambilParameterHarga,
+  buatKombinasiTarif,
+  ambilSemuaKombinasi,
+  toggleAktifKombinasi,
+  hapusKombinasi,
+  kalkulasiHargaOtomatis,
+  
+  // Kalkulasi & Pesanan Baru (OLD SYSTEM)
   kalkulasiOpsiHarga,
   buatPesananBaru,
   ambilPesananPercetakan,

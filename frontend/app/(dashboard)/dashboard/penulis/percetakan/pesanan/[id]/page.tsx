@@ -37,6 +37,7 @@ function Timeline({ status }: { status: StatusPesanan }) {
     { key: "siap", label: "Siap", icon: CheckCircle2 },
     { key: "dikirim", label: "Dikirim", icon: Truck },
     { key: "terkirim", label: "Terkirim", icon: CheckCircle2 },
+    { key: "selesai", label: "Selesai", icon: CheckCircle2 },
   ];
 
   const statusOrder = [
@@ -47,6 +48,7 @@ function Timeline({ status }: { status: StatusPesanan }) {
     "siap",
     "dikirim",
     "terkirim",
+    "selesai",
   ];
   const currentIndex = statusOrder.indexOf(status);
 
@@ -106,6 +108,21 @@ function Timeline({ status }: { status: StatusPesanan }) {
         })}
       </div>
 
+      {/* Completed State */}
+      {status === "selesai" && (
+        <div className="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-teal-900">Pesanan Selesai 🎉</p>
+              <p className="text-sm text-teal-700 mt-1">
+                Terima kasih! Pesanan Anda telah selesai dengan sukses
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cancelled State */}
       {status === "dibatalkan" && (
         <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -134,6 +151,11 @@ export default function DetailPesananPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  
+  // State untuk konfirmasi penerimaan
+  const [showKonfirmasiModal, setShowKonfirmasiModal] = useState(false);
+  const [catatanPenerimaan, setCatatanPenerimaan] = useState("");
+  const [sedangKonfirmasi, setSedangKonfirmasi] = useState(false);
 
   useEffect(() => {
     if (pesananId) {
@@ -174,6 +196,23 @@ export default function DetailPesananPage() {
       alert(error.message || "Gagal membatalkan pesanan");
     } finally {
       setCancelling(false);
+    }
+  }
+
+  async function handleKonfirmasiPenerimaan() {
+    try {
+      setSedangKonfirmasi(true);
+      // TODO: API call
+      // const response = await percetakanApi.konfirmasiPenerimaanPesanan(pesananId, catatanPenerimaan);
+      alert("Terima kasih! Penerimaan pesanan berhasil dikonfirmasi. Status pesanan diperbarui menjadi 'selesai'.");
+      ambilDetailPesanan();
+      setShowKonfirmasiModal(false);
+      setCatatanPenerimaan("");
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.pesan || error.message || "Gagal mengkonfirmasi penerimaan pesanan");
+    } finally {
+      setSedangKonfirmasi(false);
     }
   }
 
@@ -229,20 +268,34 @@ export default function DetailPesananPage() {
         </div>
 
         {/* Action Buttons */}
-        {pesanan.status === "tertunda" && (
-          <button
-            onClick={() => setShowCancelModal(true)}
-            className="flex items-center gap-2 px-6 py-3 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors font-medium"
-          >
-            <XCircle className="w-5 h-5" />
-            Batalkan Pesanan
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Button Konfirmasi Penerimaan - hanya muncul jika status "terkirim" */}
+          {pesanan.status === "terkirim" && (
+            <button
+              onClick={() => setShowKonfirmasiModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all font-medium shadow-lg shadow-teal-500/30"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              Konfirmasi Penerimaan
+            </button>
+          )}
 
-        <button className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium">
-          <Download className="w-5 h-5" />
-          Download Invoice
-        </button>
+          {/* Button Batalkan - hanya jika status "tertunda" */}
+          {pesanan.status === "tertunda" && (
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="flex items-center gap-2 px-6 py-3 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors font-medium"
+            >
+              <XCircle className="w-5 h-5" />
+              Batalkan Pesanan
+            </button>
+          )}
+
+          <button className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium">
+            <Download className="w-5 h-5" />
+            Download Invoice
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -308,11 +361,11 @@ export default function DetailPesananPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jumlah Eksemplar</p>
-                <p className="font-medium text-gray-900">{pesanan.jumlahCetak} pcs</p>
+                <p className="font-medium text-gray-900">{pesanan.jumlah} pcs</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Format Kertas</p>
-                <p className="font-medium text-gray-900">{pesanan.ukuranKertas}</p>
+                <p className="font-medium text-gray-900">{pesanan.formatKertas}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Jenis Kertas</p>
@@ -322,10 +375,10 @@ export default function DetailPesananPage() {
                 <p className="text-sm text-gray-500 mb-1">Jenis Cover</p>
                 <p className="font-medium text-gray-900">{pesanan.jenisCover}</p>
               </div>
-              {pesanan.catatanTambahan && (
+              {pesanan.catatan && (
                 <div className="col-span-2">
                   <p className="text-sm text-gray-500 mb-1">Catatan</p>
-                  <p className="font-medium text-gray-900">{pesanan.catatanTambahan}</p>
+                  <p className="font-medium text-gray-900">{pesanan.catatan}</p>
                 </div>
               )}
             </div>
@@ -426,20 +479,20 @@ export default function DetailPesananPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Harga Satuan:</span>
                 <span className="font-medium text-teal-900">
-                  {formatRupiah(Number(pesanan.totalHarga) / pesanan.jumlahCetak)}
+                  {formatRupiah(Number(pesanan.hargaTotal) / pesanan.jumlah)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-teal-700">Jumlah:</span>
                 <span className="font-medium text-teal-900">
-                  {pesanan.jumlahCetak} pcs
+                  {pesanan.jumlah} pcs
                 </span>
               </div>
               <div className="h-px bg-teal-200"></div>
               <div className="flex justify-between">
                 <span className="font-semibold text-teal-900">Total:</span>
                 <span className="text-xl font-bold text-teal-600">
-                  {formatRupiah(pesanan.totalHarga)}
+                  {formatRupiah(pesanan.hargaTotal)}
                 </span>
               </div>
             </div>
@@ -451,14 +504,14 @@ export default function DetailPesananPage() {
               <div>
                 <p className="text-gray-500">Tanggal Pesanan</p>
                 <p className="font-medium text-gray-900">
-                  {formatTanggal(pesanan.dibuatPada)}
+                  {formatTanggal(pesanan.tanggalPesan)}
                 </p>
               </div>
-              {pesanan.tanggalSelesai && (
+              {pesanan.estimasiSelesai && (
                 <div>
-                  <p className="text-gray-500">Target Selesai</p>
+                  <p className="text-gray-500">Estimasi Selesai</p>
                   <p className="font-medium text-gray-900">
-                    {formatTanggal(pesanan.tanggalSelesai)}
+                    {formatTanggal(pesanan.estimasiSelesai)}
                   </p>
                 </div>
               )}
@@ -507,6 +560,60 @@ export default function DetailPesananPage() {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelling ? "Memproses..." : "Ya, Batalkan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Konfirmasi Penerimaan Modal */}
+      {showKonfirmasiModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-teal-100 rounded-lg">
+                <CheckCircle2 className="w-6 h-6 text-teal-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Konfirmasi Penerimaan Pesanan
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Apakah Anda sudah menerima pesanan buku Anda dengan baik? Pesanan akan ditandai sebagai selesai.
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Catatan (Opsional)
+              </label>
+              <textarea
+                value={catatanPenerimaan}
+                onChange={(e) => setCatatanPenerimaan(e.target.value)}
+                placeholder="Berikan ulasan atau catatan tentang pesanan Anda..."
+                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowKonfirmasiModal(false);
+                  setCatatanPenerimaan("");
+                }}
+                disabled={sedangKonfirmasi}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleKonfirmasiPenerimaan}
+                disabled={sedangKonfirmasi}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sedangKonfirmasi ? "Memproses..." : "Ya, Konfirmasi"}
               </button>
             </div>
           </div>
