@@ -1,6 +1,5 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 /**
  * Service untuk mengelola caching dengan Redis

@@ -253,10 +253,11 @@ export default function DaftarPesananPercetakanPage() {
         </div>
 
         {/* Table Pesanan */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50/80 border-b border-slate-200">
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50/80 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                       Pesanan
