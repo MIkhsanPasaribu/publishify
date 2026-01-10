@@ -44,17 +44,14 @@ class NetworkImageWidget extends StatelessWidget {
         return _buildLoadingWidget(loadingProgress);
       },
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('Error loading image: $error');
-        debugPrint('Image URL: $fullUrl');
+        // Tidak perlu debug print untuk 404 - ini expected untuk seed data
+        // yang tidak punya file gambar aktual
         return _buildErrorWidget();
       },
     );
 
     if (borderRadius != null) {
-      imageWidget = ClipRRect(
-        borderRadius: borderRadius!,
-        child: imageWidget,
-      );
+      imageWidget = ClipRRect(borderRadius: borderRadius!, child: imageWidget);
     }
 
     return imageWidget;
@@ -70,7 +67,7 @@ class NetworkImageWidget extends StatelessWidget {
             child: CircularProgressIndicator(
               value: loadingProgress.expectedTotalBytes != null
                   ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
+                        loadingProgress.expectedTotalBytes!
                   : null,
               strokeWidth: 2,
               valueColor: const AlwaysStoppedAnimation<Color>(

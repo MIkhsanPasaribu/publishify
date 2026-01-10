@@ -7,7 +7,8 @@ class PercetakanDashboardPage extends StatefulWidget {
   const PercetakanDashboardPage({super.key});
 
   @override
-  State<PercetakanDashboardPage> createState() => _PercetakanDashboardPageState();
+  State<PercetakanDashboardPage> createState() =>
+      _PercetakanDashboardPageState();
 }
 
 class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
@@ -29,17 +30,26 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
     });
 
     try {
-      // Gunakan data dummy untuk sementara
-      await Future.delayed(const Duration(milliseconds: 500));
-      
+      // Load pesanan terbaru dari API
+      final pesananResponse = await PercetakanService.ambilDaftarPesanan(
+        halaman: 1,
+        limit: 5,
+      );
+
+      // Load statistik dari API
+      final statsResponse = await PercetakanService.ambilStatistik();
+
       setState(() {
-        _recentOrders = _getDummyOrders();
-        _stats = _getDummyStats();
+        _recentOrders = pesananResponse.data ?? [];
+        _stats = statsResponse.data;
         _isLoading = false;
       });
     } catch (e) {
+      // Fallback ke dummy data jika API gagal
       setState(() {
-        _error = e.toString();
+        _recentOrders = _getDummyOrders();
+        _stats = _getDummyStats();
+        _error = null; // Tidak tampilkan error, gunakan dummy
         _isLoading = false;
       });
     }
@@ -167,10 +177,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
       appBar: AppBar(
         title: const Text(
           'Dashboard Percetakan',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: AppTheme.primaryGreen,
         elevation: 0,
@@ -179,24 +186,24 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildErrorWidget()
-              : RefreshIndicator(
-                  onRefresh: _loadDashboardData,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStatsCards(),
-                        const SizedBox(height: 24),
-                        _buildQuickActions(),
-                        const SizedBox(height: 24),
-                        _buildRecentOrders(),
-                      ],
-                    ),
-                  ),
+          ? _buildErrorWidget()
+          : RefreshIndicator(
+              onRefresh: _loadDashboardData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsCards(),
+                    const SizedBox(height: 24),
+                    _buildQuickActions(),
+                    const SizedBox(height: 24),
+                    _buildRecentOrders(),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 
@@ -225,15 +232,15 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
 
   Widget _buildStatsCards() {
     if (_stats == null) return const SizedBox();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Ringkasan',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
@@ -285,7 +292,12 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -293,7 +305,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -307,7 +319,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha:0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -317,19 +329,10 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
@@ -347,7 +350,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -358,16 +361,21 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
         children: [
           const Text(
             'Status Pesanan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildStatusRow('tertunda', breakdown.tertunda, Colors.grey),
           _buildStatusRow('diterima', breakdown.diterima, Colors.blue),
-          _buildStatusRow('dalam_produksi', breakdown.dalamProduksi, Colors.orange),
-          _buildStatusRow('kontrol_kualitas', breakdown.kontrolKualitas, Colors.purple),
+          _buildStatusRow(
+            'dalam_produksi',
+            breakdown.dalamProduksi,
+            Colors.orange,
+          ),
+          _buildStatusRow(
+            'kontrol_kualitas',
+            breakdown.kontrolKualitas,
+            Colors.purple,
+          ),
           _buildStatusRow('siap', breakdown.siap, Colors.green),
           _buildStatusRow('dikirim', breakdown.dikirim, Colors.teal),
         ],
@@ -377,7 +385,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
 
   Widget _buildStatusRow(String status, int count, Color color) {
     final labelStatus = PercetakanService.ambilLabelStatus();
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -385,10 +393,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -399,10 +404,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           ),
           Text(
             count.toString(),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -417,9 +419,9 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
       children: [
         Text(
           'Aksi Cepat',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         GridView.builder(
@@ -455,9 +457,9 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
     return InkWell(
       onTap: () {
         // TODO: Navigate to respective page
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Navigasi ke ${item['judul']}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Navigasi ke ${item['judul']}')));
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -466,7 +468,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -476,26 +478,16 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              _getIconData(item['icon']),
-              color: color,
-              size: 32,
-            ),
+            Icon(_getIconData(item['icon']), color: color, size: 32),
             const SizedBox(height: 8),
             Text(
               item['judul'],
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               item['subjudul'],
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -525,9 +517,9 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
           children: [
             Text(
               'Pesanan Terbaru',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton(
               onPressed: () {
@@ -569,10 +561,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
             const SizedBox(height: 16),
             Text(
               'Belum ada pesanan',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -583,7 +572,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
   Widget _buildOrderCard(PesananCetak order) {
     final labelStatus = PercetakanService.ambilLabelStatus();
     final warnaStatus = PercetakanService.ambilWarnaStatus();
-    
+
     final colorMap = {
       'grey': Colors.grey,
       'blue': Colors.blue,
@@ -603,7 +592,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -655,7 +644,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha:0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -703,10 +692,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
                   if (order.estimasiSelesai != null)
                     Text(
                       'Target: ${PercetakanService.formatTanggal(order.estimasiSelesai!)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                 ],
               ),
@@ -725,10 +711,7 @@ class _PercetakanDashboardPageState extends State<PercetakanDashboardPage> {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

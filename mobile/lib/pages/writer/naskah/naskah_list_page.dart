@@ -115,6 +115,24 @@ class _NaskahListPageState extends State<NaskahListPage> {
     }
   }
 
+  /// Navigasi ke halaman buat naskah baru
+  Future<void> _createNewNaskah() async {
+    final result = await AppRoutes.navigateToCreateNaskah(context);
+    if (result == true) {
+      // Refresh list jika naskah berhasil dibuat
+      _loadNaskah();
+    }
+  }
+
+  /// Navigasi ke halaman edit naskah
+  Future<void> _editNaskah(NaskahData naskah) async {
+    final result = await AppRoutes.navigateToEditNaskah(context, naskah);
+    if (result == true) {
+      // Refresh list jika naskah berhasil diperbarui
+      _loadNaskah();
+    }
+  }
+
   void _showSortDialog() {
     showDialog(
       context: context,
@@ -259,6 +277,15 @@ class _NaskahListPageState extends State<NaskahListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _createNewNaskah,
+        backgroundColor: AppTheme.primaryGreen,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Buat Naskah',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -279,8 +306,8 @@ class _NaskahListPageState extends State<NaskahListPage> {
                       ),
                     )
                   : _naskahList.isEmpty
-                      ? _buildEmptyState()
-                      : _buildNaskahList(),
+                  ? _buildEmptyState()
+                  : _buildNaskahList(),
             ),
           ],
         ),
@@ -301,10 +328,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppTheme.white,
-            ),
+            icon: const Icon(Icons.arrow_back, color: AppTheme.white),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -319,10 +343,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.sort,
-              color: AppTheme.white,
-            ),
+            icon: const Icon(Icons.sort, color: AppTheme.white),
             onPressed: _showSortDialog,
           ),
         ],
@@ -336,13 +357,8 @@ class _NaskahListPageState extends State<NaskahListPage> {
       child: TextField(
         decoration: InputDecoration(
           hintText: 'Cari naskah...',
-          hintStyle: AppTheme.bodyMedium.copyWith(
-            color: AppTheme.greyMedium,
-          ),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: AppTheme.greyMedium,
-          ),
+          hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.greyMedium),
+          prefixIcon: const Icon(Icons.search, color: AppTheme.greyMedium),
           filled: true,
           fillColor: AppTheme.white,
           border: OutlineInputBorder(
@@ -386,11 +402,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.book_outlined,
-            size: 64,
-            color: AppTheme.greyMedium,
-          ),
+          Icon(Icons.book_outlined, size: 64, color: AppTheme.greyMedium),
           const SizedBox(height: 16),
           Text(
             'Belum ada naskah',
@@ -403,9 +415,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
           Text(
             'Mulai menulis naskah pertamamu',
             textAlign: TextAlign.center,
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.greyMedium,
-            ),
+            style: AppTheme.bodyMedium.copyWith(color: AppTheme.greyMedium),
           ),
         ],
       ),
@@ -441,9 +451,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           // Navigate to detail naskah page
@@ -455,7 +463,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title and Status
+              // Title, Status and Menu
               Row(
                 children: [
                   Expanded(
@@ -476,7 +484,9 @@ class _NaskahListPageState extends State<NaskahListPage> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(naskah.status).withValues(alpha: 0.1),
+                      color: _getStatusColor(
+                        naskah.status,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -486,6 +496,47 @@ class _NaskahListPageState extends State<NaskahListPage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  // Menu popup untuk edit dan delete
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: AppTheme.greyMedium),
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        _editNaskah(naskah);
+                      } else if (value == 'delete') {
+                        _showDeleteConfirmation(naskah);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      // Hanya tampilkan edit jika status draft atau perlu_revisi
+                      if (naskah.status == 'draft' ||
+                          naskah.status == 'perlu_revisi')
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, size: 20),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                      // Hanya tampilkan delete jika status draft
+                      if (naskah.status == 'draft')
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 20, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text(
+                                'Hapus',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -549,10 +600,7 @@ class _NaskahListPageState extends State<NaskahListPage> {
                     ),
                   ],
                   const Spacer(),
-                  Icon(
-                    Icons.chevron_right,
-                    color: AppTheme.greyMedium,
-                  ),
+                  Icon(Icons.chevron_right, color: AppTheme.greyMedium),
                 ],
               ),
             ],
@@ -560,5 +608,74 @@ class _NaskahListPageState extends State<NaskahListPage> {
         ),
       ),
     );
+  }
+
+  /// Menampilkan dialog konfirmasi hapus
+  void _showDeleteConfirmation(NaskahData naskah) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Naskah'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus naskah "${naskah.judul}"?\n\nTindakan ini tidak dapat dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteNaskah(naskah);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Menghapus naskah
+  Future<void> _deleteNaskah(NaskahData naskah) async {
+    try {
+      final response = await NaskahService.deleteNaskah(naskah.id);
+
+      if (mounted) {
+        if (response.sukses) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Naskah "${naskah.judul}" berhasil dihapus'),
+              backgroundColor: AppTheme.primaryGreen,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          // Refresh list
+          _loadNaskah();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.pesan),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus naskah: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }

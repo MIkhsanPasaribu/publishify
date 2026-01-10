@@ -165,6 +165,52 @@ class AuthService {
     return prefs.getString(_keyRefreshToken);
   }
 
+  /// Refresh access token menggunakan refresh token
+  /// POST /api/auth/refresh
+  static Future<RefreshTokenResponse> refreshAccessToken() async {
+    try {
+      final refreshToken = await getRefreshToken();
+      if (refreshToken == null) {
+        return RefreshTokenResponse(
+          sukses: false,
+          pesan: 'Refresh token tidak ditemukan. Silakan login ulang.',
+        );
+      }
+
+      final url = Uri.parse(ApiConfig.authRefresh);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'refreshToken': refreshToken}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      final refreshResponse = RefreshTokenResponse.fromJson(responseData);
+
+      // Jika berhasil, simpan access token baru
+      if (refreshResponse.sukses && refreshResponse.data != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          _keyAccessToken,
+          refreshResponse.data!.accessToken,
+        );
+      }
+
+      return refreshResponse;
+    } catch (e) {
+      return RefreshTokenResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
   /// Get complete user data from SharedPreferences
   static Future<LoginData?> getLoginData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -215,6 +261,100 @@ class AuthService {
     // Fallback: get first role from SharedPreferences
     final roles = await getUserRoles();
     return roles.isNotEmpty ? roles.first : null;
+  }
+
+  /// Verifikasi email dengan token
+  /// POST /api/auth/verifikasi-email
+  static Future<VerifikasiEmailResponse> verifikasiEmail({
+    required String token,
+  }) async {
+    try {
+      final url = Uri.parse(ApiConfig.authVerifikasiEmail);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'token': token}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return VerifikasiEmailResponse.fromJson(responseData);
+    } catch (e) {
+      return VerifikasiEmailResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Reset password dengan token
+  /// POST /api/auth/reset-password
+  static Future<ResetPasswordResponse> resetPassword({
+    required String token,
+    required String passwordBaru,
+  }) async {
+    try {
+      final url = Uri.parse(ApiConfig.authResetPassword);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'token': token, 'passwordBaru': passwordBaru}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return ResetPasswordResponse.fromJson(responseData);
+    } catch (e) {
+      return ResetPasswordResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get profil pengguna saat ini (untuk testing/refresh data)
+  /// POST /api/auth/me
+  static Future<AuthMeResponse> getMe() async {
+    try {
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        return AuthMeResponse(
+          sukses: false,
+          pesan: 'Token tidak ditemukan. Silakan login ulang.',
+        );
+      }
+
+      final url = Uri.parse(ApiConfig.authMe);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return AuthMeResponse.fromJson(responseData);
+    } catch (e) {
+      return AuthMeResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
   }
 
   /// Save user roles to SharedPreferences
@@ -322,4 +462,148 @@ class AuthService {
   // ENHANCED ROLE MANAGEMENT METHODS
   // ====================================
   // Methods updated to use UserData helper methods
+
+  /// Lupa password - request reset link
+  /// POST /api/auth/lupa-password
+  static Future<LupaPasswordResponse> lupaPassword({
+    required String email,
+  }) async {
+    try {
+      final url = Uri.parse(ApiConfig.authLupaPassword);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return LupaPasswordResponse.fromJson(responseData);
+    } catch (e) {
+      return LupaPasswordResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Link Google Account ke user yang sudah login
+  /// POST /api/auth/google/link
+  static Future<GoogleLinkResponse> linkGoogleAccount({
+    required String idToken,
+  }) async {
+    try {
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        return GoogleLinkResponse(
+          sukses: false,
+          pesan: 'Token tidak ditemukan. Silakan login ulang.',
+        );
+      }
+
+      final url = Uri.parse(ApiConfig.authGoogleLink);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'idToken': idToken}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return GoogleLinkResponse.fromJson(responseData);
+    } catch (e) {
+      return GoogleLinkResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Unlink Google Account dari user
+  /// DELETE /api/auth/google/unlink
+  static Future<GoogleUnlinkResponse> unlinkGoogleAccount() async {
+    try {
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        return GoogleUnlinkResponse(
+          sukses: false,
+          pesan: 'Token tidak ditemukan. Silakan login ulang.',
+        );
+      }
+
+      final url = Uri.parse(ApiConfig.authGoogleUnlink);
+
+      final response = await http
+          .delete(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return GoogleUnlinkResponse.fromJson(responseData);
+    } catch (e) {
+      return GoogleUnlinkResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Ganti password untuk user yang sudah login
+  /// PUT /api/pengguna/password
+  static Future<GantiPasswordResponse> gantiPassword({
+    required String passwordLama,
+    required String passwordBaru,
+  }) async {
+    try {
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        return GantiPasswordResponse(
+          sukses: false,
+          pesan: 'Token tidak ditemukan. Silakan login ulang.',
+        );
+      }
+
+      final url = Uri.parse(ApiConfig.penggunaPassword);
+
+      final response = await http
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({
+              'passwordLama': passwordLama,
+              'passwordBaru': passwordBaru,
+            }),
+          )
+          .timeout(ApiConfig.defaultTimeout);
+
+      final responseData = jsonDecode(response.body);
+      return GantiPasswordResponse.fromJson(responseData);
+    } catch (e) {
+      return GantiPasswordResponse(
+        sukses: false,
+        pesan: 'Terjadi kesalahan: ${e.toString()}',
+      );
+    }
+  }
 }

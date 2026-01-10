@@ -61,6 +61,12 @@ class ApiConfig {
   /// GET - Google OAuth callback
   static String get authGoogleCallback => '$apiBaseUrl/auth/google/callback';
 
+  /// POST - Link Google account ke user
+  static String get authGoogleLink => '$apiBaseUrl/auth/google/link';
+
+  /// DELETE - Unlink Google account dari user
+  static String get authGoogleUnlink => '$apiBaseUrl/auth/google/unlink';
+
   // ============================================
   // PENGGUNA ENDPOINTS
   // ============================================
@@ -106,6 +112,17 @@ class ApiConfig {
   static String naskahTerbitkan(String id) =>
       '$apiBaseUrl/naskah/$id/terbitkan';
 
+  /// PUT - Set harga jual naskah
+  static String naskahHargaJual(String id) =>
+      '$apiBaseUrl/naskah/$id/harga-jual';
+
+  /// GET - Semua naskah untuk Admin
+  static String get naskahAdminSemua => '$apiBaseUrl/naskah/admin/semua';
+
+  /// GET - Naskah diterbitkan milik penulis
+  static String get naskahPenulisDiterbitkan =>
+      '$apiBaseUrl/naskah/penulis/diterbitkan';
+
   // ============================================
   // KATEGORI & GENRE ENDPOINTS
   // ============================================
@@ -116,11 +133,17 @@ class ApiConfig {
   /// GET/PUT/DELETE - Detail kategori by ID
   static String kategoriById(String id) => '$apiBaseUrl/kategori/$id';
 
+  /// GET - Kategori aktif untuk dropdown
+  static String get kategoriAktif => '$apiBaseUrl/kategori/aktif';
+
   /// GET/POST - Daftar genre
   static String get genre => '$apiBaseUrl/genre';
 
   /// GET/PUT/DELETE - Detail genre by ID
   static String genreById(String id) => '$apiBaseUrl/genre/$id';
+
+  /// GET - Genre aktif untuk dropdown
+  static String get genreAktif => '$apiBaseUrl/genre/aktif';
 
   // ============================================
   // REVIEW ENDPOINTS
@@ -194,9 +217,62 @@ class ApiConfig {
   static String percetakanPengiriman(String id) =>
       '$apiBaseUrl/percetakan/$id/pengiriman';
 
+  /// POST - Buat tarif percetakan baru
+  static String get percetakanTarifBaru => '$apiBaseUrl/percetakan/tarif';
+
+  /// GET/PUT/DELETE - Detail tarif by ID
+  static String percetakanTarifById(String id) =>
+      '$apiBaseUrl/percetakan/tarif/$id';
+
+  /// POST - Simpan parameter harga
+  static String get percetakanParameterHarga =>
+      '$apiBaseUrl/percetakan/tarif/parameter';
+
+  /// GET - Ambil parameter harga
+  static String get percetakanGetParameterHarga =>
+      '$apiBaseUrl/percetakan/tarif/parameter';
+
+  /// POST - Buat kombinasi tarif
+  static String get percetakanKombinasiTarif =>
+      '$apiBaseUrl/percetakan/tarif/kombinasi';
+
+  /// GET - Ambil semua kombinasi tarif
+  static String get percetakanGetKombinasiTarif =>
+      '$apiBaseUrl/percetakan/tarif/kombinasi';
+
+  /// PUT - Toggle status aktif kombinasi
+  static String percetakanKombinasiToggle(String id) =>
+      '$apiBaseUrl/percetakan/tarif/kombinasi/$id/toggle';
+
+  /// DELETE - Hapus kombinasi tarif
+  static String percetakanKombinasiHapus(String id) =>
+      '$apiBaseUrl/percetakan/tarif/kombinasi/$id';
+
+  /// POST - Kalkulasi opsi harga
+  static String get percetakanKalkulasiOpsi =>
+      '$apiBaseUrl/percetakan/kalkulasi-opsi';
+
+  /// POST - Buat pesanan baru (snapshot pattern)
+  static String get percetakanPesananBaru => '$apiBaseUrl/percetakan/pesanan';
+
+  /// GET - Pesanan untuk percetakan
+  static String get percetakanPesananUntukPercetakan =>
+      '$apiBaseUrl/percetakan/pesanan/untuk-percetakan';
+
+  /// POST - Konfirmasi penerimaan pesanan
+  static String percetakanKonfirmasiTerima(String id) =>
+      '$apiBaseUrl/percetakan/$id/konfirmasi-terima';
+
+  /// PUT - Perbarui detail pesanan
+  static String percetakanPerbaruiDetail(String id) =>
+      '$apiBaseUrl/percetakan/$id/perbarui';
+
   // ============================================
   // UPLOAD ENDPOINTS
   // ============================================
+
+  /// GET - Daftar file dengan pagination
+  static String get upload => '$apiBaseUrl/upload';
 
   /// POST - Upload single file
   static String get uploadSingle => '$apiBaseUrl/upload/single';
@@ -204,8 +280,59 @@ class ApiConfig {
   /// POST - Upload multiple files
   static String get uploadMultiple => '$apiBaseUrl/upload/multiple';
 
+  /// GET - Ambil URL file by ID
+  static String uploadById(String id) => '$apiBaseUrl/upload/$id';
+
+  /// GET - Metadata file by ID
+  static String uploadMetadata(String id) => '$apiBaseUrl/upload/metadata/$id';
+
   /// DELETE - Hapus file
   static String uploadHapus(String id) => '$apiBaseUrl/upload/$id';
+
+  /// GET - Download template naskah (public)
+  static String get uploadTemplateNaskah =>
+      '$apiBaseUrl/upload/template/naskah';
+
+  /// POST - Process image (resize/compress)
+  static String uploadProcessImage(String id) =>
+      '$apiBaseUrl/upload/image/$id/process';
+
+  /// POST - Process image dengan preset
+  static String uploadProcessPreset(String id, String preset) =>
+      '$apiBaseUrl/upload/image/$id/preset/$preset';
+
+  /// POST - Konversi DOCX ke PDF by ID
+  static String uploadConvertDocx(String id) =>
+      '$apiBaseUrl/upload/$id/convert/pdf';
+
+  /// POST - Konversi DOCX ke PDF dari URL
+  static String get uploadConvertDocxUrl =>
+      '$apiBaseUrl/upload/convert/pdf-from-url';
+
+  // ============================================
+  // PEMBAYARAN ENDPOINTS
+  // ============================================
+
+  /// GET/POST - Daftar pembayaran / Buat pembayaran baru
+  static String get pembayaran => '$apiBaseUrl/pembayaran';
+
+  /// GET - Detail pembayaran by ID
+  static String pembayaranById(String id) => '$apiBaseUrl/pembayaran/$id';
+
+  /// PUT - Konfirmasi pembayaran
+  static String pembayaranKonfirmasi(String id) =>
+      '$apiBaseUrl/pembayaran/$id/konfirmasi';
+
+  /// PUT - Batalkan pembayaran
+  static String pembayaranBatal(String id) =>
+      '$apiBaseUrl/pembayaran/$id/batal';
+
+  /// POST - Webhook pembayaran
+  static String get pembayaranWebhook => '$apiBaseUrl/pembayaran/webhook';
+
+  /// GET - Statistik ringkasan pembayaran
+  static String get pembayaranStatistikRingkasan =>
+      '$apiBaseUrl/pembayaran/statistik/ringkasan';
 
   // ============================================
   // NOTIFIKASI ENDPOINTS

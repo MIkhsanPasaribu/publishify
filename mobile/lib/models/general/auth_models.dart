@@ -37,11 +37,7 @@ class RegisterResponse {
   final String pesan;
   final RegisterData? data;
 
-  RegisterResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  RegisterResponse({required this.sukses, required this.pesan, this.data});
 
   factory RegisterResponse.fromJson(Map<String, dynamic> json) {
     return RegisterResponse(
@@ -72,32 +68,51 @@ class RegisterData {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'email': email,
-      'tokenVerifikasi': tokenVerifikasi,
-    };
+    return {'id': id, 'email': email, 'tokenVerifikasi': tokenVerifikasi};
   }
 }
 
 // ===== LOGIN MODELS =====
+
+/// Reset Password Response Model
+class ResetPasswordResponse {
+  final bool sukses;
+  final String pesan;
+
+  ResetPasswordResponse({required this.sukses, required this.pesan});
+
+  factory ResetPasswordResponse.fromJson(Map<String, dynamic> json) {
+    return ResetPasswordResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
+
+/// Verifikasi Email Response Model
+class VerifikasiEmailResponse {
+  final bool sukses;
+  final String pesan;
+
+  VerifikasiEmailResponse({required this.sukses, required this.pesan});
+
+  factory VerifikasiEmailResponse.fromJson(Map<String, dynamic> json) {
+    return VerifikasiEmailResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
 
 // Model untuk Request Login
 class LoginRequest {
   final String email;
   final String kataSandi;
 
-  LoginRequest({
-    required this.email,
-    required this.kataSandi,
-  });
+  LoginRequest({required this.email, required this.kataSandi});
 
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'kataSandi': kataSandi,
-      'platform': 'mobile',
-    };
+    return {'email': email, 'kataSandi': kataSandi, 'platform': 'mobile'};
   }
 }
 
@@ -107,11 +122,7 @@ class LoginResponse {
   final String pesan;
   final LoginData? data;
 
-  LoginResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  LoginResponse({required this.sukses, required this.pesan, this.data});
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
@@ -119,6 +130,37 @@ class LoginResponse {
       pesan: json['pesan'] ?? '',
       data: json['data'] != null ? LoginData.fromJson(json['data']) : null,
     );
+  }
+}
+
+// ===== REFRESH TOKEN MODELS =====
+
+/// Response untuk refresh access token
+class RefreshTokenResponse {
+  final bool sukses;
+  final String pesan;
+  final RefreshTokenData? data;
+
+  RefreshTokenResponse({required this.sukses, required this.pesan, this.data});
+
+  factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) {
+    return RefreshTokenResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null
+          ? RefreshTokenData.fromJson(json['data'])
+          : null,
+    );
+  }
+}
+
+class RefreshTokenData {
+  final String accessToken;
+
+  RefreshTokenData({required this.accessToken});
+
+  factory RefreshTokenData.fromJson(Map<String, dynamic> json) {
+    return RefreshTokenData(accessToken: json['accessToken'] ?? '');
   }
 }
 
@@ -153,7 +195,8 @@ class LoginData {
 class UserData {
   final String id;
   final String email;
-  final List<String> peran; // Untuk kompatibilitas, tetap ada untuk response backend sederhana
+  final List<String>
+  peran; // Untuk kompatibilitas, tetap ada untuk response backend sederhana
   final bool terverifikasi;
   final ProfilPengguna? profilPengguna;
   final List<PeranPengguna>? peranPengguna; // Tambahan untuk struktur lengkap
@@ -171,7 +214,11 @@ class UserData {
     return UserData(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
-      peran: (json['peran'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      peran:
+          (json['peran'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       terverifikasi: json['terverifikasi'] ?? false,
       profilPengguna: json['profilPengguna'] != null
           ? ProfilPengguna.fromJson(json['profilPengguna'])
@@ -338,12 +385,7 @@ class PeranPengguna {
 // ===== JENIS PERAN ENUM =====
 
 /// Enum untuk JenisPeran sesuai dengan backend
-enum JenisPeran {
-  penulis,
-  editor,
-  percetakan,
-  admin,
-}
+enum JenisPeran { penulis, editor, percetakan, admin }
 
 /// Extension untuk JenisPeran
 extension JenisPeranExtension on JenisPeran {
@@ -386,5 +428,175 @@ extension JenisPeranExtension on JenisPeran {
       default:
         return JenisPeran.penulis; // default
     }
+  }
+}
+
+// ===== LUPA PASSWORD MODELS =====
+
+/// Request untuk lupa password
+class LupaPasswordRequest {
+  final String email;
+
+  LupaPasswordRequest({required this.email});
+
+  Map<String, dynamic> toJson() => {'email': email};
+}
+
+/// Response untuk lupa password
+class LupaPasswordResponse {
+  final bool sukses;
+  final String pesan;
+
+  LupaPasswordResponse({required this.sukses, required this.pesan});
+
+  factory LupaPasswordResponse.fromJson(Map<String, dynamic> json) {
+    return LupaPasswordResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
+
+// ===== GOOGLE OAUTH MODELS =====
+
+/// Response untuk Google OAuth Link
+class GoogleLinkResponse {
+  final bool sukses;
+  final String pesan;
+  final GoogleLinkData? data;
+
+  GoogleLinkResponse({required this.sukses, required this.pesan, this.data});
+
+  factory GoogleLinkResponse.fromJson(Map<String, dynamic> json) {
+    return GoogleLinkResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null ? GoogleLinkData.fromJson(json['data']) : null,
+    );
+  }
+}
+
+class GoogleLinkData {
+  final String googleId;
+  final String email;
+  final String? nama;
+  final String? gambar;
+  final String tanggalDihubungkan;
+
+  GoogleLinkData({
+    required this.googleId,
+    required this.email,
+    this.nama,
+    this.gambar,
+    required this.tanggalDihubungkan,
+  });
+
+  factory GoogleLinkData.fromJson(Map<String, dynamic> json) {
+    return GoogleLinkData(
+      googleId: json['googleId'] ?? '',
+      email: json['email'] ?? '',
+      nama: json['nama'],
+      gambar: json['gambar'],
+      tanggalDihubungkan: json['tanggalDihubungkan'] ?? '',
+    );
+  }
+}
+
+/// Response untuk Google OAuth Unlink
+class GoogleUnlinkResponse {
+  final bool sukses;
+  final String pesan;
+
+  GoogleUnlinkResponse({required this.sukses, required this.pesan});
+
+  factory GoogleUnlinkResponse.fromJson(Map<String, dynamic> json) {
+    return GoogleUnlinkResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
+
+// ===== GANTI PASSWORD MODELS =====
+
+/// Request untuk ganti password (user yang sudah login)
+class GantiPasswordRequest {
+  final String passwordLama;
+  final String passwordBaru;
+
+  GantiPasswordRequest({
+    required this.passwordLama,
+    required this.passwordBaru,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'passwordLama': passwordLama,
+    'passwordBaru': passwordBaru,
+  };
+}
+
+/// Response untuk ganti password
+class GantiPasswordResponse {
+  final bool sukses;
+  final String pesan;
+
+  GantiPasswordResponse({required this.sukses, required this.pesan});
+
+  factory GantiPasswordResponse.fromJson(Map<String, dynamic> json) {
+    return GantiPasswordResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
+
+// ===== AUTH ME MODELS =====
+
+/// Response untuk GET /api/auth/me
+class AuthMeResponse {
+  final bool sukses;
+  final String pesan;
+  final AuthMeData? data;
+
+  AuthMeResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory AuthMeResponse.fromJson(Map<String, dynamic> json) {
+    return AuthMeResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null ? AuthMeData.fromJson(json['data']) : null,
+    );
+  }
+}
+
+class AuthMeData {
+  final String id;
+  final String email;
+  final List<String> peran;
+  final bool terverifikasi;
+
+  AuthMeData({
+    required this.id,
+    required this.email,
+    required this.peran,
+    required this.terverifikasi,
+  });
+
+  factory AuthMeData.fromJson(Map<String, dynamic> json) {
+    List<String> peranList = [];
+    if (json['peran'] != null) {
+      if (json['peran'] is List) {
+        peranList = (json['peran'] as List).map((e) => e.toString()).toList();
+      } else if (json['peran'] is String) {
+        peranList = [json['peran'] as String];
+      }
+    }
+
+    return AuthMeData(
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      peran: peranList,
+      terverifikasi: json['terverifikasi'] ?? false,
+    );
   }
 }

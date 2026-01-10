@@ -13,7 +13,11 @@ class ImageHelper {
   ///
   /// Contoh:
   /// - Input: `/uploads/sampul/2025-11-04_lukisan_a6011cc09612df7e.jpg`
-  /// - Output: `http://10.0.2.2:4000/uploads/sampul/2025-11-04_lukisan_a6011cc09612df7e.jpg`
+  /// - Output: `http://74.225.221.140/uploads/sampul/2025-11-04_lukisan_a6011cc09612df7e.jpg`
+  ///
+  /// Juga handle path dari seed data yang tidak punya prefix /uploads:
+  /// - Input: `/sampul/978-602-1234-012-6.jpg`
+  /// - Output: `http://74.225.221.140/uploads/sampul/978-602-1234-012-6.jpg`
   ///
   /// Jika input sudah full URL (dimulai dengan http/https), langsung return
   static String getFullImageUrl(String? relativePath) {
@@ -27,8 +31,24 @@ class ImageHelper {
       return relativePath;
     }
 
-    // Tambahkan leading slash jika tidak ada
-    final path = relativePath.startsWith('/') ? relativePath : '/$relativePath';
+    // Normalize path
+    String path = relativePath.startsWith('/')
+        ? relativePath
+        : '/$relativePath';
+
+    // Jika path tidak dimulai dengan /uploads, tambahkan prefix /uploads
+    // Ini untuk backward compatibility dengan seed data yang pakai format lama
+    // seperti /sampul/xxx.jpg atau /naskah/xxx.pdf
+    if (!path.startsWith('/uploads/')) {
+      // Handle format: /sampul/xxx, /naskah/xxx, /gambar/xxx, /dokumen/xxx
+      final validPrefixes = ['/sampul/', '/naskah/', '/gambar/', '/dokumen/'];
+      for (final prefix in validPrefixes) {
+        if (path.startsWith(prefix)) {
+          path = '/uploads$path';
+          break;
+        }
+      }
+    }
 
     // Gabungkan base URL dengan path
     return '$_baseUrl$path';
@@ -41,10 +61,15 @@ class ImageHelper {
     }
 
     // Cek apakah URL atau path valid
+    // Support both /uploads/xxx dan legacy format /sampul/xxx, /naskah/xxx
     return url.isNotEmpty &&
         (url.startsWith('http://') ||
             url.startsWith('https://') ||
-            url.startsWith('/uploads/'));
+            url.startsWith('/uploads/') ||
+            url.startsWith('/sampul/') ||
+            url.startsWith('/naskah/') ||
+            url.startsWith('/gambar/') ||
+            url.startsWith('/dokumen/'));
   }
 
   /// Get full URL untuk sampul buku

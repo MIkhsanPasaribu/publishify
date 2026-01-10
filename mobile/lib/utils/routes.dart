@@ -10,7 +10,9 @@ import 'package:publishify/pages/writer/print/print_page.dart';
 import 'package:publishify/pages/writer/percetakan/pilih_percetakan_page.dart';
 import 'package:publishify/pages/writer/naskah/naskah_list_page.dart';
 import 'package:publishify/pages/writer/naskah/detail_naskah_page.dart';
+import 'package:publishify/pages/writer/naskah/naskah_form_page.dart';
 import 'package:publishify/pages/editor/home/editor_dashboard_page.dart';
+import 'package:publishify/models/writer/naskah_models.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -27,7 +29,8 @@ class AppRoutes {
   static const String pilihPercetakan = '/pilih-percetakan';
   static const String naskahList = '/naskah-list';
   static const String detailNaskah = '/detail-naskah';
-  
+  static const String naskahForm = '/naskah-form';
+
   // Dashboard routes untuk setiap role
   static const String dashboardPenulis = '/dashboard/penulis';
   static const String dashboardEditor = '/dashboard/editor';
@@ -46,10 +49,10 @@ class AppRoutes {
       print: (context) => const PrintPage(),
       pilihPercetakan: (context) => const PilihPercetakanPage(),
       naskahList: (context) => const NaskahListPage(),
-      
+      naskahForm: (context) => const NaskahFormPage(), // Create new naskah
       // Dashboard routes - sesuai role masing-masing
       dashboardPenulis: (context) => const MainLayout(initialIndex: 0),
-      dashboardEditor: (context) => const EditorDashboardPage(), 
+      dashboardEditor: (context) => const EditorDashboardPage(),
       dashboardPercetakan: (context) => const MainLayout(initialIndex: 0),
       dashboardAdmin: (context) => const MainLayout(initialIndex: 0),
     };
@@ -64,5 +67,23 @@ class AppRoutes {
       ),
     );
   }
-}
 
+  // Navigate to create new naskah
+  static Future<bool?> navigateToCreateNaskah(BuildContext context) {
+    return Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const NaskahFormPage()),
+    );
+  }
+
+  // Navigate to edit naskah
+  static Future<bool?> navigateToEditNaskah(
+    BuildContext context,
+    NaskahData naskah,
+  ) {
+    return Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => NaskahFormPage(naskah: naskah)),
+    );
+  }
+}

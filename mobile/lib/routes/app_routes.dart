@@ -15,6 +15,14 @@ import 'package:publishify/pages/editor/naskah/naskah_masuk_page.dart';
 // Percetakan pages imports
 import 'package:publishify/pages/percetakan/percetakan_main_page.dart';
 
+// Admin pages imports
+import 'package:publishify/pages/admin/home/admin_dashboard_page.dart'
+    as admin_dashboard;
+import 'package:publishify/pages/admin/pengguna/admin_pengguna_page.dart';
+import 'package:publishify/pages/admin/review/admin_review_page.dart';
+import 'package:publishify/pages/admin/naskah/admin_naskah_page.dart';
+import 'package:publishify/pages/admin/statistik/admin_statistik_page.dart';
+
 // Auth pages imports
 import 'package:publishify/pages/auth/splash_screen.dart';
 // import 'package:publishify/pages/auth/login_page.dart'; // Unused - loaded via named route
@@ -89,9 +97,51 @@ class AppRoutes {
 
       case '/dashboard/admin':
         return MaterialPageRoute(
+          builder: (_) => const admin_dashboard.AdminDashboardPage(),
+          settings: settings,
+        );
+
+      // ====================================
+      // ADMIN SPECIFIC ROUTES
+      // ====================================
+      case '/admin/pengguna':
+        return MaterialPageRoute(
+          builder: (_) => const AdminPenggunaPage(),
+          settings: settings,
+        );
+
+      case '/admin/review':
+        return MaterialPageRoute(
+          builder: (_) => const AdminReviewPage(),
+          settings: settings,
+        );
+
+      case '/admin/naskah':
+        return MaterialPageRoute(
+          builder: (_) => const AdminNaskahPage(),
+          settings: settings,
+        );
+
+      case '/admin/statistik':
+        return MaterialPageRoute(
+          builder: (_) => const AdminStatistikPage(),
+          settings: settings,
+        );
+
+      case '/admin/notifikasi':
+        return MaterialPageRoute(
           builder: (_) => _buildPlaceholderPage(
-            'Admin Dashboard',
-            'Dashboard untuk role admin belum tersedia',
+            'Notifikasi Admin',
+            'Halaman notifikasi admin belum tersedia',
+          ),
+          settings: settings,
+        );
+
+      case '/admin/profil':
+        return MaterialPageRoute(
+          builder: (_) => _buildPlaceholderPage(
+            'Profil Admin',
+            'Halaman profil admin belum tersedia',
           ),
           settings: settings,
         );
@@ -192,17 +242,17 @@ class AppRoutes {
         );
 
       // ====================================
-      // ADMIN SPECIFIC ROUTES
+      // ADMIN LEGACY ROUTES (redirect to new routes)
       // ====================================
       case '/admin/users':
         return MaterialPageRoute(
-          builder: (_) => AdminUserManagementPage(),
+          builder: (_) => const AdminPenggunaPage(),
           settings: settings,
         );
 
       case '/admin/reviews':
         return MaterialPageRoute(
-          builder: (_) => AdminReviewManagementPage(),
+          builder: (_) => const AdminReviewPage(),
           settings: settings,
         );
 

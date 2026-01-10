@@ -196,7 +196,8 @@ class NotifikasiSocketService {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('userId');
+      // Key harus sama dengan yang disimpan di auth_service.dart
+      final userId = prefs.getString('user_id');
 
       if (userId == null) {
         logger.w('[NotifikasiSocket] Cannot join room: no user ID');

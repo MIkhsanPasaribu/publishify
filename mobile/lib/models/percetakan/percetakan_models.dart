@@ -479,3 +479,411 @@ class PaginationMeta {
     };
   }
 }
+
+/// API Response untuk buat pengiriman
+class PengirimanResponse {
+  final bool sukses;
+  final String pesan;
+  final PengirimanData? data;
+
+  const PengirimanResponse({
+    required this.sukses,
+    required this.pesan,
+    this.data,
+  });
+
+  factory PengirimanResponse.fromJson(Map<String, dynamic> json) {
+    return PengirimanResponse(
+      sukses: json['sukses'] as bool? ?? false,
+      pesan: json['pesan'] as String? ?? '',
+      data: json['data'] != null
+          ? PengirimanData.fromJson(json['data'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+/// Data pengiriman yang dibuat
+class PengirimanData {
+  final String id;
+  final String idPesanan;
+  final String namaEkspedisi;
+  final String? nomorResi;
+  final String biayaPengiriman;
+  final String alamatTujuan;
+  final String namaPenerima;
+  final String teleponPenerima;
+  final String status;
+  final DateTime? estimasiTiba;
+  final DateTime? tanggalKirim;
+  final DateTime? tanggalTerima;
+  final DateTime dibuatPada;
+
+  const PengirimanData({
+    required this.id,
+    required this.idPesanan,
+    required this.namaEkspedisi,
+    this.nomorResi,
+    required this.biayaPengiriman,
+    required this.alamatTujuan,
+    required this.namaPenerima,
+    required this.teleponPenerima,
+    required this.status,
+    this.estimasiTiba,
+    this.tanggalKirim,
+    this.tanggalTerima,
+    required this.dibuatPada,
+  });
+
+  factory PengirimanData.fromJson(Map<String, dynamic> json) {
+    return PengirimanData(
+      id: json['id'] as String,
+      idPesanan: json['idPesanan'] as String,
+      namaEkspedisi: json['namaEkspedisi'] as String,
+      nomorResi: json['nomorResi'] as String?,
+      biayaPengiriman: json['biayaPengiriman']?.toString() ?? '0',
+      alamatTujuan: json['alamatTujuan'] as String,
+      namaPenerima: json['namaPenerima'] as String,
+      teleponPenerima: json['teleponPenerima'] as String,
+      status: json['status'] as String,
+      estimasiTiba: json['estimasiTiba'] != null
+          ? DateTime.parse(json['estimasiTiba'] as String)
+          : null,
+      tanggalKirim: json['tanggalKirim'] != null
+          ? DateTime.parse(json['tanggalKirim'] as String)
+          : null,
+      tanggalTerima: json['tanggalTerima'] != null
+          ? DateTime.parse(json['tanggalTerima'] as String)
+          : null,
+      dibuatPada: DateTime.parse(json['dibuatPada'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'idPesanan': idPesanan,
+      'namaEkspedisi': namaEkspedisi,
+      'nomorResi': nomorResi,
+      'biayaPengiriman': biayaPengiriman,
+      'alamatTujuan': alamatTujuan,
+      'namaPenerima': namaPenerima,
+      'teleponPenerima': teleponPenerima,
+      'status': status,
+      'estimasiTiba': estimasiTiba?.toIso8601String(),
+      'tanggalKirim': tanggalKirim?.toIso8601String(),
+      'tanggalTerima': tanggalTerima?.toIso8601String(),
+      'dibuatPada': dibuatPada.toIso8601String(),
+    };
+  }
+}
+
+// ====================================
+// TARIF MODELS
+// ====================================
+
+/// Data tarif percetakan
+class TarifData {
+  final String id;
+  final String nama;
+  final String ukuranKertas;
+  final String jenisKertas;
+  final double hargaPerLembar;
+  final double hargaJilid;
+  final String? deskripsi;
+  final bool aktif;
+  final DateTime dibuatPada;
+  final DateTime diperbaruiPada;
+
+  const TarifData({
+    required this.id,
+    required this.nama,
+    required this.ukuranKertas,
+    required this.jenisKertas,
+    required this.hargaPerLembar,
+    required this.hargaJilid,
+    this.deskripsi,
+    required this.aktif,
+    required this.dibuatPada,
+    required this.diperbaruiPada,
+  });
+
+  factory TarifData.fromJson(Map<String, dynamic> json) {
+    return TarifData(
+      id: json['id'] as String,
+      nama: json['nama'] as String,
+      ukuranKertas: json['ukuranKertas'] as String,
+      jenisKertas: json['jenisKertas'] as String,
+      hargaPerLembar: (json['hargaPerLembar'] as num).toDouble(),
+      hargaJilid: (json['hargaJilid'] as num).toDouble(),
+      deskripsi: json['deskripsi'] as String?,
+      aktif: json['aktif'] as bool? ?? true,
+      dibuatPada: DateTime.parse(json['dibuatPada'] as String),
+      diperbaruiPada: DateTime.parse(json['diperbaruiPada'] as String),
+    );
+  }
+}
+
+/// Response untuk single tarif
+class TarifResponse {
+  final bool sukses;
+  final String pesan;
+  final TarifData? data;
+
+  TarifResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory TarifResponse.fromJson(Map<String, dynamic> json) {
+    return TarifResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null ? TarifData.fromJson(json['data']) : null,
+    );
+  }
+}
+
+/// Response untuk list tarif
+class TarifListResponse {
+  final bool sukses;
+  final String pesan;
+  final List<TarifData>? data;
+
+  TarifListResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory TarifListResponse.fromJson(Map<String, dynamic> json) {
+    return TarifListResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null
+          ? (json['data'] as List).map((e) => TarifData.fromJson(e)).toList()
+          : null,
+    );
+  }
+}
+
+/// Response untuk delete tarif
+class DeleteTarifResponse {
+  final bool sukses;
+  final String pesan;
+
+  DeleteTarifResponse({required this.sukses, this.pesan = ''});
+
+  factory DeleteTarifResponse.fromJson(Map<String, dynamic> json) {
+    return DeleteTarifResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+    );
+  }
+}
+
+// ====================================
+// PARAMETER HARGA MODELS
+// ====================================
+
+/// Response untuk parameter harga
+class ParameterHargaResponse {
+  final bool sukses;
+  final String pesan;
+  final Map<String, dynamic>? data;
+
+  ParameterHargaResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory ParameterHargaResponse.fromJson(Map<String, dynamic> json) {
+    return ParameterHargaResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] as Map<String, dynamic>?,
+    );
+  }
+}
+
+// ====================================
+// KOMBINASI TARIF MODELS
+// ====================================
+
+/// Data kombinasi tarif
+class KombinasiTarifData {
+  final String id;
+  final String nama;
+  final String? deskripsi;
+  final List<String> idTarif;
+  final bool aktif;
+  final DateTime dibuatPada;
+  final DateTime diperbaruiPada;
+  final List<TarifData>? tarif;
+
+  const KombinasiTarifData({
+    required this.id,
+    required this.nama,
+    this.deskripsi,
+    required this.idTarif,
+    required this.aktif,
+    required this.dibuatPada,
+    required this.diperbaruiPada,
+    this.tarif,
+  });
+
+  factory KombinasiTarifData.fromJson(Map<String, dynamic> json) {
+    return KombinasiTarifData(
+      id: json['id'] as String,
+      nama: json['nama'] as String,
+      deskripsi: json['deskripsi'] as String?,
+      idTarif:
+          (json['idTarif'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      aktif: json['aktif'] as bool? ?? true,
+      dibuatPada: DateTime.parse(json['dibuatPada'] as String),
+      diperbaruiPada: DateTime.parse(json['diperbaruiPada'] as String),
+      tarif: json['tarif'] != null
+          ? (json['tarif'] as List).map((e) => TarifData.fromJson(e)).toList()
+          : null,
+    );
+  }
+}
+
+/// Response untuk single kombinasi tarif
+class KombinasiTarifResponse {
+  final bool sukses;
+  final String pesan;
+  final KombinasiTarifData? data;
+
+  KombinasiTarifResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory KombinasiTarifResponse.fromJson(Map<String, dynamic> json) {
+    return KombinasiTarifResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null
+          ? KombinasiTarifData.fromJson(json['data'])
+          : null,
+    );
+  }
+}
+
+/// Response untuk list kombinasi tarif
+class KombinasiTarifListResponse {
+  final bool sukses;
+  final String pesan;
+  final List<KombinasiTarifData>? data;
+
+  KombinasiTarifListResponse({
+    required this.sukses,
+    this.pesan = '',
+    this.data,
+  });
+
+  factory KombinasiTarifListResponse.fromJson(Map<String, dynamic> json) {
+    return KombinasiTarifListResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null
+          ? (json['data'] as List)
+                .map((e) => KombinasiTarifData.fromJson(e))
+                .toList()
+          : null,
+    );
+  }
+}
+
+// ====================================
+// KALKULASI OPSI MODELS
+// ====================================
+
+/// Opsi harga hasil kalkulasi
+class OpsiHarga {
+  final String idTarif;
+  final String namaTarif;
+  final String ukuranKertas;
+  final String jenisKertas;
+  final double hargaSatuan;
+  final double hargaTotal;
+  final double hargaPerLembar;
+  final double hargaJilid;
+
+  const OpsiHarga({
+    required this.idTarif,
+    required this.namaTarif,
+    required this.ukuranKertas,
+    required this.jenisKertas,
+    required this.hargaSatuan,
+    required this.hargaTotal,
+    required this.hargaPerLembar,
+    required this.hargaJilid,
+  });
+
+  factory OpsiHarga.fromJson(Map<String, dynamic> json) {
+    return OpsiHarga(
+      idTarif: json['idTarif'] as String,
+      namaTarif: json['namaTarif'] as String,
+      ukuranKertas: json['ukuranKertas'] as String,
+      jenisKertas: json['jenisKertas'] as String,
+      hargaSatuan: (json['hargaSatuan'] as num).toDouble(),
+      hargaTotal: (json['hargaTotal'] as num).toDouble(),
+      hargaPerLembar: (json['hargaPerLembar'] as num).toDouble(),
+      hargaJilid: (json['hargaJilid'] as num).toDouble(),
+    );
+  }
+}
+
+/// Response untuk kalkulasi opsi harga
+class KalkulasiOpsiResponse {
+  final bool sukses;
+  final String pesan;
+  final List<OpsiHarga>? data;
+
+  KalkulasiOpsiResponse({required this.sukses, this.pesan = '', this.data});
+
+  factory KalkulasiOpsiResponse.fromJson(Map<String, dynamic> json) {
+    return KalkulasiOpsiResponse(
+      sukses: json['sukses'] ?? false,
+      pesan: json['pesan'] ?? '',
+      data: json['data'] != null
+          ? (json['data'] as List).map((e) => OpsiHarga.fromJson(e)).toList()
+          : null,
+    );
+  }
+}
+
+/// Response untuk konfirmasi/tolak pesanan oleh percetakan
+class KonfirmasiPesananResponse {
+  final bool sukses;
+  final String pesan;
+  final PesananCetak? data;
+
+  const KonfirmasiPesananResponse({
+    required this.sukses,
+    required this.pesan,
+    this.data,
+  });
+
+  factory KonfirmasiPesananResponse.fromJson(Map<String, dynamic> json) {
+    return KonfirmasiPesananResponse(
+      sukses: json['sukses'] as bool? ?? false,
+      pesan: json['pesan'] as String? ?? '',
+      data: json['data'] != null
+          ? PesananCetak.fromJson(json['data'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+/// Response untuk batalkan pesanan oleh percetakan
+class BatalPesananPercetakanResponse {
+  final bool sukses;
+  final String pesan;
+  final PesananCetak? data;
+
+  const BatalPesananPercetakanResponse({
+    required this.sukses,
+    required this.pesan,
+    this.data,
+  });
+
+  factory BatalPesananPercetakanResponse.fromJson(Map<String, dynamic> json) {
+    return BatalPesananPercetakanResponse(
+      sukses: json['sukses'] as bool? ?? false,
+      pesan: json['pesan'] as String? ?? '',
+      data: json['data'] != null
+          ? PesananCetak.fromJson(json['data'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
