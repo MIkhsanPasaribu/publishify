@@ -9,7 +9,7 @@ import 'package:publishify/pages/editor/statistics/editor_statistics_page.dart';
 import 'package:publishify/pages/editor/notifications/editor_notifications_page.dart';
 import 'package:publishify/pages/editor/profile/editor_profile_page.dart';
 import 'package:publishify/pages/editor/naskah/naskah_masuk_page.dart';
-import 'package:publishify/pages/editor/feedback/editor_feedback_page.dart';
+// import 'package:publishify/pages/editor/feedback/editor_feedback_page.dart'; // Unused
 // import 'package:publishify/pages/editor/editor_route_test_page.dart';
 
 // Percetakan pages imports
@@ -17,13 +17,13 @@ import 'package:publishify/pages/percetakan/percetakan_main_page.dart';
 
 // Auth pages imports
 import 'package:publishify/pages/auth/splash_screen.dart';
-import 'package:publishify/pages/auth/login_page.dart';
-import 'package:publishify/pages/auth/register_page.dart';
+// import 'package:publishify/pages/auth/login_page.dart'; // Unused - loaded via named route
+// import 'package:publishify/pages/auth/register_page.dart'; // Unused - loaded via named route
 import 'package:publishify/pages/auth/success_page.dart';
 
 // Writer/Common pages imports
 import 'package:publishify/pages/main_layout.dart';
-import 'package:publishify/pages/writer/home/home_page.dart';
+// import 'package:publishify/pages/writer/home/home_page.dart'; // Unused - loaded via named route
 import 'package:publishify/pages/writer/upload/upload_book_page.dart';
 import 'package:publishify/pages/writer/review/review_page.dart';
 import 'package:publishify/pages/writer/print/print_page.dart';
@@ -34,7 +34,6 @@ import 'package:publishify/pages/writer/naskah/detail_naskah_page.dart';
 /// Route Configuration untuk Role-Based Navigation
 /// Mengatur routing berdasarkan role pengguna
 class AppRoutes {
-  
   /// Generate routes berdasarkan route settings
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -70,7 +69,9 @@ class AppRoutes {
       // ====================================
       case '/dashboard/penulis':
         return MaterialPageRoute(
-          builder: (_) => const MainLayout(initialIndex: 0), // MainLayout dengan bottom nav untuk penulis
+          builder: (_) => const MainLayout(
+            initialIndex: 0,
+          ), // MainLayout dengan bottom nav untuk penulis
           settings: settings,
         );
 
@@ -88,7 +89,10 @@ class AppRoutes {
 
       case '/dashboard/admin':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Admin Dashboard', 'Dashboard untuk role admin belum tersedia'),
+          builder: (_) => _buildPlaceholderPage(
+            'Admin Dashboard',
+            'Dashboard untuk role admin belum tersedia',
+          ),
           settings: settings,
         );
 
@@ -97,13 +101,19 @@ class AppRoutes {
       // ====================================
       case '/penulis/manuscripts':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Daftar Naskah', 'Halaman daftar naskah penulis'),
+          builder: (_) => _buildPlaceholderPage(
+            'Daftar Naskah',
+            'Halaman daftar naskah penulis',
+          ),
           settings: settings,
         );
 
       case '/penulis/orders':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Pesanan Penulis', 'Halaman pesanan untuk penulis'),
+          builder: (_) => _buildPlaceholderPage(
+            'Pesanan Penulis',
+            'Halaman pesanan untuk penulis',
+          ),
           settings: settings,
         );
 
@@ -131,9 +141,8 @@ class AppRoutes {
       case '/editor/detail-review-naskah':
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => DetailReviewNaskahPage(
-            naskahId: args?['naskahId'] ?? '',
-          ),
+          builder: (_) =>
+              DetailReviewNaskahPage(naskahId: args?['naskahId'] ?? ''),
           settings: settings,
         );
 
@@ -167,7 +176,6 @@ class AppRoutes {
           settings: settings,
         );
 
-      
       // ====================================
       // PERCETAKAN SPECIFIC ROUTES
       // ====================================
@@ -203,19 +211,26 @@ class AppRoutes {
       // ====================================
       case '/profile':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Profil', 'Halaman profil pengguna'),
+          builder: (_) =>
+              _buildPlaceholderPage('Profil', 'Halaman profil pengguna'),
           settings: settings,
         );
 
       case '/notifications':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Notifikasi', 'Halaman notifikasi pengguna'),
+          builder: (_) => _buildPlaceholderPage(
+            'Notifikasi',
+            'Halaman notifikasi pengguna',
+          ),
           settings: settings,
         );
 
       case '/settings':
         return MaterialPageRoute(
-          builder: (_) => _buildPlaceholderPage('Pengaturan', 'Halaman pengaturan aplikasi'),
+          builder: (_) => _buildPlaceholderPage(
+            'Pengaturan',
+            'Halaman pengaturan aplikasi',
+          ),
           settings: settings,
         );
 
@@ -261,9 +276,7 @@ class AppRoutes {
       case '/detail-naskah':
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => DetailNaskahPage(
-            naskahId: args?['naskahId'] ?? '',
-          ),
+          builder: (_) => DetailNaskahPage(naskahId: args?['naskahId'] ?? ''),
           settings: settings,
         );
 
@@ -290,26 +303,16 @@ class AppRoutes {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.construction,
-              size: 64,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.construction, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               message,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -341,26 +344,16 @@ class AppRoutes {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             const Text(
               '404 - Halaman Tidak Ditemukan',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Route "$routeName" tidak tersedia',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -394,53 +387,55 @@ class AppRoutes {
 
 /// Dashboard untuk Percetakan
 class PercetakanDashboardPage extends StatelessWidget {
+  const PercetakanDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Dashboard Percetakan')),
-      body: Center(
-        child: Text('Percetakan Dashboard - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Dashboard Percetakan')),
+      body: const Center(child: Text('Percetakan Dashboard - TODO: Implement')),
     );
   }
 }
 
 /// Dashboard untuk Admin
 class AdminDashboardPage extends StatelessWidget {
+  const AdminDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Dashboard Admin')),
-      body: Center(
-        child: Text('Admin Dashboard - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Dashboard Admin')),
+      body: const Center(child: Text('Admin Dashboard - TODO: Implement')),
     );
   }
 }
 
 /// Home Page (Landing Page)
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Publishify')),
+      appBar: AppBar(title: const Text('Publishify')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'Selamat Datang di Publishify',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/login'),
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/register'),
-              child: Text('Register'),
+              child: const Text('Register'),
             ),
           ],
         ),
@@ -451,65 +446,65 @@ class HomePage extends StatelessWidget {
 
 /// Login Page Placeholder
 class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
-      body: Center(
-        child: Text('Login Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
+      body: const Center(child: Text('Login Page - TODO: Implement')),
     );
   }
 }
 
 /// Register Page Placeholder
 class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Register')),
-      body: Center(
-        child: Text('Register Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
+      body: const Center(child: Text('Register Page - TODO: Implement')),
     );
   }
 }
 
 /// Profile Page Placeholder
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
-      body: Center(
-        child: Text('Profile Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
+      body: const Center(child: Text('Profile Page - TODO: Implement')),
     );
   }
 }
 
 /// Notifications Page Placeholder
 class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Notifications')),
-      body: Center(
-        child: Text('Notifications Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
+      body: const Center(child: Text('Notifications Page - TODO: Implement')),
     );
   }
 }
 
 /// Settings Page Placeholder
 class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Settings')),
-      body: Center(
-        child: Text('Settings Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
+      body: const Center(child: Text('Settings Page - TODO: Implement')),
     );
   }
 }
@@ -520,11 +515,13 @@ class SettingsPage extends StatelessWidget {
 
 /// Penulis Manuscript List Page
 class PenulisManuscriptListPage extends StatelessWidget {
+  const PenulisManuscriptListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Naskah Saya')),
-      body: Center(
+      appBar: AppBar(title: const Text('Naskah Saya')),
+      body: const Center(
         child: Text('Penulis Manuscript List - TODO: Implement'),
       ),
     );
@@ -533,26 +530,26 @@ class PenulisManuscriptListPage extends StatelessWidget {
 
 /// Penulis Order List Page
 class PenulisOrderListPage extends StatelessWidget {
+  const PenulisOrderListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Pesanan Cetak Saya')),
-      body: Center(
-        child: Text('Penulis Order List - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Pesanan Cetak Saya')),
+      body: const Center(child: Text('Penulis Order List - TODO: Implement')),
     );
   }
 }
 
 /// Upload Naskah Page
 class UploadNaskahPage extends StatelessWidget {
+  const UploadNaskahPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Upload Naskah')),
-      body: Center(
-        child: Text('Upload Naskah Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Upload Naskah')),
+      body: const Center(child: Text('Upload Naskah Page - TODO: Implement')),
     );
   }
 }
@@ -563,26 +560,26 @@ class UploadNaskahPage extends StatelessWidget {
 
 /// Editor Review List Page
 class EditorReviewListPage extends StatelessWidget {
+  const EditorReviewListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Review Naskah')),
-      body: Center(
-        child: Text('Editor Review List - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Review Naskah')),
+      body: const Center(child: Text('Editor Review List - TODO: Implement')),
     );
   }
 }
 
 /// Editor Feedback Page
 class EditorFeedbackPage extends StatelessWidget {
+  const EditorFeedbackPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Berikan Feedback')),
-      body: Center(
-        child: Text('Editor Feedback Page - TODO: Implement'),
-      ),
+      appBar: AppBar(title: const Text('Berikan Feedback')),
+      body: const Center(child: Text('Editor Feedback Page - TODO: Implement')),
     );
   }
 }
@@ -593,11 +590,13 @@ class EditorFeedbackPage extends StatelessWidget {
 
 /// Percetakan Order List Page
 class PercetakanOrderListPage extends StatelessWidget {
+  const PercetakanOrderListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Pesanan Cetak')),
-      body: Center(
+      appBar: AppBar(title: const Text('Pesanan Cetak')),
+      body: const Center(
         child: Text('Percetakan Order List - TODO: Implement'),
       ),
     );
@@ -606,11 +605,13 @@ class PercetakanOrderListPage extends StatelessWidget {
 
 /// Percetakan Production Page
 class PercetakanProductionPage extends StatelessWidget {
+  const PercetakanProductionPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Status Produksi')),
-      body: Center(
+      appBar: AppBar(title: const Text('Status Produksi')),
+      body: const Center(
         child: Text('Percetakan Production Page - TODO: Implement'),
       ),
     );
@@ -623,11 +624,13 @@ class PercetakanProductionPage extends StatelessWidget {
 
 /// Admin User Management Page
 class AdminUserManagementPage extends StatelessWidget {
+  const AdminUserManagementPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Kelola Pengguna')),
-      body: Center(
+      appBar: AppBar(title: const Text('Kelola Pengguna')),
+      body: const Center(
         child: Text('Admin User Management - TODO: Implement'),
       ),
     );
@@ -636,11 +639,13 @@ class AdminUserManagementPage extends StatelessWidget {
 
 /// Admin Review Management Page
 class AdminReviewManagementPage extends StatelessWidget {
+  const AdminReviewManagementPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Kelola Review')),
-      body: Center(
+      appBar: AppBar(title: const Text('Kelola Review')),
+      body: const Center(
         child: Text('Admin Review Management - TODO: Implement'),
       ),
     );
@@ -655,28 +660,28 @@ class AdminReviewManagementPage extends StatelessWidget {
 class NotFoundPage extends StatelessWidget {
   final String? routeName;
 
-  const NotFoundPage({Key? key, this.routeName}) : super(key: key);
+  const NotFoundPage({super.key, this.routeName});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Halaman Tidak Ditemukan')),
+      appBar: AppBar(title: const Text('Halaman Tidak Ditemukan')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 100, color: Colors.red),
-            SizedBox(height: 20),
-            Text(
+            const Icon(Icons.error_outline, size: 100, color: Colors.red),
+            const SizedBox(height: 20),
+            const Text(
               '404 - Halaman Tidak Ditemukan',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text('Route: ${routeName ?? 'Unknown'}'),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-              child: Text('Kembali ke Home'),
+              child: const Text('Kembali ke Home'),
             ),
           ],
         ),

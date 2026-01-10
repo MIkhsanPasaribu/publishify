@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:logger/logger.dart';
 
 final logger = Logger();
@@ -102,7 +102,9 @@ class NotifikasiListResponse {
       sukses: json['sukses'],
       pesan: json['pesan'],
       data: json['data'] != null
-          ? (json['data'] as List).map((item) => Notifikasi.fromJson(item)).toList()
+          ? (json['data'] as List)
+                .map((item) => Notifikasi.fromJson(item))
+                .toList()
           : null,
       metadata: json['metadata'] != null
           ? NotifikasiMetadata.fromJson(json['metadata'])
@@ -117,11 +119,7 @@ class NotifikasiResponse {
   final String? pesan;
   final Notifikasi? data;
 
-  NotifikasiResponse({
-    required this.sukses,
-    this.pesan,
-    this.data,
-  });
+  NotifikasiResponse({required this.sukses, this.pesan, this.data});
 
   factory NotifikasiResponse.fromJson(Map<String, dynamic> json) {
     return NotifikasiResponse(
@@ -148,21 +146,22 @@ class NotifikasiBelumDibacaResponse {
     return NotifikasiBelumDibacaResponse(
       sukses: json['sukses'],
       pesan: json['pesan'],
-      totalBelumDibaca: json['data'] != null ? json['data']['totalBelumDibaca'] : null,
+      totalBelumDibaca: json['data'] != null
+          ? json['data']['totalBelumDibaca']
+          : null,
     );
   }
 }
 
 /// Service untuk mengelola notifikasi editor
 class EditorNotifikasiService {
-  static final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Helper untuk membuat headers dengan auth
   static Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.getAccessToken();
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
+      'X-Platform': 'mobile',
     };
   }
 
@@ -203,37 +202,41 @@ class EditorNotifikasiService {
         queryParams['tanggalSelesai'] = tanggalSelesai;
       }
 
-      final uri = Uri.parse('$baseUrl/api/notifikasi')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.notifikasi,
+      ).replace(queryParameters: queryParams);
 
       logger.i('[EditorNotifikasiService] GET $uri');
 
       final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
-      logger.i('[EditorNotifikasiService] Response status: ${response.statusCode}');
+      logger.i(
+        '[EditorNotifikasiService] Response status: ${response.statusCode}',
+      );
 
       final jsonResponse = json.decode(response.body);
 
       if (response.statusCode == 200) {
         return NotifikasiListResponse.fromJson(jsonResponse);
       } else {
-        String errorMessage = jsonResponse['pesan'] ?? 'Gagal mengambil notifikasi';
-        
+        String errorMessage =
+            jsonResponse['pesan'] ?? 'Gagal mengambil notifikasi';
+
         if (response.statusCode == 401) {
-          errorMessage = 'Unauthorized - Token tidak valid atau sudah kedaluwarsa';
+          errorMessage =
+              'Unauthorized - Token tidak valid atau sudah kedaluwarsa';
         }
 
         logger.e('[EditorNotifikasiService] Error: $errorMessage');
 
-        return NotifikasiListResponse(
-          sukses: false,
-          pesan: errorMessage,
-        );
+        return NotifikasiListResponse(sukses: false, pesan: errorMessage);
       }
     } catch (e) {
       logger.e('[EditorNotifikasiService] Exception: ${e.toString()}');
-      
+
       return NotifikasiListResponse(
         sukses: false,
         pesan: 'Terjadi kesalahan: ${e.toString()}',
@@ -245,9 +248,11 @@ class EditorNotifikasiService {
   /// Ambil detail notifikasi berdasarkan ID
   static Future<NotifikasiResponse> ambilNotifikasiById(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id');
+      final uri = Uri.parse(ApiConfig.notifikasiById(id));
       final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -271,9 +276,11 @@ class EditorNotifikasiService {
   /// Tandai notifikasi sebagai sudah dibaca
   static Future<NotifikasiResponse> tandaiDibaca(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id/baca');
+      final uri = Uri.parse('${ApiConfig.notifikasiById(id)}/baca');
       final headers = await _getHeaders();
-      final response = await http.put(uri, headers: headers);
+      final response = await http
+          .put(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -282,7 +289,9 @@ class EditorNotifikasiService {
       } else {
         return NotifikasiResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menandai notifikasi sebagai dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menandai notifikasi sebagai dibaca',
         );
       }
     } catch (e) {
@@ -297,9 +306,11 @@ class EditorNotifikasiService {
   /// Tandai semua notifikasi sebagai sudah dibaca
   static Future<NotifikasiResponse> tandaiSemuaDibaca() async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/baca-semua/all');
+      final uri = Uri.parse('${ApiConfig.notifikasi}/baca-semua/all');
       final headers = await _getHeaders();
-      final response = await http.put(uri, headers: headers);
+      final response = await http
+          .put(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -311,7 +322,9 @@ class EditorNotifikasiService {
       } else {
         return NotifikasiResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menandai semua notifikasi sebagai dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menandai semua notifikasi sebagai dibaca',
         );
       }
     } catch (e) {
@@ -326,9 +339,11 @@ class EditorNotifikasiService {
   /// Hapus notifikasi
   static Future<NotifikasiResponse> hapusNotifikasi(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id');
+      final uri = Uri.parse(ApiConfig.notifikasiById(id));
       final headers = await _getHeaders();
-      final response = await http.delete(uri, headers: headers);
+      final response = await http
+          .delete(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -355,9 +370,11 @@ class EditorNotifikasiService {
   /// Hitung jumlah notifikasi yang belum dibaca
   static Future<NotifikasiBelumDibacaResponse> hitungBelumDibaca() async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/belum-dibaca/count');
+      final uri = Uri.parse('${ApiConfig.notifikasi}/belum-dibaca/count');
       final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -366,7 +383,9 @@ class EditorNotifikasiService {
       } else {
         return NotifikasiBelumDibacaResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menghitung notifikasi belum dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menghitung notifikasi belum dibaca',
         );
       }
     } catch (e) {

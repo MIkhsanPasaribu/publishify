@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:publishify/utils/theme.dart';
 import 'package:publishify/models/writer/book_submission.dart';
 import 'package:publishify/services/writer/upload_service.dart';
@@ -10,10 +10,7 @@ import 'package:publishify/services/writer/naskah_service.dart';
 class UploadFilePage extends StatefulWidget {
   final BookSubmission submission;
 
-  const UploadFilePage({
-    super.key,
-    required this.submission,
-  });
+  const UploadFilePage({super.key, required this.submission});
 
   @override
   State<UploadFilePage> createState() => _UploadFilePageState();
@@ -37,7 +34,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final fileSize = await file.length();
-        
+
         // Check file size (max 50MB sesuai backend)
         const maxSize = 50 * 1024 * 1024; // 50MB
         if (fileSize > maxSize) {
@@ -121,11 +118,11 @@ class _UploadFilePageState extends State<UploadFilePage> {
 
       // Step 2: Create naskah with uploaded file URL
       // Build full URL from relative path (backend returns /uploads/...)
-      final baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
+      final baseUrl = ApiConfig.baseUrl;
       final fileUrl = uploadResponse.data!.url.startsWith('http')
           ? uploadResponse.data!.url
           : '$baseUrl${uploadResponse.data!.url}';
-      
+
       final createResponse = await NaskahService.createNaskah(
         judul: widget.submission.title,
         subJudul: null,
@@ -133,7 +130,8 @@ class _UploadFilePageState extends State<UploadFilePage> {
         idKategori: widget.submission.category,
         idGenre: widget.submission.genre,
         isbn: widget.submission.isbn,
-        urlFile: fileUrl,  // Full URL: http://localhost:4000/uploads/naskah/file.docx
+        urlFile:
+            fileUrl, // Full URL: http://localhost:4000/uploads/naskah/file.docx
         publik: false,
       );
 
@@ -164,7 +162,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
       }
     } catch (e) {
       if (!mounted) return;
-      
+
       setState(() {
         _isUploading = false;
       });
@@ -189,7 +187,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
               children: [
                 // Header
                 _buildHeader(),
-                
+
                 // Content
                 Expanded(
                   child: Padding(
@@ -213,17 +211,17 @@ class _UploadFilePageState extends State<UploadFilePage> {
                             fontSize: 14,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Upload Area
                         _buildUploadArea(),
-                        
+
                         const Spacer(),
-                        
+
                         // Submit Button
                         _buildSubmitButton(),
-                        
+
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -231,7 +229,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
                 ),
               ],
             ),
-            
+
             // Loading overlay
             if (_isUploading)
               Container(
@@ -288,10 +286,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppTheme.white,
-            ),
+            icon: const Icon(Icons.arrow_back, color: AppTheme.white),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
@@ -334,10 +329,7 @@ class _UploadFilePageState extends State<UploadFilePage> {
                 decoration: BoxDecoration(
                   color: AppTheme.backgroundWhite,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.greyDisabled,
-                    width: 2,
-                  ),
+                  border: Border.all(color: AppTheme.greyDisabled, width: 2),
                 ),
                 child: const Icon(
                   Icons.upload_file,

@@ -1,19 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/models/writer/review_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Review Service
 /// Handles all review related API calls
 /// Khusus untuk user PENULIS - untuk melihat review/feedback dari naskah mereka
 class ReviewService {
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Get detail review by ID (including all feedback)
   /// GET /api/review/:id
-  /// 
+  ///
   /// Endpoint ini bisa diakses oleh:
   /// - Editor yang ditugaskan
   /// - Penulis naskah
@@ -22,7 +19,7 @@ class ReviewService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return ReviewDetailResponse(
           sukses: false,
@@ -30,16 +27,19 @@ class ReviewService {
         );
       }
 
-      final uri = Uri.parse('$baseUrl/api/review/$idReview');
+      final uri = Uri.parse(ApiConfig.reviewById(idReview));
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return ReviewDetailResponse.fromJson(responseData);
@@ -54,7 +54,7 @@ class ReviewService {
 
   /// Update review status or notes
   /// PUT /api/review/:id
-  /// 
+  ///
   /// Untuk penulis: biasanya tidak bisa update review
   /// Tapi bisa digunakan untuk respond feedback (future feature)
   static Future<ReviewDetailResponse> updateReview({
@@ -65,7 +65,7 @@ class ReviewService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return ReviewDetailResponse(
           sukses: false,
@@ -73,7 +73,7 @@ class ReviewService {
         );
       }
 
-      final uri = Uri.parse('$baseUrl/api/review/$idReview');
+      final uri = Uri.parse(ApiConfig.reviewById(idReview));
 
       // Build request body
       final Map<String, dynamic> body = {};
@@ -81,14 +81,17 @@ class ReviewService {
       if (catatan != null) body['catatan'] = catatan;
 
       // Make API request
-      final response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .put(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return ReviewDetailResponse.fromJson(responseData);
@@ -103,7 +106,7 @@ class ReviewService {
 
   /// Get all reviews for current user's manuscripts
   /// Untuk penulis: ambil semua naskah mereka, lalu ambil review untuk setiap naskah
-  /// 
+  ///
   /// Note: Backend tidak memiliki endpoint khusus untuk ini,
   /// jadi kita perlu kombinasi dari:
   /// 1. GET /api/naskah/penulis/saya (ambil semua naskah penulis)
@@ -114,7 +117,7 @@ class ReviewService {
   }) async {
     try {
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return ReviewListResponse(
           sukses: false,
@@ -123,19 +126,23 @@ class ReviewService {
       }
 
       // Get all user's manuscripts that are in review or need revision
-      final naskahUri = Uri.parse('$baseUrl/api/naskah/penulis/saya')
-          .replace(queryParameters: {
-            'limit': '100', // Get all
-            'status': 'dalam_review,perlu_revisi', // Filter by status
-          });
-
-      final naskahResponse = await http.get(
-        naskahUri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
+      final naskahUri = Uri.parse(ApiConfig.naskahPenulisSaya).replace(
+        queryParameters: {
+          'limit': '100', // Get all
+          'status': 'dalam_review,perlu_revisi', // Filter by status
         },
       );
+
+      final naskahResponse = await http
+          .get(
+            naskahUri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (naskahResponse.statusCode != 200) {
         return ReviewListResponse(
@@ -160,20 +167,24 @@ class ReviewService {
 
       for (var naskah in naskahList) {
         final idNaskah = naskah['id'];
-        
-        // Get reviews for this manuscript
-        final reviewUri = Uri.parse('$baseUrl/api/review/naskah/$idNaskah')
-            .replace(queryParameters: {
-              'limit': '100', // Get all reviews for this manuscript
-            });
 
-        final reviewResponse = await http.get(
-          reviewUri,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $accessToken',
+        // Get reviews for this manuscript
+        final reviewUri = Uri.parse(ApiConfig.reviewByNaskah(idNaskah)).replace(
+          queryParameters: {
+            'limit': '100', // Get all reviews for this manuscript
           },
         );
+
+        final reviewResponse = await http
+            .get(
+              reviewUri,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $accessToken',
+                'X-Platform': 'mobile',
+              },
+            )
+            .timeout(ApiConfig.defaultTimeout);
 
         if (reviewResponse.statusCode == 200) {
           final reviewData = jsonDecode(reviewResponse.body);
@@ -187,9 +198,7 @@ class ReviewService {
       }
 
       // Sort by most recent
-      allReviews.sort((a, b) => 
-        b.diperbaruiPada.compareTo(a.diperbaruiPada)
-      );
+      allReviews.sort((a, b) => b.diperbaruiPada.compareTo(a.diperbaruiPada));
 
       // Apply pagination
       final startIndex = (halaman - 1) * limit;
@@ -222,7 +231,7 @@ class ReviewService {
   static Future<Map<String, int>> getReviewCountByStatus() async {
     try {
       final response = await getAllReviewsForMyManuscripts(limit: 100);
-      
+
       if (!response.sukses || response.data == null) {
         return {
           'ditugaskan': 0,
@@ -277,7 +286,7 @@ class ReviewService {
   /// Helper: Get recommendation label in Indonesian
   static String getRekomendasiLabel(String? rekomendasi) {
     if (rekomendasi == null) return '-';
-    
+
     switch (rekomendasi.toLowerCase()) {
       case 'setujui':
         return 'Disetujui';

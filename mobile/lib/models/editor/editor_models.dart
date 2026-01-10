@@ -1,5 +1,6 @@
 /// Models untuk Editor Dashboard
 /// Menggunakan backend integration models saja
+library;
 
 // Export review models yang backend-compatible
 export 'review_models.dart';
@@ -68,9 +69,10 @@ class EditorNaskahItem {
       penulis: json['penulis'] ?? '',
       status: json['status'] ?? '',
       prioritas: json['prioritas'] ?? 'sedang',
-      tanggalMasuk: DateTime.tryParse(json['tanggalMasuk'] ?? '') ?? DateTime.now(),
-      batasWaktu: json['batasWaktu'] != null 
-          ? DateTime.tryParse(json['batasWaktu']) 
+      tanggalMasuk:
+          DateTime.tryParse(json['tanggalMasuk'] ?? '') ?? DateTime.now(),
+      batasWaktu: json['batasWaktu'] != null
+          ? DateTime.tryParse(json['batasWaktu'])
           : null,
       deskripsi: json['deskripsi'],
       jumlahHalaman: json['jumlahHalaman'],
@@ -97,7 +99,7 @@ class ReviewAssignment {
   final int jumlahHalaman;
   final String? catatan;
   final String? rekomendasi;
-  
+
   // Legacy fields untuk kompatibilitas
   final String? idNaskah;
   final String? penulis;
@@ -157,7 +159,8 @@ class ReviewAssignment {
       id: json['id'] ?? '',
       judulNaskah: json['judulNaskah'] ?? '',
       penulisNaskah: json['penulisNaskah'] ?? json['penulis'] ?? '',
-      tanggalDitugaskan: DateTime.tryParse(json['tanggalDitugaskan'] ?? '') ?? DateTime.now(),
+      tanggalDitugaskan:
+          DateTime.tryParse(json['tanggalDitugaskan'] ?? '') ?? DateTime.now(),
       batasWaktu: DateTime.tryParse(json['batasWaktu'] ?? '') ?? DateTime.now(),
       status: json['status'] ?? 'ditugaskan',
       progress: (json['progress'] ?? 0.0).toDouble(),
@@ -168,11 +171,11 @@ class ReviewAssignment {
       idNaskah: json['idNaskah'],
       penulis: json['penulis'],
       editorYangDitugaskan: json['editorYangDitugaskan'],
-      tanggalMulai: json['tanggalMulai'] != null 
-          ? DateTime.tryParse(json['tanggalMulai']) 
+      tanggalMulai: json['tanggalMulai'] != null
+          ? DateTime.tryParse(json['tanggalMulai'])
           : null,
-      tanggalSelesai: json['tanggalSelesai'] != null 
-          ? DateTime.tryParse(json['tanggalSelesai']) 
+      tanggalSelesai: json['tanggalSelesai'] != null
+          ? DateTime.tryParse(json['tanggalSelesai'])
           : null,
       prioritas: json['prioritas'] ?? 3,
       tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
@@ -182,36 +185,54 @@ class ReviewAssignment {
   /// Helper untuk mendapatkan warna berdasarkan prioritas
   String get prioritasLabel {
     switch (prioritas) {
-      case 1: return 'Sangat Tinggi';
-      case 2: return 'Tinggi';
-      case 3: return 'Sedang';
-      case 4: return 'Rendah';
-      case 5: return 'Sangat Rendah';
-      default: return 'Sedang';
+      case 1:
+        return 'Sangat Tinggi';
+      case 2:
+        return 'Tinggi';
+      case 3:
+        return 'Sedang';
+      case 4:
+        return 'Rendah';
+      case 5:
+        return 'Sangat Rendah';
+      default:
+        return 'Sedang';
     }
   }
 
   /// Helper untuk mendapatkan status label Indonesia
   String get statusLabel {
     switch (status.toLowerCase()) {
-      case 'ditugaskan': return 'Ditugaskan';
-      case 'dalam_proses': return 'Dalam Proses';
-      case 'sedang_review': return 'Sedang Review';
-      case 'selesai': return 'Selesai';
-      case 'dibatalkan': return 'Dibatalkan';
-      case 'ditolak': return 'Ditolak';
-      default: return status;
+      case 'ditugaskan':
+        return 'Ditugaskan';
+      case 'dalam_proses':
+        return 'Dalam Proses';
+      case 'sedang_review':
+        return 'Sedang Review';
+      case 'selesai':
+        return 'Selesai';
+      case 'dibatalkan':
+        return 'Dibatalkan';
+      case 'ditolak':
+        return 'Ditolak';
+      default:
+        return status;
     }
   }
 
   /// Helper untuk mendapatkan warna status
   int get statusColor {
     switch (status.toLowerCase()) {
-      case 'ditugaskan': return 0xFF2196F3; // Blue
-      case 'dalam_proses': return 0xFFFF9800; // Orange
-      case 'selesai': return 0xFF4CAF50; // Green
-      case 'dibatalkan': return 0xFFF44336; // Red
-      default: return 0xFF9E9E9E; // Grey
+      case 'ditugaskan':
+        return 0xFF2196F3; // Blue
+      case 'dalam_proses':
+        return 0xFFFF9800; // Orange
+      case 'selesai':
+        return 0xFF4CAF50; // Green
+      case 'dibatalkan':
+        return 0xFFF44336; // Red
+      default:
+        return 0xFF9E9E9E; // Grey
     }
   }
 
@@ -240,12 +261,16 @@ class EditorStats {
 
   // Alias untuk kompatibilitas
   int get totalReview => totalReviewDitugaskan;
-  int get reviewSelesai => reviewSelesaiHariIni + naskahDisetujui + naskahDitolak + naskahPerluRevisi;
+  int get reviewSelesai =>
+      reviewSelesaiHariIni +
+      naskahDisetujui +
+      naskahDitolak +
+      naskahPerluRevisi;
   int get reviewMenunggu => reviewTertunda;
   int get reviewDibatalkan => 0;
   double get ratingRataRata => 4.5; // Default rating
-  int get tingkatPenyelesaian => totalReviewDitugaskan > 0 
-      ? ((reviewSelesai / totalReviewDitugaskan) * 100).round() 
+  int get tingkatPenyelesaian => totalReviewDitugaskan > 0
+      ? ((reviewSelesai / totalReviewDitugaskan) * 100).round()
       : 0;
 
   EditorStats({
@@ -270,7 +295,8 @@ class EditorStats {
   int get lateReviews => completedReviews - onTimeReviews;
   int get pendingReviews => reviewTertunda;
   double get averageReviewDays => rataRataWaktuReview;
-  int get totalFeedbacks => completedReviews; // Asumsi setiap review ada feedback
+  int get totalFeedbacks =>
+      completedReviews; // Asumsi setiap review ada feedback
 
   /// Convert to JSON
   Map<String, dynamic> toJson() => {
@@ -296,10 +322,15 @@ class EditorStats {
   /// Create from JSON
   factory EditorStats.fromJson(Map<String, dynamic> json) {
     return EditorStats(
-      totalReviewDitugaskan: json['totalReviewDitugaskan'] ?? json['totalReview'] ?? 0,
+      totalReviewDitugaskan:
+          json['totalReviewDitugaskan'] ?? json['totalReview'] ?? 0,
       reviewSelesaiHariIni: json['reviewSelesaiHariIni'] ?? 0,
       reviewDalamProses: json['reviewDalamProses'] ?? json['dalam_proses'] ?? 0,
-      reviewTertunda: json['reviewTertunda'] ?? json['reviewMenunggu'] ?? json['ditugaskan'] ?? 0,
+      reviewTertunda:
+          json['reviewTertunda'] ??
+          json['reviewMenunggu'] ??
+          json['ditugaskan'] ??
+          0,
       naskahDisetujui: json['naskahDisetujui'] ?? json['disetujui'] ?? 0,
       naskahPerluRevisi: json['naskahPerluRevisi'] ?? json['perlu_revisi'] ?? 0,
       naskahDitolak: json['naskahDitolak'] ?? json['ditolak'] ?? 0,
@@ -342,7 +373,8 @@ class EditorNotifikasi {
   final String id;
   final String judul;
   final String pesan;
-  final String tipe; // naskah_baru, deadline_dekat, review_selesai, feedback_baru
+  final String
+  tipe; // naskah_baru, deadline_dekat, review_selesai, feedback_baru
   final DateTime tanggal;
   final bool dibaca;
   final String? idNaskah;

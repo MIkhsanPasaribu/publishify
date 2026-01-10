@@ -1,15 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/models/writer/kategori_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Kategori Service
 /// Handles all kategori related API calls
 class KategoriService {
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Get list of kategori with pagination
   /// GET /api/kategori?halaman=1&limit=20&aktif=true
   static Future<KategoriResponse> getKategori({
@@ -20,11 +17,9 @@ class KategoriService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
-        return KategoriResponse(
-          sukses: false,
-        );
+        return KategoriResponse(sukses: false);
       }
 
       // Build URL with query parameters
@@ -32,30 +27,32 @@ class KategoriService {
         'halaman': halaman.toString(),
         'limit': limit.toString(),
       };
-      
+
       if (aktif != null) {
         queryParams['aktif'] = aktif.toString();
       }
 
-      final uri = Uri.parse('$baseUrl/api/kategori')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.kategori,
+      ).replace(queryParameters: queryParams);
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return KategoriResponse.fromJson(responseData);
     } catch (e) {
       // Return error response
-      return KategoriResponse(
-        sukses: false,
-      );
+      return KategoriResponse(sukses: false);
     }
   }
 
@@ -65,31 +62,30 @@ class KategoriService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
-        return KategoriResponse(
-          sukses: false,
-        );
+        return KategoriResponse(sukses: false);
       }
 
-      final uri = Uri.parse('$baseUrl/api/kategori/aktif');
+      final uri = Uri.parse('${ApiConfig.kategori}/aktif');
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return KategoriResponse.fromJson(responseData);
     } catch (e) {
       // Return error response
-      return KategoriResponse(
-        sukses: false,
-      );
+      return KategoriResponse(sukses: false);
     }
   }
 }

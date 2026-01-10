@@ -1,26 +1,22 @@
 /// Models untuk Review System Editor
 /// Sesuai dengan backend structure dari review.controller.ts dan review.service.ts
+library;
 
 /// Enum untuk Status Review
-enum StatusReview {
-  ditugaskan,
-  dalam_proses,
-  selesai,
-  dibatalkan,
-}
+// ignore: constant_identifier_names
+enum StatusReview { ditugaskan, dalam_proses, selesai, dibatalkan }
 
 /// Enum untuk Rekomendasi Review
-enum Rekomendasi {
-  setujui,
-  revisi,
-  tolak,
-}
+enum Rekomendasi { setujui, revisi, tolak }
 
 /// Enum untuk Status Naskah
+// ignore: constant_identifier_names
 enum StatusNaskah {
   draft,
   diajukan,
+  // ignore: constant_identifier_names
   dalam_review,
+  // ignore: constant_identifier_names
   perlu_revisi,
   disetujui,
   ditolak,
@@ -63,18 +59,24 @@ class ReviewNaskah {
       idNaskah: json['idNaskah'],
       idEditor: json['idEditor'],
       status: StatusReview.values.firstWhere((e) => e.name == json['status']),
-      rekomendasi: json['rekomendasi'] != null 
+      rekomendasi: json['rekomendasi'] != null
           ? Rekomendasi.values.firstWhere((e) => e.name == json['rekomendasi'])
           : null,
       catatan: json['catatan'],
       ditugaskanPada: DateTime.parse(json['ditugaskanPada']),
-      dimulaiPada: json['dimulaiPada'] != null ? DateTime.parse(json['dimulaiPada']) : null,
-      selesaiPada: json['selesaiPada'] != null ? DateTime.parse(json['selesaiPada']) : null,
+      dimulaiPada: json['dimulaiPada'] != null
+          ? DateTime.parse(json['dimulaiPada'])
+          : null,
+      selesaiPada: json['selesaiPada'] != null
+          ? DateTime.parse(json['selesaiPada'])
+          : null,
       naskah: NaskahInfo.fromJson(json['naskah']),
       editor: EditorInfo.fromJson(json['editor']),
-      feedback: (json['feedback'] as List<dynamic>?)
-          ?.map((f) => FeedbackReview.fromJson(f))
-          .toList() ?? [],
+      feedback:
+          (json['feedback'] as List<dynamic>?)
+              ?.map((f) => FeedbackReview.fromJson(f))
+              .toList() ??
+          [],
     );
   }
 
@@ -171,17 +173,13 @@ class PenulisInfo {
   final String email;
   final ProfilPengguna? profilPengguna;
 
-  PenulisInfo({
-    required this.id,
-    required this.email,
-    this.profilPengguna,
-  });
+  PenulisInfo({required this.id, required this.email, this.profilPengguna});
 
   factory PenulisInfo.fromJson(Map<String, dynamic> json) {
     return PenulisInfo(
       id: json['id'],
       email: json['email'],
-      profilPengguna: json['profilPengguna'] != null 
+      profilPengguna: json['profilPengguna'] != null
           ? ProfilPengguna.fromJson(json['profilPengguna'])
           : null,
     );
@@ -233,17 +231,13 @@ class EditorInfo {
   final String email;
   final ProfilPengguna? profilPengguna;
 
-  EditorInfo({
-    required this.id,
-    required this.email,
-    this.profilPengguna,
-  });
+  EditorInfo({required this.id, required this.email, this.profilPengguna});
 
   factory EditorInfo.fromJson(Map<String, dynamic> json) {
     return EditorInfo(
       id: json['id'],
       email: json['email'],
-      profilPengguna: json['profilPengguna'] != null 
+      profilPengguna: json['profilPengguna'] != null
           ? ProfilPengguna.fromJson(json['profilPengguna'])
           : null,
     );
@@ -264,26 +258,14 @@ class KategoriInfo {
   final String nama;
   final String slug;
 
-  KategoriInfo({
-    required this.id,
-    required this.nama,
-    required this.slug,
-  });
+  KategoriInfo({required this.id, required this.nama, required this.slug});
 
   factory KategoriInfo.fromJson(Map<String, dynamic> json) {
-    return KategoriInfo(
-      id: json['id'],
-      nama: json['nama'],
-      slug: json['slug'],
-    );
+    return KategoriInfo(id: json['id'], nama: json['nama'], slug: json['slug']);
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nama': nama,
-      'slug': slug,
-    };
+    return {'id': id, 'nama': nama, 'slug': slug};
   }
 }
 
@@ -293,26 +275,14 @@ class GenreInfo {
   final String nama;
   final String slug;
 
-  GenreInfo({
-    required this.id,
-    required this.nama,
-    required this.slug,
-  });
+  GenreInfo({required this.id, required this.nama, required this.slug});
 
   factory GenreInfo.fromJson(Map<String, dynamic> json) {
-    return GenreInfo(
-      id: json['id'],
-      nama: json['nama'],
-      slug: json['slug'],
-    );
+    return GenreInfo(id: json['id'], nama: json['nama'], slug: json['slug']);
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nama': nama,
-      'slug': slug,
-    };
+    return {'id': id, 'nama': nama, 'slug': slug};
   }
 }
 
@@ -419,11 +389,13 @@ class ReviewTerbaru {
     return ReviewTerbaru(
       id: json['id'],
       status: StatusReview.values.firstWhere((e) => e.name == json['status']),
-      rekomendasi: json['rekomendasi'] != null 
+      rekomendasi: json['rekomendasi'] != null
           ? Rekomendasi.values.firstWhere((e) => e.name == json['rekomendasi'])
           : null,
       ditugaskanPada: DateTime.parse(json['ditugaskanPada']),
-      selesaiPada: json['selesaiPada'] != null ? DateTime.parse(json['selesaiPada']) : null,
+      selesaiPada: json['selesaiPada'] != null
+          ? DateTime.parse(json['selesaiPada'])
+          : null,
       judulNaskah: json['naskah']['judul'],
     );
   }
@@ -453,11 +425,7 @@ class TugaskanReviewRequest {
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'idNaskah': idNaskah,
-      'idEditor': idEditor,
-      'catatan': catatan,
-    };
+    return {'idNaskah': idNaskah, 'idEditor': idEditor, 'catatan': catatan};
   }
 }
 
@@ -468,17 +436,19 @@ class PerbaruiReviewRequest {
   final String? catatan;
   final DateTime? dimulaiPada;
 
-  PerbaruiReviewRequest({
-    this.status,
-    this.catatan,
-    this.dimulaiPada,
-  });
+  PerbaruiReviewRequest({this.status, this.catatan, this.dimulaiPada});
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
-    if (status != null) data['status'] = status!.name;
-    if (catatan != null) data['catatan'] = catatan;
-    if (dimulaiPada != null) data['dimulaiPada'] = dimulaiPada!.toIso8601String();
+    if (status != null) {
+      data['status'] = status!.name;
+    }
+    if (catatan != null) {
+      data['catatan'] = catatan;
+    }
+    if (dimulaiPada != null) {
+      data['dimulaiPada'] = dimulaiPada!.toIso8601String();
+    }
     return data;
   }
 }
@@ -489,16 +459,10 @@ class SubmitReviewRequest {
   final Rekomendasi rekomendasi;
   final String catatan; // required, min 50 chars
 
-  SubmitReviewRequest({
-    required this.rekomendasi,
-    required this.catatan,
-  });
+  SubmitReviewRequest({required this.rekomendasi, required this.catatan});
 
   Map<String, dynamic> toJson() {
-    return {
-      'rekomendasi': rekomendasi.name,
-      'catatan': catatan,
-    };
+    return {'rekomendasi': rekomendasi.name, 'catatan': catatan};
   }
 }
 
@@ -509,16 +473,10 @@ class TambahFeedbackRequest {
   final int? halaman;
   final String komentar; // required, min 10 chars
 
-  TambahFeedbackRequest({
-    this.bab,
-    this.halaman,
-    required this.komentar,
-  });
+  TambahFeedbackRequest({this.bab, this.halaman, required this.komentar});
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
-      'komentar': komentar,
-    };
+    final Map<String, dynamic> data = {'komentar': komentar};
     if (bab != null) data['bab'] = bab;
     if (halaman != null) data['halaman'] = halaman;
     return data;
@@ -585,7 +543,9 @@ class ReviewResponse<T> {
     return ReviewResponse<T>(
       sukses: json['sukses'],
       pesan: json['pesan'],
-      data: json['data'] != null && fromJsonT != null ? fromJsonT(json['data']) : json['data'],
+      data: json['data'] != null && fromJsonT != null
+          ? fromJsonT(json['data'])
+          : json['data'],
       metadata: json['metadata'],
     );
   }

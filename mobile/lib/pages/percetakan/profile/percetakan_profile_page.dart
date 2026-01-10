@@ -37,10 +37,10 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
   void _loadData() async {
     // Load data from DummyData for stats only
     _profile = DummyData.getUserProfile();
-    
+
     // Load user data from API (with cache)
     await _loadUserDataFromAPI();
-    
+
     // Load naskah from API for portfolio
     await _loadNaskahFromAPI();
   }
@@ -84,10 +84,10 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
     try {
       // Get profile from API (will use cache if not expired)
       final response = await ProfileService.getProfile();
-      
+
       if (response.sukses && response.data != null && mounted) {
         final profileData = response.data!;
-        
+
         setState(() {
           // Get nama tampilan from profile
           if (profileData.profilPengguna != null) {
@@ -99,7 +99,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
             _userBio = 'Belum dilengkapi';
             _userAvatar = '';
           }
-          
+
           // Get role/peran (join multiple active roles with comma)
           if (profileData.peranPengguna.isNotEmpty) {
             final activeRoles = profileData.peranPengguna
@@ -110,12 +110,14 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                   return jenisPeran[0].toUpperCase() + jenisPeran.substring(1);
                 })
                 .toList();
-            
-            _userRole = activeRoles.isNotEmpty ? activeRoles.join(', ') : 'User';
+
+            _userRole = activeRoles.isNotEmpty
+                ? activeRoles.join(', ')
+                : 'User';
           } else {
             _userRole = 'User';
           }
-          
+
           _isLoadingProfile = false;
         });
       } else {
@@ -132,25 +134,28 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
   Future<void> _loadFromOldCache() async {
     try {
       final loginData = await AuthService.getLoginData();
-      
+
       if (loginData != null && mounted) {
         setState(() {
           if (loginData.pengguna.profilPengguna != null) {
             _userName = loginData.pengguna.profilPengguna!.namaTampilan;
-            _userBio = loginData.pengguna.profilPengguna!.bio ?? 'Belum dilengkapi';
+            _userBio =
+                loginData.pengguna.profilPengguna!.bio ?? 'Belum dilengkapi';
           } else {
             _userName = 'User';
             _userBio = 'Belum dilengkapi';
           }
-          
+
           if (loginData.pengguna.peran.isNotEmpty) {
-            _userRole = loginData.pengguna.peran.map((role) {
-              return role[0].toUpperCase() + role.substring(1);
-            }).join(', ');
+            _userRole = loginData.pengguna.peran
+                .map((role) {
+                  return role[0].toUpperCase() + role.substring(1);
+                })
+                .join(', ');
           } else {
             _userRole = 'User';
           }
-          
+
           _isLoadingProfile = false;
         });
       } else {
@@ -189,7 +194,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
           children: [
             // Top Header
             _buildHeader(),
-            
+
             // Main Content - Scrollable with RefreshIndicator
             Expanded(
               child: RefreshIndicator(
@@ -200,20 +205,20 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                   child: Column(
                     children: [
                       const SizedBox(height: 20),
-                      
+
                       // Profile Info Section
                       _buildProfileInfo(),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Bio Section
                       _buildBioSection(),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Portfolio Section
                       _buildPortfolioSection(),
-                      
+
                       const SizedBox(height: 80), // Space for bottom nav
                     ],
                   ),
@@ -248,10 +253,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.more_vert,
-              color: AppTheme.white,
-            ),
+            icon: const Icon(Icons.more_vert, color: AppTheme.white),
             onPressed: () {
               _showMoreMenu();
             },
@@ -288,69 +290,54 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
               ),
             )
           : Column(
-        children: [
-          // Profile Picture
-          AvatarImage(
-            urlAvatar: _userAvatar.isNotEmpty ? _userAvatar : _profile.photoUrl,
-            size: 100,
-            fallbackText: _userName,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Name (from cache)
-          Text(
-            _userName.isEmpty ? _profile.name : _userName,
-            style: AppTheme.headingMedium.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: AppTheme.black,
+              children: [
+                // Profile Picture
+                AvatarImage(
+                  urlAvatar: _userAvatar.isNotEmpty
+                      ? _userAvatar
+                      : _profile.photoUrl,
+                  size: 100,
+                  fallbackText: _userName,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Name (from cache)
+                Text(
+                  _userName.isEmpty ? _profile.name : _userName,
+                  style: AppTheme.headingMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: AppTheme.black,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                // Role (from cache)
+                Text(
+                  _userRole.isEmpty ? _profile.role : _userRole,
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.greyMedium,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Stats Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    StatItem(count: _profile.totalBooks, label: 'Buku'),
+                    Container(width: 1, height: 40, color: AppTheme.greyLight),
+                    StatItem(count: _profile.totalRating, label: 'Rating'),
+                    Container(width: 1, height: 40, color: AppTheme.greyLight),
+                    StatItem(count: _profile.totalViewers, label: 'Viewers'),
+                  ],
+                ),
+              ],
             ),
-          ),
-          
-          const SizedBox(height: 4),
-          
-          // Role (from cache)
-          Text(
-            _userRole.isEmpty ? _profile.role : _userRole,
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.greyMedium,
-              fontSize: 14,
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Stats Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              StatItem(
-                count: _profile.totalBooks,
-                label: 'Buku',
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppTheme.greyLight,
-              ),
-              StatItem(
-                count: _profile.totalRating,
-                label: 'Rating',
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppTheme.greyLight,
-              ),
-              StatItem(
-                count: _profile.totalViewers,
-                label: 'Viewers',
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -386,14 +373,14 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
             child: Text(
               _userBio,
               style: AppTheme.bodyMedium.copyWith(
-                color: _userBio == 'Belum dilengkapi' 
-                  ? AppTheme.greyMedium.withValues(alpha: 0.6)
-                  : AppTheme.greyMedium,
+                color: _userBio == 'Belum dilengkapi'
+                    ? AppTheme.greyMedium.withValues(alpha: 0.6)
+                    : AppTheme.greyMedium,
                 height: 1.6,
                 fontSize: 14,
-                fontStyle: _userBio == 'Belum dilengkapi' 
-                  ? FontStyle.italic 
-                  : FontStyle.normal,
+                fontStyle: _userBio == 'Belum dilengkapi'
+                    ? FontStyle.italic
+                    : FontStyle.normal,
               ),
               textAlign: TextAlign.justify,
             ),
@@ -418,7 +405,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Loading state
           if (_isLoadingNaskah)
             const Center(
@@ -577,14 +564,13 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (naskah.jumlahKata != null)
-                            Text(
-                              '${naskah.jumlahKata} kata',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: AppTheme.greyMedium,
-                                fontSize: 11,
-                              ),
+                          Text(
+                            '${naskah.jumlahKata} kata',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.greyMedium,
+                              fontSize: 11,
                             ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -599,10 +585,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                   ),
                 ),
                 // Arrow icon
-                const Icon(
-                  Icons.chevron_right,
-                  color: AppTheme.greyMedium,
-                ),
+                const Icon(Icons.chevron_right, color: AppTheme.greyMedium),
               ],
             ),
           ),
@@ -616,9 +599,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
       context: context,
       backgroundColor: AppTheme.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
@@ -647,7 +628,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                       builder: (context) => const EditPercetakanProfilePage(),
                     ),
                   );
-                  
+
                   // If profile was updated, reload data from API
                   if (result == true && mounted) {
                     await ProfileService.clearProfileCache();
@@ -656,7 +637,10 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.settings, color: AppTheme.primaryGreen),
+                leading: const Icon(
+                  Icons.settings,
+                  color: AppTheme.primaryGreen,
+                ),
                 title: const Text('Pengaturan'),
                 onTap: () {
                   Navigator.pop(context);
@@ -692,9 +676,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
@@ -737,10 +719,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text(
               'Keluar',
@@ -755,7 +734,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
   Future<void> _handleLogout() async {
     // Close confirmation dialog
     Navigator.pop(context);
-    
+
     // Show loading dialog
     showDialog(
       context: context,
@@ -799,25 +778,22 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
         ),
       ),
     );
-    
+
     try {
       // Call logout API and clear all data
       final success = await AuthService.logout();
-      
+
       // Close loading dialog
       if (mounted) {
         Navigator.pop(context);
       }
-      
+
       // Navigate to splash screen and clear all routes
       if (mounted) {
         // Navigate to splash screen which will redirect to login
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/',
-          (route) => false,
-        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
-      
+
       // Show success message
       if (mounted && success) {
         // Wait a bit then show success on splash
@@ -838,7 +814,7 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
       if (mounted) {
         Navigator.pop(context);
       }
-      
+
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -849,13 +825,10 @@ class _PercetakanProfilePageState extends State<PercetakanProfilePage> {
           ),
         );
       }
-      
+
       // Still navigate to splash even on error
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/',
-          (route) => false,
-        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     }
   }

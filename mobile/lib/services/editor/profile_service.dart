@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import 'package:publishify/models/writer/update_profile_models.dart';
 import 'package:publishify/models/writer/profile_api_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Editor Profile Service
@@ -12,15 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class EditorProfileService {
   static final logger = Logger();
 
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
-  
   // Cache expiry time (in hours)
   static const int cacheExpiryHours = 1;
 
   /// Get editor profile from API or cache
   /// GET /api/pengguna/profil/saya
-  static Future<ProfileApiResponse> getProfile({bool forceRefresh = false}) async {
+  static Future<ProfileApiResponse> getProfile({
+    bool forceRefresh = false,
+  }) async {
     try {
       // Check cache first if not forced refresh
       if (!forceRefresh) {
@@ -44,16 +43,19 @@ class EditorProfileService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/pengguna/profil/saya');
+      final url = Uri.parse(ApiConfig.penggunaProfilSaya);
 
       // Make API request
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       final profileResponse = ProfileApiResponse.fromJson(responseData);
@@ -77,24 +79,24 @@ class EditorProfileService {
   static Future<ProfileUserData?> _getProfileFromCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Check if cache exists and not expired
       final cacheTime = prefs.getInt('editor_profile_cache_time');
       if (cacheTime == null) return null;
-      
+
       final cacheDateTime = DateTime.fromMillisecondsSinceEpoch(cacheTime);
       final now = DateTime.now();
       final difference = now.difference(cacheDateTime).inHours;
-      
+
       // If cache expired, return null
       if (difference >= cacheExpiryHours) {
         return null;
       }
-      
+
       // Get cached profile data
       final profileJson = prefs.getString('editor_profile_data');
       if (profileJson == null) return null;
-      
+
       final profileData = jsonDecode(profileJson);
       return ProfileUserData.fromJson(profileData);
     } catch (e) {
@@ -107,14 +109,17 @@ class EditorProfileService {
   static Future<void> _saveProfileToCache(ProfileUserData profile) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Save profile data
       final profileJson = jsonEncode(profile.toJson());
       await prefs.setString('editor_profile_data', profileJson);
-      
+
       // Save cache time
-      await prefs.setInt('editor_profile_cache_time', DateTime.now().millisecondsSinceEpoch);
-      
+      await prefs.setInt(
+        'editor_profile_cache_time',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+
       logger.i('Profile saved to cache successfully');
     } catch (e) {
       logger.e('Error saving profile to cache: $e');
@@ -135,7 +140,9 @@ class EditorProfileService {
 
   /// Update profile
   /// PUT /api/pengguna/profil
-  static Future<UpdateProfileResponse> updateProfile(UpdateProfileRequest request) async {
+  static Future<UpdateProfileResponse> updateProfile(
+    UpdateProfileRequest request,
+  ) async {
     try {
       // Get access token
       final accessToken = await AuthService.getAccessToken();
@@ -147,17 +154,20 @@ class EditorProfileService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/pengguna/profil');
+      final url = Uri.parse(ApiConfig.penggunaProfilSaya);
 
       // Make API request
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(request.toJson()),
-      );
+      final response = await http
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       logger.i('Update profile response status: ${response.statusCode}');
       logger.i('Update profile response body: ${response.body}');
@@ -181,7 +191,7 @@ class EditorProfileService {
   }
 
   /// Update telepon
-  /// PUT /api/pengguna/telepon
+  /// PUT /api/pengguna/profil/saya
   static Future<UpdateProfileResponse> updateTelepon(String telepon) async {
     try {
       // Get access token
@@ -194,17 +204,20 @@ class EditorProfileService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/pengguna/telepon');
+      final url = Uri.parse(ApiConfig.penggunaProfilSaya);
 
       // Make API request
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode({'telepon': telepon}),
-      );
+      final response = await http
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode({'telepon': telepon}),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       logger.i('Update telepon response status: ${response.statusCode}');
       logger.i('Update telepon response body: ${response.body}');

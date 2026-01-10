@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 class PercetakanService {
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
-
   /// POST /api/percetakan - Buat pesanan cetak
   static Future<BuatPesananResponse> buatPesananCetak({
     required String idNaskah,
@@ -18,7 +16,7 @@ class PercetakanService {
   }) async {
     try {
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return BuatPesananResponse(
           sukses: false,
@@ -26,8 +24,8 @@ class PercetakanService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/percetakan');
-      
+      final url = Uri.parse(ApiConfig.percetakan);
+
       final body = {
         'idNaskah': idNaskah,
         'jumlah': jumlah,
@@ -41,14 +39,17 @@ class PercetakanService {
         body['catatan'] = catatan;
       }
 
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return BuatPesananResponse.fromJson(responseData);
@@ -67,11 +68,7 @@ class BuatPesananResponse {
   final String pesan;
   final PesananData? data;
 
-  BuatPesananResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  BuatPesananResponse({required this.sukses, required this.pesan, this.data});
 
   factory BuatPesananResponse.fromJson(Map<String, dynamic> json) {
     return BuatPesananResponse(

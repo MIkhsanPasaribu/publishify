@@ -40,7 +40,9 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       if (response.sukses && response.data != null) {
         setState(() {
           _books = response.data!;
-          _filterCounts = Map<String, int>.from(response.metadata?['filters'] ?? {});
+          _filterCounts = Map<String, int>.from(
+            response.metadata?['filters'] ?? {},
+          );
           _isLoading = false;
         });
       } else {
@@ -70,21 +72,19 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
     // Simpan navigator dan scaffoldMessenger sebelum masuk async gap
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => const Center(
-        child: CircularProgressIndicator(
-          color: AppTheme.primaryGreen,
-        ),
+        child: CircularProgressIndicator(color: AppTheme.primaryGreen),
       ),
     );
 
     try {
       final response = await ReviewCollectionService.terimaBuku(book.id);
-      
+
       if (!mounted) return;
       navigator.pop(); // Close loading dialog
 
@@ -110,32 +110,30 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
     // Simpan navigator dan scaffoldMessenger sebelum masuk async gap
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => _TugaskanEditorDialog(
         book: book,
         onSubmit: (editorId, alasan) async {
           Navigator.pop(dialogContext);
-          
+
           // Show loading
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (loadingContext) => const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryGreen,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
             ),
           );
 
           try {
             final response = await ReviewCollectionService.tugaskanEditorLain(
-              idReview: book.id, 
-              idEditorBaru: editorId, 
+              idReview: book.id,
+              idEditorBaru: editorId,
               alasan: alasan,
             );
-            
+
             if (!mounted) return;
             navigator.pop(); // Close loading
 
@@ -163,9 +161,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
   void _onLihatDetail(BukuMasukReview book) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => ReviewDetailPage(book: book),
-      ),
+      MaterialPageRoute(builder: (context) => ReviewDetailPage(book: book)),
     );
   }
 
@@ -197,28 +193,28 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
               child: _isLoading
                   ? _buildLoadingState()
                   : _errorMessage != null
-                      ? _buildErrorState()
-                      : _books.isEmpty
-                          ? _buildEmptyState()
-                          : RefreshIndicator(
-                              onRefresh: _loadData,
-                              color: AppTheme.primaryGreen,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildInfoCard(),
-                                    const SizedBox(height: 20),
-                                    _buildFilterDropdown(),
-                                    const SizedBox(height: 16),
-                                    _buildStatsRow(),
-                                    const SizedBox(height: 20),
-                                    ..._books.map((book) => _buildBookCard(book)),
-                                  ],
-                                ),
-                              ),
-                            ),
+                  ? _buildErrorState()
+                  : _books.isEmpty
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      color: AppTheme.primaryGreen,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoCard(),
+                            const SizedBox(height: 20),
+                            _buildFilterDropdown(),
+                            const SizedBox(height: 16),
+                            _buildStatsRow(),
+                            const SizedBox(height: 20),
+                            ..._books.map((book) => _buildBookCard(book)),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -240,11 +236,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppTheme.white,
-              size: 24,
-            ),
+            icon: const Icon(Icons.arrow_back, color: AppTheme.white, size: 24),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -362,11 +354,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.filter_list,
-            color: AppTheme.primaryGreen,
-            size: 20,
-          ),
+          const Icon(Icons.filter_list, color: AppTheme.primaryGreen, size: 20),
           const SizedBox(width: 12),
           Text(
             'Filter: ',
@@ -439,10 +427,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.greyDisabled,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.greyDisabled, width: 1),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryDark.withValues(alpha: 0.05),
@@ -484,7 +469,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Detail buku
               Expanded(
                 child: Column(
@@ -512,16 +497,25 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
                       ),
                     ],
                     const SizedBox(height: 8),
-                    
+
                     // Metadata
                     _buildMetadataRow('Penulis', book.namaPenulis),
-                    _buildMetadataRow('Genre', '${book.kategori} • ${book.genre}'),
-                    _buildMetadataRow('Halaman', '${book.jumlahHalaman} hal • ${(book.jumlahKata / 1000).toStringAsFixed(0)}k kata'),
-                    _buildMetadataRow('Submit', _formatDate(book.tanggalSubmit ?? book.tanggalMasuk)),
-                    
-                    if (book.deadlineReview != null) 
+                    _buildMetadataRow(
+                      'Genre',
+                      '${book.kategori} • ${book.genre}',
+                    ),
+                    _buildMetadataRow(
+                      'Halaman',
+                      '${book.jumlahHalaman} hal • ${(book.jumlahKata / 1000).toStringAsFixed(0)}k kata',
+                    ),
+                    _buildMetadataRow(
+                      'Submit',
+                      _formatDate(book.tanggalSubmit ?? book.tanggalMasuk),
+                    ),
+
+                    if (book.deadlineReview != null)
                       _buildMetadataRow(
-                        'Deadline', 
+                        'Deadline',
                         _formatDate(book.deadlineReview!),
                         isDeadline: true,
                       ),
@@ -642,11 +636,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: color,
-          ),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 2),
           Text(
             label,
@@ -661,10 +651,14 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
     );
   }
 
-  Widget _buildMetadataRow(String label, String value, {bool isDeadline = false}) {
-    final isUrgent = isDeadline && DateTime.now().isAfter(
-      DateTime.now().add(const Duration(days: 1)),
-    );
+  Widget _buildMetadataRow(
+    String label,
+    String value, {
+    bool isDeadline = false,
+  }) {
+    final isUrgent =
+        isDeadline &&
+        DateTime.now().isAfter(DateTime.now().add(const Duration(days: 1)));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
@@ -699,7 +693,8 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
     return Row(
       children: [
         // Terima Buku button
-        if (book.status == 'belum_ditugaskan' || book.status == 'ditugaskan') ...[
+        if (book.status == 'belum_ditugaskan' ||
+            book.status == 'ditugaskan') ...[
           Expanded(
             child: ElevatedButton(
               onPressed: () => _onTerimaBuku(book),
@@ -729,7 +724,8 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
         ],
 
         // Tugaskan Editor Lain button
-        if (book.status == 'belum_ditugaskan' || book.status == 'ditugaskan') ...[
+        if (book.status == 'belum_ditugaskan' ||
+            book.status == 'ditugaskan') ...[
           Expanded(
             child: OutlinedButton(
               onPressed: () => _onTugaskanEditor(book),
@@ -793,14 +789,9 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: AppTheme.primaryGreen,
-          ),
+          CircularProgressIndicator(color: AppTheme.primaryGreen),
           SizedBox(height: 16),
-          Text(
-            'Memuat data buku...',
-            style: AppTheme.bodyMedium,
-          ),
+          Text('Memuat data buku...', style: AppTheme.bodyMedium),
         ],
       ),
     );
@@ -813,17 +804,11 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.errorRed,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
             const SizedBox(height: 16),
             Text(
               'Terjadi Kesalahan',
-              style: AppTheme.headingSmall.copyWith(
-                color: AppTheme.errorRed,
-              ),
+              style: AppTheme.headingSmall.copyWith(color: AppTheme.errorRed),
             ),
             const SizedBox(height: 8),
             Text(
@@ -858,9 +843,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
             const SizedBox(height: 16),
             Text(
               'Tidak Ada Buku',
-              style: AppTheme.headingSmall.copyWith(
-                color: AppTheme.greyMedium,
-              ),
+              style: AppTheme.headingSmall.copyWith(color: AppTheme.greyMedium),
             ),
             const SizedBox(height: 8),
             Text(
@@ -895,7 +878,7 @@ class _ReviewCollectionPageState extends State<ReviewCollectionPage> {
       if (futureDays == 1) {
         return 'Besok';
       } else {
-        return '${futureDays} hari lagi';
+        return '$futureDays hari lagi';
       }
     }
   }
@@ -906,10 +889,7 @@ class _TugaskanEditorDialog extends StatefulWidget {
   final BukuMasukReview book;
   final Function(String editorId, String alasan) onSubmit;
 
-  const _TugaskanEditorDialog({
-    required this.book,
-    required this.onSubmit,
-  });
+  const _TugaskanEditorDialog({required this.book, required this.onSubmit});
 
   @override
   State<_TugaskanEditorDialog> createState() => _TugaskanEditorDialogState();
@@ -946,19 +926,14 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Tugaskan ke Editor Lain',
-              style: AppTheme.headingSmall,
-            ),
+            Text('Tugaskan ke Editor Lain', style: AppTheme.headingSmall),
             const SizedBox(height: 8),
             Text(
               'Pilih editor yang sesuai untuk buku "${widget.book.judul}"',
@@ -968,9 +943,7 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
 
             if (_isLoading) ...[
               const Center(
-                child: CircularProgressIndicator(
-                  color: AppTheme.primaryGreen,
-                ),
+                child: CircularProgressIndicator(color: AppTheme.primaryGreen),
               ),
             ] else ...[
               // Editor selection
@@ -981,7 +954,7 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               ..._editors.map((editor) => _buildEditorOption(editor)),
 
               const SizedBox(height: 16),
@@ -1030,8 +1003,13 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _selectedEditorId != null && _alasanController.text.isNotEmpty
-                        ? () => widget.onSubmit(_selectedEditorId!, _alasanController.text)
+                    onPressed:
+                        _selectedEditorId != null &&
+                            _alasanController.text.isNotEmpty
+                        ? () => widget.onSubmit(
+                            _selectedEditorId!,
+                            _alasanController.text,
+                          )
                         : null,
                     style: AppTheme.primaryButtonStyle,
                     child: const Text('Tugaskan'),
@@ -1047,7 +1025,7 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
 
   Widget _buildEditorOption(EditorOption editor) {
     final isSelected = _selectedEditorId == editor.id;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -1058,7 +1036,9 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryGreen.withValues(alpha: 0.1) : AppTheme.white,
+          color: isSelected
+              ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+              : AppTheme.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppTheme.primaryGreen : AppTheme.greyDisabled,
@@ -1073,7 +1053,9 @@ class _TugaskanEditorDialogState extends State<_TugaskanEditorDialog> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? AppTheme.primaryGreen : AppTheme.greyMedium,
+                  color: isSelected
+                      ? AppTheme.primaryGreen
+                      : AppTheme.greyMedium,
                   width: 2,
                 ),
               ),

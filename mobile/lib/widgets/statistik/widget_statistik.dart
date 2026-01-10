@@ -20,7 +20,7 @@ class KartuStatistikUtama extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGreen.withValues(alpha:0.3),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -76,11 +76,16 @@ class KartuStatistikUtama extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color iconColor) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color iconColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -99,7 +104,7 @@ class KartuStatistikUtama extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: AppTheme.white.withValues(alpha:0.9),
+              color: AppTheme.white.withValues(alpha: 0.9),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -131,7 +136,9 @@ class ChartPenjualanBulanan extends StatelessWidget {
       return _buildEmptyState();
     }
 
-    final maxValue = data.map((e) => e.jumlahDibaca).reduce((a, b) => a > b ? a : b);
+    final maxValue = data
+        .map((e) => e.jumlahDibaca)
+        .reduce((a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -140,7 +147,7 @@ class ChartPenjualanBulanan extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -165,7 +172,7 @@ class ChartPenjualanBulanan extends StatelessWidget {
               children: data.asMap().entries.map((entry) {
                 final item = entry.value;
                 final height = (item.jumlahDibaca / maxValue) * 160;
-                
+
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -187,7 +194,7 @@ class ChartPenjualanBulanan extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                AppTheme.primaryGreen.withValues(alpha:0.7),
+                                AppTheme.primaryGreen.withValues(alpha: 0.7),
                                 AppTheme.primaryGreen,
                               ],
                               begin: Alignment.topCenter,
@@ -201,7 +208,9 @@ class ChartPenjualanBulanan extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          item.bulan.length >= 3 ? item.bulan.substring(0, 3) : item.bulan,
+                          item.bulan.length >= 3
+                              ? item.bulan.substring(0, 3)
+                              : item.bulan,
                           style: const TextStyle(
                             fontSize: 10,
                             color: AppTheme.greyDisabled,
@@ -229,18 +238,11 @@ class ChartPenjualanBulanan extends StatelessWidget {
       child: const Center(
         child: Column(
           children: [
-            Icon(
-              Icons.show_chart,
-              size: 48,
-              color: AppTheme.greyDisabled,
-            ),
+            Icon(Icons.show_chart, size: 48, color: AppTheme.greyDisabled),
             SizedBox(height: 16),
             Text(
               'Belum ada data pembacaan',
-              style: TextStyle(
-                color: AppTheme.greyDisabled,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: AppTheme.greyDisabled, fontSize: 16),
             ),
           ],
         ),
@@ -267,7 +269,7 @@ class KartuKomentarTerbaru extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -285,7 +287,7 @@ class KartuKomentarTerbaru extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...data.take(3).map((komentar) => _buildKomentarItem(komentar)).toList(),
+          ...data.take(3).map((komentar) => _buildKomentarItem(komentar)),
         ],
       ),
     );
@@ -297,9 +299,11 @@ class KartuKomentarTerbaru extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.backgroundWhite.withValues(alpha:0.8),
+          color: AppTheme.backgroundWhite.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.greyDisabled.withValues(alpha:0.3)),
+          border: Border.all(
+            color: AppTheme.greyDisabled.withValues(alpha: 0.3),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,18 +368,11 @@ class KartuKomentarTerbaru extends StatelessWidget {
       child: const Center(
         child: Column(
           children: [
-            Icon(
-              Icons.comment,
-              size: 48,
-              color: AppTheme.greyDisabled,
-            ),
+            Icon(Icons.comment, size: 48, color: AppTheme.greyDisabled),
             SizedBox(height: 16),
             Text(
               'Belum ada komentar',
-              style: TextStyle(
-                color: AppTheme.greyDisabled,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: AppTheme.greyDisabled, fontSize: 16),
             ),
           ],
         ),

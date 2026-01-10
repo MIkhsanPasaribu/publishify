@@ -1,15 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/models/writer/genre_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Genre Service
 /// Handles all genre related API calls
 class GenreService {
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Get list of genres with pagination
   /// GET /api/genre?halaman=1&limit=20&aktif=true
   static Future<GenreResponse> getGenres({
@@ -20,11 +17,9 @@ class GenreService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
-        return GenreResponse(
-          sukses: false,
-        );
+        return GenreResponse(sukses: false);
       }
 
       // Build URL with query parameters
@@ -32,30 +27,32 @@ class GenreService {
         'halaman': halaman.toString(),
         'limit': limit.toString(),
       };
-      
+
       if (aktif != null) {
         queryParams['aktif'] = aktif.toString();
       }
 
-      final uri = Uri.parse('$baseUrl/api/genre')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.genre,
+      ).replace(queryParameters: queryParams);
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return GenreResponse.fromJson(responseData);
     } catch (e) {
       // Return error response
-      return GenreResponse(
-        sukses: false,
-      );
+      return GenreResponse(sukses: false);
     }
   }
 
@@ -65,31 +62,30 @@ class GenreService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
-        return GenreResponse(
-          sukses: false,
-        );
+        return GenreResponse(sukses: false);
       }
 
-      final uri = Uri.parse('$baseUrl/api/genre/aktif');
+      final uri = Uri.parse('${ApiConfig.genre}/aktif');
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return GenreResponse.fromJson(responseData);
     } catch (e) {
       // Return error response
-      return GenreResponse(
-        sukses: false,
-      );
+      return GenreResponse(sukses: false);
     }
   }
 }

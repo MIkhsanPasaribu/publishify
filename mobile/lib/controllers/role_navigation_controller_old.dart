@@ -8,11 +8,12 @@ import 'package:logger/logger.dart';
 /// Mengarahkan user ke dashboard yang sesuai dengan role mereka
 class RoleNavigationController {
   static final logger = Logger();
+
   /// Dapatkan route berdasarkan peran pengguna
-  /// 
+  ///
   /// Returns:
   /// - '/dashboard/penulis' untuk role penulis
-  /// - '/dashboard/editor' untuk role editor  
+  /// - '/dashboard/editor' untuk role editor
   /// - '/dashboard/percetakan' untuk role percetakan
   /// - '/dashboard/admin' untuk role admin
   /// - '/dashboard/penulis' sebagai default fallback
@@ -40,9 +41,11 @@ class RoleNavigationController {
   }
 
   /// Ekstrak role dari register response
-  /// Karena RegisterResponse tidak memiliki info role lengkap, 
+  /// Karena RegisterResponse tidak memiliki info role lengkap,
   /// kita return default 'penulis' sesuai dengan backend default
-  static List<String> extractRolesFromRegisterResponse(RegisterResponse response) {
+  static List<String> extractRolesFromRegisterResponse(
+    RegisterResponse response,
+  ) {
     // Register response hanya berisi ID, email, dan token verifikasi
     // Role default untuk registrasi adalah 'penulis'
     return ['penulis'];
@@ -56,28 +59,27 @@ class RoleNavigationController {
     try {
       // Extract roles dari response
       List<String> userRoles = extractRolesFromResponse(response);
-      
+
       // Simpan roles ke cache untuk penggunaan selanjutnya
       await AuthService.saveUserRoles(userRoles);
-      
+
       // Dapatkan route berdasarkan role
       String targetRoute = getRoleBasedRoute(userRoles);
-      if(!context.mounted) return;
-      
+      if (!context.mounted) return;
+
       // Navigate to appropriate dashboard
       Navigator.of(context).pushNamedAndRemoveUntil(
         targetRoute,
         (route) => false, // Remove all previous routes
       );
-      
+
       logger.i('🎯 Navigating to: $targetRoute for roles: $userRoles');
     } catch (e) {
       logger.e('❌ Error in role navigation: $e');
       // Fallback ke dashboard penulis jika error
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.dashboardPenulis,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.dashboardPenulis, (route) => false);
     }
   }
 
@@ -89,28 +91,28 @@ class RoleNavigationController {
     try {
       // Extract roles dari response
       List<String> userRoles = extractRolesFromRegisterResponse(response);
-      
+
       // Simpan roles ke cache untuk penggunaan selanjutnya
       await AuthService.saveUserRoles(userRoles);
-      
+
       // Dapatkan route berdasarkan role
       String targetRoute = getRoleBasedRoute(userRoles);
-      if(!context.mounted) return;
-      
+      if (!context.mounted) return;
+
       // Navigate to appropriate dashboard
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        targetRoute,
-        (route) => false,
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(targetRoute, (route) => false);
+
+      logger.i(
+        '🎯 Navigating after register to: $targetRoute for roles: $userRoles',
       );
-      
-      logger.i('🎯 Navigating after register to: $targetRoute for roles: $userRoles');
     } catch (e) {
       logger.e('❌ Error in role navigation after register: $e');
       // Fallback ke dashboard penulis jika error
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.dashboardPenulis,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.dashboardPenulis, (route) => false);
     }
   }
 
@@ -120,8 +122,12 @@ class RoleNavigationController {
   }
 
   /// Check multiple role permissions (OR logic)
-  static bool hasAnyRolePermission(List<String> userRoles, List<String> requiredRoles) {
-    return requiredRoles.any((role) => userRoles.contains(role)) || userRoles.contains('admin');
+  static bool hasAnyRolePermission(
+    List<String> userRoles,
+    List<String> requiredRoles,
+  ) {
+    return requiredRoles.any((role) => userRoles.contains(role)) ||
+        userRoles.contains('admin');
   }
 
   /// Dapatkan primary role (role dengan prioritas tertinggi)
@@ -135,7 +141,7 @@ class RoleNavigationController {
   /// Dapatkan greeting message berdasarkan role
   static String getRoleGreeting(List<String> userRoles) {
     String primaryRole = getPrimaryRole(userRoles);
-    
+
     switch (primaryRole) {
       case 'admin':
         return 'Selamat datang, Administrator!';
@@ -187,11 +193,13 @@ class RoleNavigationController {
 
 /// Dashboard untuk Admin
 class AdminDashboardPage extends StatelessWidget {
+  const AdminDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard Admin'),
+        title: const Text('Dashboard Admin'),
         backgroundColor: RoleNavigationController.getRoleColor('admin'),
       ),
       body: Center(
@@ -203,28 +211,28 @@ class AdminDashboardPage extends StatelessWidget {
               size: 100,
               color: RoleNavigationController.getRoleColor('admin'),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Dashboard Administrator',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text('Kelola pengguna, naskah, review, dan sistem'),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text('Kelola pengguna, naskah, review, dan sistem'),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman admin yang sesuai
                 Navigator.pushNamed(context, '/admin/users');
               },
-              child: Text('Kelola Pengguna'),
+              child: const Text('Kelola Pengguna'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman admin review
                 Navigator.pushNamed(context, '/admin/reviews');
               },
-              child: Text('Kelola Review'),
+              child: const Text('Kelola Review'),
             ),
           ],
         ),
@@ -235,11 +243,13 @@ class AdminDashboardPage extends StatelessWidget {
 
 /// Dashboard untuk Editor
 class EditorDashboardPage extends StatelessWidget {
+  const EditorDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard Editor'),
+        title: const Text('Dashboard Editor'),
         backgroundColor: RoleNavigationController.getRoleColor('editor'),
       ),
       body: Center(
@@ -251,28 +261,28 @@ class EditorDashboardPage extends StatelessWidget {
               size: 100,
               color: RoleNavigationController.getRoleColor('editor'),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Dashboard Editor',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text('Review dan edit naskah dari penulis'),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text('Review dan edit naskah dari penulis'),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman review yang ditugaskan
                 Navigator.pushNamed(context, '/editor/reviews');
               },
-              child: Text('Review Naskah'),
+              child: const Text('Review Naskah'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman feedback
                 Navigator.pushNamed(context, '/editor/feedback');
               },
-              child: Text('Berikan Feedback'),
+              child: const Text('Berikan Feedback'),
             ),
           ],
         ),
@@ -283,11 +293,13 @@ class EditorDashboardPage extends StatelessWidget {
 
 /// Dashboard untuk Percetakan
 class PercetakanDashboardPage extends StatelessWidget {
+  const PercetakanDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard Percetakan'),
+        title: const Text('Dashboard Percetakan'),
         backgroundColor: RoleNavigationController.getRoleColor('percetakan'),
       ),
       body: Center(
@@ -299,28 +311,28 @@ class PercetakanDashboardPage extends StatelessWidget {
               size: 100,
               color: RoleNavigationController.getRoleColor('percetakan'),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Dashboard Percetakan',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text('Kelola pesanan cetak dan pengiriman'),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text('Kelola pesanan cetak dan pengiriman'),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman pesanan
                 Navigator.pushNamed(context, '/percetakan/orders');
               },
-              child: Text('Pesanan Cetak'),
+              child: const Text('Pesanan Cetak'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman produksi
                 Navigator.pushNamed(context, '/percetakan/production');
               },
-              child: Text('Status Produksi'),
+              child: const Text('Status Produksi'),
             ),
           ],
         ),
@@ -331,11 +343,13 @@ class PercetakanDashboardPage extends StatelessWidget {
 
 /// Dashboard untuk Penulis
 class PenulisDashboardPage extends StatelessWidget {
+  const PenulisDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard Penulis'),
+        title: const Text('Dashboard Penulis'),
         backgroundColor: RoleNavigationController.getRoleColor('penulis'),
       ),
       body: Center(
@@ -347,36 +361,36 @@ class PenulisDashboardPage extends StatelessWidget {
               size: 100,
               color: RoleNavigationController.getRoleColor('penulis'),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Dashboard Penulis',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text('Tulis, kelola, dan terbitkan naskah Anda'),
-            SizedBox(height: 30),
+            const SizedBox(height: 10),
+            const Text('Tulis, kelola, dan terbitkan naskah Anda'),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman naskah
                 Navigator.pushNamed(context, '/penulis/manuscripts');
               },
-              child: Text('Naskah Saya'),
+              child: const Text('Naskah Saya'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman upload
                 Navigator.pushNamed(context, '/upload');
               },
-              child: Text('Upload Naskah'),
+              child: const Text('Upload Naskah'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
                 // TODO: Navigate ke halaman pesanan cetak
                 Navigator.pushNamed(context, '/penulis/orders');
               },
-              child: Text('Pesanan Cetak'),
+              child: const Text('Pesanan Cetak'),
             ),
           ],
         ),

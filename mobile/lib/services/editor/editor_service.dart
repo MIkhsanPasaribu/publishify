@@ -1,8 +1,8 @@
 /// Editor Service - Main Service Layer untuk Editor Module
 /// Menggabungkan semua fungsi review untuk kebutuhan Editor Dashboard
 /// Best Practice: High-level abstraction dengan caching dan error handling
+library;
 
-import 'package:publishify/models/editor/review_models.dart';
 import 'package:publishify/models/editor/editor_models.dart';
 import 'package:publishify/services/editor/editor_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +10,10 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Editor Service - Business Logic Layer
@@ -47,18 +50,25 @@ class EditorService {
 
       if (response.sukses && response.data != null) {
         // Convert ReviewNaskah ke ReviewAssignment untuk UI compatibility
-        return response.data!.map((review) => ReviewAssignment(
-          id: review.id,
-          judulNaskah: review.naskah.judul,
-          penulisNaskah: review.naskah.penulis.profilPengguna?.namaLengkap ?? 
-                        review.naskah.penulis.email,
-          tanggalDitugaskan: review.ditugaskanPada,
-          batasWaktu: review.ditugaskanPada.add(const Duration(days: 14)), // Default 14 hari
-          status: _convertStatus(review.status),
-          progress: _calculateProgress(review).toDouble(),
-          kategori: review.naskah.kategori.nama,
-          jumlahHalaman: review.naskah.jumlahHalaman ?? 0,
-        )).toList();
+        return response.data!
+            .map(
+              (review) => ReviewAssignment(
+                id: review.id,
+                judulNaskah: review.naskah.judul,
+                penulisNaskah:
+                    review.naskah.penulis.profilPengguna?.namaLengkap ??
+                    review.naskah.penulis.email,
+                tanggalDitugaskan: review.ditugaskanPada,
+                batasWaktu: review.ditugaskanPada.add(
+                  const Duration(days: 14),
+                ), // Default 14 hari
+                status: _convertStatus(review.status),
+                progress: _calculateProgress(review).toDouble(),
+                kategori: review.naskah.kategori.nama,
+                jumlahHalaman: review.naskah.jumlahHalaman ?? 0,
+              ),
+            )
+            .toList();
       }
 
       return [];
@@ -69,19 +79,21 @@ class EditorService {
   }
 
   /// Get semua review dengan pagination
-  static Future<ApiResponse<List<ReviewNaskah>>> getAllReviews({
+  static Future<EditorApiResponse<List<ReviewNaskah>>> getAllReviews({
     FilterReview? filter,
   }) async {
     return EditorApiService.ambilSemuaReview(filter: filter);
   }
 
   /// Get review by ID untuk detail page
-  static Future<ApiResponse<ReviewNaskah>> getReviewById(String id) async {
+  static Future<EditorApiResponse<ReviewNaskah>> getReviewById(
+    String id,
+  ) async {
     return EditorApiService.ambilReviewById(id);
   }
 
   /// Get review untuk naskah tertentu
-  static Future<ApiResponse<List<ReviewNaskah>>> getReviewsForNaskah(
+  static Future<EditorApiResponse<List<ReviewNaskah>>> getReviewsForNaskah(
     String idNaskah,
   ) async {
     return EditorApiService.ambilReviewNaskah(idNaskah);
@@ -92,7 +104,7 @@ class EditorService {
   // =====================================================
 
   /// Tugaskan review ke editor
-  static Future<ApiResponse<ReviewNaskah>> tugaskanReview({
+  static Future<EditorApiResponse<ReviewNaskah>> tugaskanReview({
     required String idNaskah,
     required String idEditor,
     String? catatan,
@@ -106,15 +118,15 @@ class EditorService {
   }
 
   /// Mulai proses review (ubah status ke dalam_proses)
-  static Future<ApiResponse<ReviewNaskah>> mulaiReview(String reviewId) async {
-    final request = PerbaruiReviewRequest(
-      status: StatusReview.dalam_proses,
-    );
+  static Future<EditorApiResponse<ReviewNaskah>> mulaiReview(
+    String reviewId,
+  ) async {
+    final request = PerbaruiReviewRequest(status: StatusReview.dalam_proses);
     return EditorApiService.perbaruiReview(reviewId, request);
   }
 
   /// Update catatan review
-  static Future<ApiResponse<ReviewNaskah>> updateCatatanReview(
+  static Future<EditorApiResponse<ReviewNaskah>> updateCatatanReview(
     String reviewId,
     String catatan,
   ) async {
@@ -123,7 +135,7 @@ class EditorService {
   }
 
   /// Tambah feedback ke review
-  static Future<ApiResponse<FeedbackReview>> tambahFeedback({
+  static Future<EditorApiResponse<FeedbackReview>> tambahFeedback({
     required String reviewId,
     required String komentar,
     String? bab,
@@ -138,7 +150,7 @@ class EditorService {
   }
 
   /// Submit review dengan rekomendasi
-  static Future<ApiResponse<ReviewNaskah>> submitReview({
+  static Future<EditorApiResponse<ReviewNaskah>> submitReview({
     required String reviewId,
     required Rekomendasi rekomendasi,
     required String catatan,
@@ -151,7 +163,7 @@ class EditorService {
   }
 
   /// Batalkan review
-  static Future<ApiResponse<ReviewNaskah>> batalkanReview({
+  static Future<EditorApiResponse<ReviewNaskah>> batalkanReview({
     required String reviewId,
     required String alasan,
   }) async {
@@ -163,7 +175,9 @@ class EditorService {
   // =====================================================
 
   /// Get statistik review editor
-  static Future<EditorStats?> getEditorStats({bool forceRefresh = false}) async {
+  static Future<EditorStats?> getEditorStats({
+    bool forceRefresh = false,
+  }) async {
     try {
       // Check cache first
       if (!forceRefresh) {
@@ -175,10 +189,10 @@ class EditorService {
 
       if (response.sukses && response.data != null) {
         final stats = _convertToEditorStats(response.data!);
-        
+
         // Save to cache
         await _cacheStats(stats);
-        
+
         return stats;
       }
 
@@ -190,7 +204,7 @@ class EditorService {
   }
 
   /// Get statistik review dengan response lengkap
-  static Future<ApiResponse<StatistikReview>> getStatistikReview() async {
+  static Future<EditorApiResponse<StatistikReview>> getStatistikReview() async {
     return EditorApiService.ambilStatistikReview();
   }
 
@@ -243,7 +257,7 @@ class EditorService {
   static Future<List<Map<String, dynamic>>> getQuickActions() async {
     try {
       final stats = await getEditorStats();
-      
+
       if (stats != null) {
         return [
           {
@@ -354,7 +368,10 @@ class EditorService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKeyStats, json.encode(stats.toJson()));
-      await prefs.setInt('${_cacheKeyStats}_timestamp', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        '${_cacheKeyStats}_timestamp',
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (e) {
       _logger.e('Error caching stats: $e');
     }

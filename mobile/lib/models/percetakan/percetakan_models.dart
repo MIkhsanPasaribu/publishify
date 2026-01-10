@@ -1,5 +1,6 @@
 /// Models untuk module Percetakan (sesuai backend DTO & Prisma)
 /// Menggunakan data dari DTO pengguna + DTO percetakan
+library;
 
 /// Model utama untuk Pesanan Cetak
 class PesananCetak {
@@ -20,7 +21,7 @@ class PesananCetak {
   final DateTime? estimasiSelesai;
   final DateTime? tanggalSelesai;
   final DateTime diperbaruiPada;
-  
+
   // Relasi (include dari backend)
   final NaskahInfo? naskah;
   final PemesanInfo? pemesan;
@@ -62,7 +63,8 @@ class PesananCetak {
       formatKertas: json['formatKertas'] as String,
       jenisKertas: json['jenisKertas'] as String,
       jenisCover: json['jenisCover'] as String,
-      finishingTambahan: (json['finishingTambahan'] as List<dynamic>?)
+      finishingTambahan:
+          (json['finishingTambahan'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -125,11 +127,7 @@ class NaskahInfo {
   final String judul;
   final int? jumlahHalaman;
 
-  const NaskahInfo({
-    required this.id,
-    required this.judul,
-    this.jumlahHalaman,
-  });
+  const NaskahInfo({required this.id, required this.judul, this.jumlahHalaman});
 
   factory NaskahInfo.fromJson(Map<String, dynamic> json) {
     return NaskahInfo(
@@ -140,11 +138,7 @@ class NaskahInfo {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'judul': judul,
-      'jumlahHalaman': jumlahHalaman,
-    };
+    return {'id': id, 'judul': judul, 'jumlahHalaman': jumlahHalaman};
   }
 }
 
@@ -166,7 +160,8 @@ class PemesanInfo {
       email: json['email'] as String,
       profilPengguna: json['profilPengguna'] != null
           ? ProfilPenggunaInfo.fromJson(
-              json['profilPengguna'] as Map<String, dynamic>)
+              json['profilPengguna'] as Map<String, dynamic>,
+            )
           : null,
     );
   }
@@ -185,10 +180,7 @@ class ProfilPenggunaInfo {
   final String? namaDepan;
   final String? namaBelakang;
 
-  const ProfilPenggunaInfo({
-    this.namaDepan,
-    this.namaBelakang,
-  });
+  const ProfilPenggunaInfo({this.namaDepan, this.namaBelakang});
 
   factory ProfilPenggunaInfo.fromJson(Map<String, dynamic> json) {
     return ProfilPenggunaInfo(
@@ -198,10 +190,7 @@ class ProfilPenggunaInfo {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'namaDepan': namaDepan,
-      'namaBelakang': namaBelakang,
-    };
+    return {'namaDepan': namaDepan, 'namaBelakang': namaBelakang};
   }
 
   String get namaLengkap {
@@ -321,7 +310,8 @@ class PercetakanStats {
       pesananSelesai: json['pesananSelesai'] as int,
       totalRevenue: json['totalRevenue'].toString(),
       statusBreakdown: StatusBreakdown.fromJson(
-          json['statusBreakdown'] as Map<String, dynamic>),
+        json['statusBreakdown'] as Map<String, dynamic>,
+      ),
     );
   }
 
@@ -405,8 +395,8 @@ class PesananListResponse {
       pesan: json['pesan'] as String,
       data: json['data'] != null
           ? (json['data'] as List<dynamic>)
-              .map((e) => PesananCetak.fromJson(e as Map<String, dynamic>))
-              .toList()
+                .map((e) => PesananCetak.fromJson(e as Map<String, dynamic>))
+                .toList()
           : null,
       metadata: json['metadata'] != null
           ? PaginationMeta.fromJson(json['metadata'] as Map<String, dynamic>)
@@ -444,11 +434,7 @@ class StatsResponse {
   final String pesan;
   final PercetakanStats? data;
 
-  const StatsResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  const StatsResponse({required this.sukses, required this.pesan, this.data});
 
   factory StatsResponse.fromJson(Map<String, dynamic> json) {
     return StatsResponse(

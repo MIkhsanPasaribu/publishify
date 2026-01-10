@@ -1,29 +1,29 @@
 import 'dart:async';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:publishify/models/writer/notifikasi_models.dart';
-
+import 'package:publishify/config/api_config.dart';
 
 /// Service untuk mengelola WebSocket connection notifikasi real-time
 /// Backend: /notifikasi namespace dengan Socket.io
-/// 
+///
 /// Events yang diterima:
 /// - notifikasi_baru: Notifikasi baru masuk
 /// - notifikasi_count: Update jumlah notifikasi belum dibaca
 /// - notifikasi_broadcast: Broadcast notification ke semua user
-/// 
+///
 /// Events yang dikirim:
 /// - join_room: Join room user-specific untuk menerima notifikasi
 class NotifikasiSocketService {
   static final logger = Logger();
   static NotifikasiSocketService? _instance;
-  IO.Socket? _socket;
+  io.Socket? _socket;
   bool _isConnected = false;
 
   // Stream controllers untuk emit events ke UI
-  final _notifikasiBaruController = StreamController<NotifikasiData>.broadcast();
+  final _notifikasiBaruController =
+      StreamController<NotifikasiData>.broadcast();
   final _notifikasiCountController = StreamController<int>.broadcast();
   final _connectionStatusController = StreamController<bool>.broadcast();
 
@@ -43,7 +43,7 @@ class NotifikasiSocketService {
   NotifikasiSocketService._internal();
 
   /// Connect ke WebSocket server
-  /// baseUrl dari .env: BASE_URL
+  /// baseUrl dari ApiConfig
   /// namespace: /notifikasi
   Future<void> connect() async {
     if (_socket != null && _isConnected) {
@@ -52,7 +52,7 @@ class NotifikasiSocketService {
     }
 
     try {
-      final baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
+      final baseUrl = ApiConfig.baseUrl;
       final token = await _getToken();
 
       if (token == null || token.isEmpty) {
@@ -62,22 +62,22 @@ class NotifikasiSocketService {
       }
 
       logger.i('[NotifikasiSocket] Token found - length: ${token.length}');
-      logger.i('[NotifikasiSocket] Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...');
+      logger.i(
+        '[NotifikasiSocket] Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...',
+      );
       logger.i('[NotifikasiSocket] Connecting to: $baseUrl/notifikasi');
 
       // Create socket with namespace /notifikasi
-      _socket = IO.io(
+      _socket = io.io(
         '$baseUrl/notifikasi',
-        IO.OptionBuilder()
+        io.OptionBuilder()
             .setTransports(['websocket']) // Use websocket only
             .enableAutoConnect()
             .enableReconnection()
             .setReconnectionDelay(2000)
             .setReconnectionDelayMax(10000)
             .setReconnectionAttempts(5)
-            .setAuth({
-              'token': 'Bearer $token',
-            })
+            .setAuth({'token': 'Bearer $token'})
             .build(),
       );
 
@@ -128,7 +128,7 @@ class NotifikasiSocketService {
       logger.i('[NotifikasiSocket] Reconnected after $attempt attempts');
       _isConnected = true;
       _connectionStatusController.add(true);
-      
+
       // Rejoin room setelah reconnect
       await _joinUserRoom();
     });
@@ -136,7 +136,7 @@ class NotifikasiSocketService {
     // Listen to notifikasi_baru event
     _socket!.on('notifikasi_baru', (data) {
       logger.i('[NotifikasiSocket] New notification received: $data');
-      
+
       try {
         if (data is Map<String, dynamic> && data['sukses'] == true) {
           final notifikasiData = NotifikasiData.fromJson(data['data']);
@@ -150,7 +150,7 @@ class NotifikasiSocketService {
     // Listen to notifikasi_count event
     _socket!.on('notifikasi_count', (data) {
       logger.i('[NotifikasiSocket] Count update received: $data');
-      
+
       try {
         if (data is Map<String, dynamic> && data['sukses'] == true) {
           final count = data['data']['totalBelumDibaca'] as int;
@@ -164,7 +164,7 @@ class NotifikasiSocketService {
     // Listen to broadcast notifications
     _socket!.on('notifikasi_broadcast', (data) {
       logger.i('[NotifikasiSocket] Broadcast notification received: $data');
-      
+
       try {
         if (data is Map<String, dynamic> && data['sukses'] == true) {
           // Treat broadcast as new notification
@@ -175,7 +175,8 @@ class NotifikasiSocketService {
             pesan: data['data']['pesan'] ?? '',
             tipe: data['data']['tipe'] ?? 'info',
             dibaca: false,
-            dibuatPada: data['data']['dibuatPada'] ?? DateTime.now().toIso8601String(),
+            dibuatPada:
+                data['data']['dibuatPada'] ?? DateTime.now().toIso8601String(),
           );
           _notifikasiBaruController.add(notifikasiData);
         }
@@ -186,7 +187,7 @@ class NotifikasiSocketService {
   }
 
   /// Join room user-specific untuk menerima notifikasi
-  /// Room format: user_<idPengguna>
+  /// Room format: user_{idPengguna}
   Future<void> _joinUserRoom() async {
     if (_socket == null || !_isConnected) {
       logger.w('[NotifikasiSocket] Cannot join room: not connected');
@@ -204,9 +205,7 @@ class NotifikasiSocketService {
 
       logger.i('[NotifikasiSocket] Joining room for user: $userId');
       // Emit join_room event
-      _socket!.emit('join_room', {
-        'idPengguna': userId,
-      });
+      _socket!.emit('join_room', {'idPengguna': userId});
 
       // Listen for join_room response
       _socket!.on('join_room_response', (data) {
@@ -232,7 +231,9 @@ class NotifikasiSocketService {
   /// Helper untuk mendapatkan token
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token'); // Fixed: use correct key with underscore
+    return prefs.getString(
+      'access_token',
+    ); // Fixed: use correct key with underscore
   }
 
   /// Dispose all stream controllers

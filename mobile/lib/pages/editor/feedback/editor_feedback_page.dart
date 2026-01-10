@@ -4,13 +4,13 @@ import 'package:publishify/utils/theme.dart';
 /// Halaman Feedback Editor
 /// Untuk memberikan feedback kepada penulis
 class EditorFeedbackPage extends StatefulWidget {
-  const EditorFeedbackPage({Key? key}) : super(key: key);
+  const EditorFeedbackPage({super.key});
 
   @override
   State<EditorFeedbackPage> createState() => _EditorFeedbackPageState();
 }
 
-class _EditorFeedbackPageState extends State<EditorFeedbackPage> 
+class _EditorFeedbackPageState extends State<EditorFeedbackPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -32,7 +32,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
   Future<void> _loadFeedbackData() async {
     // Simulate API call
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() {
       _feedbackList = [
         FeedbackItem(
@@ -42,7 +42,8 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
           tanggalFeedback: DateTime.now().subtract(const Duration(hours: 2)),
           status: 'menunggu_respon',
           rating: 4,
-          feedback: 'Naskah sangat menarik dengan plot yang baik. Namun perlu perbaikan di beberapa bagian dialog.',
+          feedback:
+              'Naskah sangat menarik dengan plot yang baik. Namun perlu perbaikan di beberapa bagian dialog.',
           kategori: 'konstruktif',
         ),
         FeedbackItem(
@@ -52,7 +53,8 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
           tanggalFeedback: DateTime.now().subtract(const Duration(days: 1)),
           status: 'direspon',
           rating: 5,
-          feedback: 'Konten sangat informatif dan mudah dipahami. Siap untuk publikasi.',
+          feedback:
+              'Konten sangat informatif dan mudah dipahami. Siap untuk publikasi.',
           kategori: 'positif',
         ),
         FeedbackItem(
@@ -62,7 +64,8 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
           tanggalFeedback: DateTime.now().subtract(const Duration(days: 2)),
           status: 'perlu_revisi',
           rating: 3,
-          feedback: 'Cerita menarik namun perlu pengembangan karakter yang lebih mendalam.',
+          feedback:
+              'Cerita menarik namun perlu pengembangan karakter yang lebih mendalam.',
           kategori: 'membutuhkan_perbaikan',
         ),
       ];
@@ -77,10 +80,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
       appBar: AppBar(
         title: const Text(
           'Feedback Editor',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: AppTheme.primaryGreen,
         elevation: 0,
@@ -112,8 +112,14 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
               controller: _tabController,
               children: [
                 _buildFeedbackList(_feedbackList),
-                _buildFeedbackList(_feedbackList.where((f) => f.status == 'menunggu_respon').toList()),
-                _buildFeedbackList(_feedbackList.where((f) => f.status == 'direspon').toList()),
+                _buildFeedbackList(
+                  _feedbackList
+                      .where((f) => f.status == 'menunggu_respon')
+                      .toList(),
+                ),
+                _buildFeedbackList(
+                  _feedbackList.where((f) => f.status == 'direspon').toList(),
+                ),
               ],
             ),
       floatingActionButton: FloatingActionButton(
@@ -130,11 +136,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.feedback_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.feedback_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Belum ada feedback',
@@ -171,9 +173,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _showFeedbackDetail(feedback),
         borderRadius: BorderRadius.circular(12),
@@ -211,14 +211,15 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
                   _buildStatusBadge(feedback.status),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Rating
               Row(
                 children: [
-                  ...List.generate(5, (index) => 
-                    Icon(
+                  ...List.generate(
+                    5,
+                    (index) => Icon(
                       index < feedback.rating ? Icons.star : Icons.star_border,
                       color: Colors.amber,
                       size: 18,
@@ -227,48 +228,35 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
                   const SizedBox(width: 8),
                   Text(
                     '(${feedback.rating}/5)',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   const Spacer(),
                   _buildKategoriBadge(feedback.kategori),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Feedback preview
               Text(
                 feedback.feedback,
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey[700], fontSize: 14),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              
+
               const SizedBox(height: 12),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              
+
               // Footer
               Row(
                 children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 16,
-                    color: Colors.grey[500],
-                  ),
+                  Icon(Icons.access_time, size: 16, color: Colors.grey[500]),
                   const SizedBox(width: 6),
                   Text(
                     _formatDateTime(feedback.tanggalFeedback),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                   const Spacer(),
                   TextButton(
@@ -290,7 +278,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
   Widget _buildStatusBadge(String status) {
     Color color;
     String label;
-    
+
     switch (status) {
       case 'menunggu_respon':
         color = Colors.orange;
@@ -308,7 +296,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
         color = Colors.grey;
         label = status;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -329,7 +317,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
   Widget _buildKategoriBadge(String kategori) {
     Color color;
     IconData icon;
-    
+
     switch (kategori) {
       case 'positif':
         color = Colors.green;
@@ -347,7 +335,7 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
         color = Colors.grey;
         icon = Icons.feedback;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -374,17 +362,21 @@ class _EditorFeedbackPageState extends State<EditorFeedbackPage>
 
   String _getKategoriLabel(String kategori) {
     switch (kategori) {
-      case 'positif': return 'Positif';
-      case 'konstruktif': return 'Konstruktif';
-      case 'membutuhkan_perbaikan': return 'Perlu Perbaikan';
-      default: return kategori;
+      case 'positif':
+        return 'Positif';
+      case 'konstruktif':
+        return 'Konstruktif';
+      case 'membutuhkan_perbaikan':
+        return 'Perlu Perbaikan';
+      default:
+        return kategori;
     }
   }
 
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
-    
+
     if (diff.inDays > 0) {
       return '${diff.inDays} hari yang lalu';
     } else if (diff.inHours > 0) {
@@ -442,14 +434,12 @@ class FeedbackItem {
 class FeedbackDetailDialog extends StatelessWidget {
   final FeedbackItem feedback;
 
-  const FeedbackDetailDialog({Key? key, required this.feedback}) : super(key: key);
+  const FeedbackDetailDialog({super.key, required this.feedback});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(24),
         constraints: const BoxConstraints(maxWidth: 400),
@@ -475,25 +465,23 @@ class FeedbackDetailDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             Text(
               feedback.judulNaskah,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             Text(
               'Penulis: ${feedback.penulis}',
               style: TextStyle(color: Colors.grey[600]),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
-                ...List.generate(5, (index) => 
-                  Icon(
+                ...List.generate(
+                  5,
+                  (index) => Icon(
                     index < feedback.rating ? Icons.star : Icons.star_border,
                     color: Colors.amber,
                     size: 20,
@@ -503,15 +491,15 @@ class FeedbackDetailDialog extends StatelessWidget {
                 Text('(${feedback.rating}/5)'),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             const Text(
               'Feedback:',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -522,9 +510,9 @@ class FeedbackDetailDialog extends StatelessWidget {
               ),
               child: Text(feedback.feedback),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -557,7 +545,7 @@ class FeedbackDetailDialog extends StatelessWidget {
 
 /// Sheet untuk form feedback baru
 class FeedbackFormSheet extends StatefulWidget {
-  const FeedbackFormSheet({Key? key}) : super(key: key);
+  const FeedbackFormSheet({super.key});
 
   @override
   State<FeedbackFormSheet> createState() => _FeedbackFormSheetState();
@@ -586,10 +574,7 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
               const Expanded(
                 child: Text(
                   'Buat Feedback Baru',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               IconButton(
@@ -598,17 +583,15 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
-          const Text(
-            'Rating:',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
+
+          const Text('Rating:', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Row(
-            children: List.generate(5, (index) => 
-              GestureDetector(
+            children: List.generate(
+              5,
+              (index) => GestureDetector(
                 onTap: () => setState(() => _rating = index + 1),
                 child: Icon(
                   index < _rating ? Icons.star : Icons.star_border,
@@ -618,9 +601,9 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           const Text(
             'Kategori:',
             style: TextStyle(fontWeight: FontWeight.w600),
@@ -634,14 +617,20 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
             ),
             items: const [
               DropdownMenuItem(value: 'positif', child: Text('Positif')),
-              DropdownMenuItem(value: 'konstruktif', child: Text('Konstruktif')),
-              DropdownMenuItem(value: 'membutuhkan_perbaikan', child: Text('Perlu Perbaikan')),
+              DropdownMenuItem(
+                value: 'konstruktif',
+                child: Text('Konstruktif'),
+              ),
+              DropdownMenuItem(
+                value: 'membutuhkan_perbaikan',
+                child: Text('Perlu Perbaikan'),
+              ),
             ],
             onChanged: (value) => setState(() => _kategori = value!),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           const Text(
             'Feedback:',
             style: TextStyle(fontWeight: FontWeight.w600),
@@ -656,9 +645,9 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
               contentPadding: EdgeInsets.all(12),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           Row(
             children: [
               Expanded(
@@ -694,11 +683,11 @@ class _FeedbackFormSheetState extends State<FeedbackFormSheet> {
       );
       return;
     }
-    
+
     // TODO: Save feedback via API
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Feedback berhasil dikirim')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Feedback berhasil dikirim')));
   }
 }

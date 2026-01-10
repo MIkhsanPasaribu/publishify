@@ -1,17 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:publishify/models/general/auth_models.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Authentication Service
 /// Handles all authentication related API calls
 class AuthService {
   static final logger = Logger();
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-  
+
   // SharedPreferences keys
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
@@ -30,15 +28,18 @@ class AuthService {
   /// POST /api/auth/daftar
   static Future<RegisterResponse> register(RegisterRequest request) async {
     try {
-      final url = Uri.parse('$baseUrl${dotenv.env['API_AUTH_DAFTAR']}');
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(request.toJson()),
-      );
+      final url = Uri.parse(ApiConfig.authDaftar);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       final registerResponse = RegisterResponse.fromJson(responseData);
@@ -62,15 +63,18 @@ class AuthService {
   /// POST /api/auth/login
   static Future<LoginResponse> login(LoginRequest request) async {
     try {
-      final url = Uri.parse('$baseUrl${dotenv.env['API_AUTH_LOGIN']}');
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(request.toJson()),
-      );
+      final url = Uri.parse(ApiConfig.authLogin);
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       final loginResponse = LoginResponse.fromJson(responseData);
@@ -96,23 +100,26 @@ class AuthService {
     await prefs.setString(_keyUserId, data.id);
     await prefs.setString(_keyUserEmail, data.email);
     await prefs.setString(_keyTokenVerifikasi, data.tokenVerifikasi);
-    await prefs.setBool(_keyIsLoggedIn, false); // Not logged in yet, need verification
+    await prefs.setBool(
+      _keyIsLoggedIn,
+      false,
+    ); // Not logged in yet, need verification
   }
 
   /// Save login data to SharedPreferences
   static Future<void> _saveLoginData(LoginData data) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Save tokens
     await prefs.setString(_keyAccessToken, data.accessToken);
     await prefs.setString(_keyRefreshToken, data.refreshToken);
-    
+
     // Save user data
     await prefs.setString(_keyUserId, data.pengguna.id);
     await prefs.setString(_keyUserEmail, data.pengguna.email);
     await prefs.setStringList(_keyPeran, data.pengguna.peran);
     await prefs.setBool(_keyTerverifikasi, data.pengguna.terverifikasi);
-    
+
     // Save profile data if available
     if (data.pengguna.profilPengguna != null) {
       final profil = data.pengguna.profilPengguna!;
@@ -120,10 +127,10 @@ class AuthService {
       await prefs.setString(_keyNamaBelakang, profil.namaBelakang);
       await prefs.setString(_keyNamaTampilan, profil.namaTampilan);
     }
-    
+
     // Save complete user data as JSON for easy retrieval
     await prefs.setString(_keyUserData, jsonEncode(data.toJson()));
-    
+
     // Mark as logged in
     await prefs.setBool(_keyIsLoggedIn, true);
   }
@@ -162,7 +169,7 @@ class AuthService {
   static Future<LoginData?> getLoginData() async {
     final prefs = await SharedPreferences.getInstance();
     final userDataJson = prefs.getString(_keyUserData);
-    
+
     if (userDataJson != null) {
       try {
         final userData = jsonDecode(userDataJson);
@@ -180,7 +187,7 @@ class AuthService {
     if (loginData != null) {
       return loginData.pengguna.getActiveRoles();
     }
-    
+
     // Fallback: get from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(_keyPeran) ?? [];
@@ -192,7 +199,7 @@ class AuthService {
     if (loginData != null) {
       return loginData.pengguna.hasRole(role);
     }
-    
+
     // Fallback: check from SharedPreferences
     final roles = await getUserRoles();
     return roles.contains(role);
@@ -204,7 +211,7 @@ class AuthService {
     if (loginData != null) {
       return loginData.pengguna.getPrimaryRole();
     }
-    
+
     // Fallback: get first role from SharedPreferences
     final roles = await getUserRoles();
     return roles.isNotEmpty ? roles.first : null;
@@ -240,29 +247,30 @@ class AuthService {
     try {
       // Get refresh token before clearing
       final refreshToken = await getRefreshToken();
-      
+
       if (refreshToken != null) {
         try {
-          final url = Uri.parse('$baseUrl${dotenv.env['API_AUTH_LOGOUT']}');
-          
+          final url = Uri.parse(ApiConfig.authLogout);
+
           // Call logout API
-          await http.post(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'refreshToken': refreshToken,
-            }),
-          );
-          
+          await http
+              .post(
+                url,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Platform': 'mobile',
+                },
+                body: jsonEncode({'refreshToken': refreshToken}),
+              )
+              .timeout(ApiConfig.defaultTimeout);
+
           // Regardless of API response, clear local data
         } catch (e) {
           // If API call fails, still proceed with local logout
           logger.e('Logout API error: $e');
         }
       }
-      
+
       // Clear all local data
       await _clearAllAuthData();
       return true;
@@ -277,7 +285,7 @@ class AuthService {
   /// Clear all saved auth data from SharedPreferences
   static Future<void> _clearAllAuthData() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Clear all auth related data
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyUserEmail);
@@ -291,7 +299,7 @@ class AuthService {
     await prefs.remove(_keyPeran);
     await prefs.remove(_keyTerverifikasi);
     await prefs.remove(_keyIsLoggedIn);
-    
+
     // Also clear any other profile related data
     await prefs.remove('bio');
     await prefs.remove('url_avatar');
@@ -314,5 +322,4 @@ class AuthService {
   // ENHANCED ROLE MANAGEMENT METHODS
   // ====================================
   // Methods updated to use UserData helper methods
-
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:publishify/utils/theme.dart';
 import 'package:publishify/models/writer/print_item.dart';
-import 'package:publishify/widgets/network_image_widget.dart';
+// import 'package:publishify/widgets/network_image_widget.dart'; // Unused
 
 class PrintCard extends StatelessWidget {
   final PrintItem item;
@@ -47,9 +47,7 @@ class PrintCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
       child: InkWell(
         onTap: onTap,
@@ -89,7 +87,7 @@ class PrintCard extends StatelessWidget {
                         child: CircularProgressIndicator(
                           value: loadingProgress.expectedTotalBytes != null
                               ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                    loadingProgress.expectedTotalBytes!
                               : null,
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             AppTheme.primaryGreen,
@@ -101,9 +99,9 @@ class PrintCard extends StatelessWidget {
                   },
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Book Info
               Expanded(
                 child: Column(
@@ -119,9 +117,9 @@ class PrintCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     // Author
                     Text(
                       item.author,
@@ -131,9 +129,9 @@ class PrintCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Status Badge
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -163,9 +161,9 @@ class PrintCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Info Row
                     Row(
                       children: [
@@ -202,9 +200,9 @@ class PrintCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Action Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -216,9 +214,9 @@ class PrintCard extends StatelessWidget {
                             onTap: onShare!,
                             tooltip: 'Bagikan',
                           ),
-                        
+
                         const SizedBox(width: 8),
-                        
+
                         // Download Button
                         if (onDownload != null)
                           _ActionIconButton(
@@ -263,11 +261,7 @@ class _ActionIconButton extends StatelessWidget {
             color: AppTheme.primaryGreen.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppTheme.primaryGreen,
-          ),
+          child: Icon(icon, size: 20, color: AppTheme.primaryGreen),
         ),
       ),
     );

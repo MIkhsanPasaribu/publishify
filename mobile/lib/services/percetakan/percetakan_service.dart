@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/models/percetakan/percetakan_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 class PercetakanService {
-  static String get baseUrl => '${dotenv.env['BASE_URL'] ?? 'http://localhost:4000'}/api/percetakan';
+  static String get baseUrl => ApiConfig.percetakan;
 
   /// Ambil daftar pesanan dengan pagination dan filter
   static Future<PesananListResponse> ambilDaftarPesanan({
@@ -34,13 +34,16 @@ class PercetakanService {
 
       final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -56,18 +59,23 @@ class PercetakanService {
   }
 
   /// Ambil detail pesanan berdasarkan ID
-  static Future<PesananDetailResponse> ambilDetailPesanan(String idPesanan) async {
+  static Future<PesananDetailResponse> ambilDetailPesanan(
+    String idPesanan,
+  ) async {
     try {
       final token = await AuthService.getAccessToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/$idPesanan'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/$idPesanan'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -92,22 +100,23 @@ class PercetakanService {
       final token = await AuthService.getAccessToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
-      final Map<String, dynamic> requestData = {
-        'status': statusBaru,
-      };
+      final Map<String, dynamic> requestData = {'status': statusBaru};
 
       if (catatan != null && catatan.isNotEmpty) {
         requestData['catatan'] = catatan;
       }
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/$idPesanan/status'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(requestData),
-      );
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/$idPesanan/status'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Platform': 'mobile',
+            },
+            body: json.encode(requestData),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -142,14 +151,17 @@ class PercetakanService {
         requestData['catatan'] = catatan;
       }
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/$idPesanan/terima'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(requestData),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/$idPesanan/terima'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Platform': 'mobile',
+            },
+            body: json.encode(requestData),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -170,13 +182,16 @@ class PercetakanService {
       final token = await AuthService.getAccessToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/statistik'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/statistik'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -269,10 +284,7 @@ class PercetakanService {
   static String formatHarga(String harga) {
     try {
       final double nilai = double.parse(harga);
-      return 'Rp ${nilai.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]}.',
-      )}';
+      return 'Rp ${nilai.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
     } catch (e) {
       return 'Rp 0';
     }
@@ -281,18 +293,28 @@ class PercetakanService {
   /// Format tanggal ke format Indonesia
   static String formatTanggal(DateTime tanggal) {
     final Map<int, String> bulan = {
-      1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
-      5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
-      9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember',
+      1: 'Januari',
+      2: 'Februari',
+      3: 'Maret',
+      4: 'April',
+      5: 'Mei',
+      6: 'Juni',
+      7: 'Juli',
+      8: 'Agustus',
+      9: 'September',
+      10: 'Oktober',
+      11: 'November',
+      12: 'Desember',
     };
-    
+
     return '${tanggal.day} ${bulan[tanggal.month]} ${tanggal.year}';
   }
 
   /// Format tanggal dengan waktu
   static String formatTanggalWaktu(DateTime tanggal) {
     final String tgl = formatTanggal(tanggal);
-    final String jam = '${tanggal.hour.toString().padLeft(2, '0')}:${tanggal.minute.toString().padLeft(2, '0')}';
+    final String jam =
+        '${tanggal.hour.toString().padLeft(2, '0')}:${tanggal.minute.toString().padLeft(2, '0')}';
     return '$tgl pukul $jam';
   }
 }

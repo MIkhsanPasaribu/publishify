@@ -1,33 +1,34 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 class StatistikService {
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
-
   /// GET /api/naskah/statistik
   /// Mengambil statistik penulis
   static Future<StatistikResponse> ambilStatistikPenulis() async {
     try {
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         throw Exception('Token akses tidak ditemukan');
       }
 
-      final url = Uri.parse('$baseUrl/api/naskah/statistik');
-      
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final url = Uri.parse(ApiConfig.naskahStatistik);
+
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return StatistikResponse.fromJson(responseData);
       } else {
@@ -45,11 +46,7 @@ class StatistikResponse {
   final String pesan;
   final StatistikData? data;
 
-  StatistikResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  StatistikResponse({required this.sukses, required this.pesan, this.data});
 
   factory StatistikResponse.fromJson(Map<String, dynamic> json) {
     return StatistikResponse(
@@ -95,21 +92,31 @@ class StatistikData {
       naskahDraft: json['naskahDraft'] ?? 0,
       ratingRataRata: (json['ratingRataRata'] ?? 0.0).toDouble(),
       totalDibaca: json['totalDibaca'] ?? 0,
-      penjualanBulanan: (json['penjualanBulanan'] as List<dynamic>?)
-          ?.map((e) => StatistikBulanan.fromJson(e))
-          .toList() ?? [],
-      komentarTerbaru: (json['komentarTerbaru'] as List<dynamic>?)
-          ?.map((e) => KomentarTerbaru.fromJson(e))
-          .toList() ?? [],
-      distribusiRating: (json['distribusiRating'] as List<dynamic>?)
-          ?.map((e) => StatistikRating.fromJson(e))
-          .toList() ?? [],
-      naskahPerGenre: (json['naskahPerGenre'] as List<dynamic>?)
-          ?.map((e) => StatistikGenre.fromJson(e))
-          .toList() ?? [],
-      naskahPerStatus: (json['naskahPerStatus'] as List<dynamic>?)
-          ?.map((e) => StatistikStatus.fromJson(e))
-          .toList() ?? [],
+      penjualanBulanan:
+          (json['penjualanBulanan'] as List<dynamic>?)
+              ?.map((e) => StatistikBulanan.fromJson(e))
+              .toList() ??
+          [],
+      komentarTerbaru:
+          (json['komentarTerbaru'] as List<dynamic>?)
+              ?.map((e) => KomentarTerbaru.fromJson(e))
+              .toList() ??
+          [],
+      distribusiRating:
+          (json['distribusiRating'] as List<dynamic>?)
+              ?.map((e) => StatistikRating.fromJson(e))
+              .toList() ??
+          [],
+      naskahPerGenre:
+          (json['naskahPerGenre'] as List<dynamic>?)
+              ?.map((e) => StatistikGenre.fromJson(e))
+              .toList() ??
+          [],
+      naskahPerStatus:
+          (json['naskahPerStatus'] as List<dynamic>?)
+              ?.map((e) => StatistikStatus.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }

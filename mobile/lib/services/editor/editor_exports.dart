@@ -1,10 +1,11 @@
 /// Editor Services Export
 /// File ini mengexport semua service editor untuk kemudahan import
-/// 
+///
 /// Penggunaan:
 /// ```dart
 /// import 'package:publishify/services/editor/editor_exports.dart';
 /// ```
+library;
 
 // API Layer - Core HTTP client
 export 'editor_api_service.dart';

@@ -1,6 +1,7 @@
 /// Editor Statistik Service - Service untuk Statistik Review
 /// Dedicated service untuk statistik dan analytics editor
 /// Best Practice: Data transformation dan caching
+library;
 
 import 'package:publishify/models/editor/review_models.dart';
 import 'package:publishify/services/editor/editor_api_service.dart';
@@ -9,7 +10,10 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Model untuk statistik review yang sudah di-transform untuk UI
@@ -44,7 +48,8 @@ class StatistikReviewData {
 
   factory StatistikReviewData.fromStatistikReview(StatistikReview stats) {
     final totalSelesai = stats.perStatus['selesai'] ?? 0;
-    final totalDenganRekomendasi = (stats.perRekomendasi['setujui'] ?? 0) +
+    final totalDenganRekomendasi =
+        (stats.perRekomendasi['setujui'] ?? 0) +
         (stats.perRekomendasi['revisi'] ?? 0) +
         (stats.perRekomendasi['tolak'] ?? 0);
 
@@ -62,7 +67,9 @@ class StatistikReviewData {
           ? (totalSelesai / stats.totalReview * 100)
           : 0.0,
       tingkatPersetujuan: totalDenganRekomendasi > 0
-          ? ((stats.perRekomendasi['setujui'] ?? 0) / totalDenganRekomendasi * 100)
+          ? ((stats.perRekomendasi['setujui'] ?? 0) /
+                totalDenganRekomendasi *
+                100)
           : 0.0,
       reviewTerbaru: stats.reviewTerbaru,
     );
@@ -81,7 +88,8 @@ class StatistikReviewData {
       rataRataHariReview: json['rataRataHariReview'] ?? 0,
       tingkatPenyelesaian: (json['tingkatPenyelesaian'] ?? 0.0).toDouble(),
       tingkatPersetujuan: (json['tingkatPersetujuan'] ?? 0.0).toDouble(),
-      reviewTerbaru: (json['reviewTerbaru'] as List<dynamic>?)
+      reviewTerbaru:
+          (json['reviewTerbaru'] as List<dynamic>?)
               ?.map((e) => ReviewTerbaru.fromJson(e))
               .toList() ??
           [],
@@ -113,7 +121,7 @@ class StatistikReviewData {
       rekomendasiSetujui + rekomendasiRevisi + rekomendasiTolak;
 
   /// Getter untuk kompatibilitas dengan halaman UI yang menggunakan perStatus
-  _PerStatusData get perStatus => _PerStatusData(
+  PerStatusData get perStatus => PerStatusData(
     ditugaskan: reviewDitugaskan,
     dalamProses: reviewDalamProses,
     selesai: reviewSelesai,
@@ -122,7 +130,7 @@ class StatistikReviewData {
   );
 
   /// Getter untuk kompatibilitas dengan halaman UI yang menggunakan perRekomendasi
-  _PerRekomendasiData get perRekomendasi => _PerRekomendasiData(
+  PerRekomendasiData get perRekomendasi => PerRekomendasiData(
     setujui: rekomendasiSetujui,
     revisi: rekomendasiRevisi,
     tolak: rekomendasiTolak,
@@ -131,14 +139,14 @@ class StatistikReviewData {
 }
 
 /// Helper class untuk data status
-class _PerStatusData {
+class PerStatusData {
   final int ditugaskan;
   final int dalamProses;
   final int selesai;
   final int dibatalkan;
   final int total;
 
-  _PerStatusData({
+  PerStatusData({
     required this.ditugaskan,
     required this.dalamProses,
     required this.selesai,
@@ -148,13 +156,13 @@ class _PerStatusData {
 }
 
 /// Helper class untuk data rekomendasi
-class _PerRekomendasiData {
+class PerRekomendasiData {
   final int setujui;
   final int revisi;
   final int tolak;
   final int total;
 
-  _PerRekomendasiData({
+  PerRekomendasiData({
     required this.setujui,
     required this.revisi,
     required this.tolak,
@@ -168,11 +176,7 @@ class StatistikResponse {
   final String? pesan;
   final StatistikReviewData? data;
 
-  StatistikResponse({
-    required this.sukses,
-    this.pesan,
-    this.data,
-  });
+  StatistikResponse({required this.sukses, this.pesan, this.data});
 
   factory StatistikResponse.success(StatistikReviewData data) {
     return StatistikResponse(sukses: true, data: data);
@@ -186,7 +190,8 @@ class StatistikResponse {
 /// Editor Statistik Service
 class EditorStatistikService {
   // Singleton
-  static final EditorStatistikService _instance = EditorStatistikService._internal();
+  static final EditorStatistikService _instance =
+      EditorStatistikService._internal();
   factory EditorStatistikService() => _instance;
   EditorStatistikService._internal();
 
@@ -216,11 +221,13 @@ class EditorStatistikService {
 
       if (response.sukses && response.data != null) {
         // Transform ke StatistikReviewData
-        final statsData = StatistikReviewData.fromStatistikReview(response.data!);
-        
+        final statsData = StatistikReviewData.fromStatistikReview(
+          response.data!,
+        );
+
         // Cache hasil
         await _cacheStatistik(statsData);
-        
+
         return StatistikResponse.success(statsData);
       } else {
         return StatistikResponse.error(response.pesan);
@@ -232,7 +239,7 @@ class EditorStatistikService {
   }
 
   /// Ambil statistik raw dari API
-  static Future<ApiResponse<StatistikReview>> ambilStatistikRaw() async {
+  static Future<EditorApiResponse<StatistikReview>> ambilStatistikRaw() async {
     return EditorApiService.ambilStatistikReview();
   }
 
@@ -247,7 +254,7 @@ class EditorStatistikService {
 
       if (response.sukses && response.data != null) {
         final stats = response.data!;
-        
+
         return {
           'totalReview': stats.totalReview,
           'reviewAktif': stats.reviewAktif,
@@ -271,7 +278,7 @@ class EditorStatistikService {
 
       if (response.sukses && response.data != null) {
         final stats = response.data!;
-        
+
         return [
           {
             'label': 'Ditugaskan',
@@ -304,13 +311,14 @@ class EditorStatistikService {
   }
 
   /// Get data untuk chart distribusi rekomendasi
-  static Future<List<Map<String, dynamic>>?> getRekomendasiDistribution() async {
+  static Future<List<Map<String, dynamic>>?>
+  getRekomendasiDistribution() async {
     try {
       final response = await ambilStatistikReview();
 
       if (response.sukses && response.data != null) {
         final stats = response.data!;
-        
+
         return [
           {
             'label': 'Disetujui',
@@ -365,7 +373,7 @@ class EditorStatistikService {
 
       if (response.sukses && response.data != null) {
         final stats = response.data!;
-        
+
         return {
           'tingkatPenyelesaian': {
             'value': stats.tingkatPenyelesaian,
@@ -380,8 +388,11 @@ class EditorStatistikService {
           'rataRataWaktu': {
             'value': stats.rataRataHariReview,
             'label': '${stats.rataRataHariReview} hari',
-            'status': stats.rataRataHariReview <= 7 ? 'baik' : 
-                     stats.rataRataHariReview <= 14 ? 'sedang' : 'perlu_perbaikan',
+            'status': stats.rataRataHariReview <= 7
+                ? 'baik'
+                : stats.rataRataHariReview <= 14
+                ? 'sedang'
+                : 'perlu_perbaikan',
           },
           'reviewAktif': {
             'value': stats.reviewAktif,
@@ -434,7 +445,10 @@ class EditorStatistikService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, json.encode(stats.toJson()));
-      await prefs.setInt('${_cacheKey}_timestamp', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        '${_cacheKey}_timestamp',
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (e) {
       _logger.e('Error caching statistik: $e');
     }

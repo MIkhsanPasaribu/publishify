@@ -1,6 +1,7 @@
 /// Review Collection Service - Service untuk Buku Masuk Review
 /// Mengelola buku yang masuk untuk direview oleh editor
 /// Best Practice: Integration dengan EditorApiService
+library;
 
 import 'package:publishify/models/editor/review_collection_models.dart';
 import 'package:publishify/models/editor/review_models.dart';
@@ -8,13 +9,17 @@ import 'package:publishify/services/editor/editor_api_service.dart';
 import 'package:logger/logger.dart';
 
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Service untuk mengelola Review Collection
 class ReviewCollectionService {
   // Singleton
-  static final ReviewCollectionService _instance = ReviewCollectionService._internal();
+  static final ReviewCollectionService _instance =
+      ReviewCollectionService._internal();
   factory ReviewCollectionService() => _instance;
   ReviewCollectionService._internal();
 
@@ -35,7 +40,9 @@ class ReviewCollectionService {
         arah: 'desc',
       );
 
-      final response = await EditorApiService.ambilReviewSaya(filter: reviewFilter);
+      final response = await EditorApiService.ambilReviewSaya(
+        filter: reviewFilter,
+      );
 
       if (response.sukses && response.data != null) {
         final books = response.data!
@@ -45,10 +52,7 @@ class ReviewCollectionService {
         // Calculate filter counts
         final counts = await _getFilterCounts();
 
-        return BukuMasukResponse.success(
-          books,
-          metadata: {'filters': counts},
-        );
+        return BukuMasukResponse.success(books, metadata: {'filters': counts});
       }
 
       return BukuMasukResponse.error(response.pesan);
@@ -80,7 +84,7 @@ class ReviewCollectionService {
   static Future<Map<String, int>> _getFilterCounts() async {
     try {
       final response = await EditorApiService.ambilStatistikReview();
-      
+
       if (response.sukses && response.data != null) {
         final stats = response.data!;
         return {
@@ -90,7 +94,7 @@ class ReviewCollectionService {
           'selesai': stats.perStatus['selesai'] ?? 0,
         };
       }
-      
+
       return {};
     } catch (e) {
       return {};
@@ -125,9 +129,7 @@ class ReviewCollectionService {
   /// Terima buku untuk direview
   static Future<SimpleResponse> terimaBuku(String id) async {
     try {
-      final request = PerbaruiReviewRequest(
-        status: StatusReview.dalam_proses,
-      );
+      final request = PerbaruiReviewRequest(status: StatusReview.dalam_proses);
 
       final response = await EditorApiService.perbaruiReview(id, request);
 
@@ -151,7 +153,7 @@ class ReviewCollectionService {
     try {
       // Get review detail first to get idNaskah
       final detailResponse = await EditorApiService.ambilReviewById(idBuku);
-      
+
       if (!detailResponse.sukses || detailResponse.data == null) {
         return SimpleResponse.error('Buku tidak ditemukan');
       }
@@ -165,7 +167,9 @@ class ReviewCollectionService {
       final response = await EditorApiService.tugaskanReview(request);
 
       if (response.sukses) {
-        return SimpleResponse.success('Buku berhasil ditugaskan ke editor lain');
+        return SimpleResponse.success(
+          'Buku berhasil ditugaskan ke editor lain',
+        );
       }
 
       return SimpleResponse.error(response.pesan);
@@ -185,9 +189,7 @@ class ReviewCollectionService {
     try {
       // Add feedback if provided (backend hanya menerima bab, halaman, komentar)
       if (feedback != null && feedback.isNotEmpty && feedback.length >= 10) {
-        final feedbackRequest = TambahFeedbackRequest(
-          komentar: feedback,
-        );
+        final feedbackRequest = TambahFeedbackRequest(komentar: feedback);
         await EditorApiService.tambahFeedback(idReview, feedbackRequest);
       }
 
@@ -219,8 +221,8 @@ class ReviewCollectionService {
   static Future<SimpleResponse> submitReviewFromInput(InputReview input) async {
     try {
       // Combine feedback list jadi satu string (backend tidak support rating/skor)
-      final feedbackStr = input.feedback.isNotEmpty 
-          ? input.feedback.join('\n') 
+      final feedbackStr = input.feedback.isNotEmpty
+          ? input.feedback.join('\n')
           : null;
 
       return await submitReview(
@@ -261,18 +263,20 @@ class ReviewCollectionService {
       // Call API to get available editors
       // Untuk sementara, gunakan placeholder sampai backend ready
       final response = await EditorApiService.ambilDaftarEditor();
-      
+
       if (response.sukses && response.data != null) {
         final editors = response.data!
             .map((e) => EditorOption.fromJson(e))
             .toList();
         return EditorListResponse.success(editors);
       }
-      
+
       return EditorListResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error getAvailableEditors: $e');
-      return EditorListResponse.error('Gagal mengambil daftar editor: ${e.toString()}');
+      return EditorListResponse.error(
+        'Gagal mengambil daftar editor: ${e.toString()}',
+      );
     }
   }
 
@@ -285,7 +289,7 @@ class ReviewCollectionService {
     try {
       // Get review detail first to get idNaskah
       final detailResponse = await EditorApiService.ambilReviewById(idReview);
-      
+
       if (!detailResponse.sukses || detailResponse.data == null) {
         return SimpleResponse.error('Review tidak ditemukan');
       }
@@ -299,7 +303,9 @@ class ReviewCollectionService {
       final response = await EditorApiService.tugaskanReview(request);
 
       if (response.sukses) {
-        return SimpleResponse.success('Review berhasil ditugaskan ke editor lain');
+        return SimpleResponse.success(
+          'Review berhasil ditugaskan ke editor lain',
+        );
       }
 
       return SimpleResponse.error(response.pesan);

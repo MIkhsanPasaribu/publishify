@@ -39,7 +39,7 @@ class _PrintPageState extends State<PrintPage> {
     'Laminating',
     'UV Coating',
     'Emboss',
-    'Foil Stamping'
+    'Foil Stamping',
   ];
 
   @override
@@ -61,7 +61,9 @@ class _PrintPageState extends State<PrintPage> {
     });
 
     try {
-      final naskahList = await NaskahService.getNaskahPenulisWithStatus('diterbitkan');
+      final naskahList = await NaskahService.getNaskahPenulisWithStatus(
+        'diterbitkan',
+      );
       setState(() {
         _naskahList = naskahList;
       });
@@ -93,13 +95,11 @@ class _PrintPageState extends State<PrintPage> {
       backgroundColor: AppTheme.greyLight,
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryGreen,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
             )
           : _naskahList.isEmpty
-              ? _buildEmptyState()
-              : _buildForm(),
+          ? _buildEmptyState()
+          : _buildForm(),
     );
   }
 
@@ -108,16 +108,9 @@ class _PrintPageState extends State<PrintPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.print_disabled,
-            size: 64,
-            color: AppTheme.greyMedium,
-          ),
+          Icon(Icons.print_disabled, size: 64, color: AppTheme.greyMedium),
           const SizedBox(height: 16),
-          const Text(
-            'Tidak Ada Naskah Terbit',
-            style: AppTheme.headingSmall,
-          ),
+          const Text('Tidak Ada Naskah Terbit', style: AppTheme.headingSmall),
           const SizedBox(height: 8),
           const Text(
             'Anda belum memiliki naskah yang diterbitkan.\nTerbitkan naskah terlebih dahulu untuk mencetak.',
@@ -169,10 +162,7 @@ class _PrintPageState extends State<PrintPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Pesan Cetak Buku',
-                          style: AppTheme.headingSmall,
-                        ),
+                        Text('Pesan Cetak Buku', style: AppTheme.headingSmall),
                         SizedBox(height: 4),
                         Text(
                           'Isi form di bawah untuk memesan cetak buku Anda',
@@ -328,10 +318,7 @@ class _PrintPageState extends State<PrintPage> {
                 const SizedBox(height: 8),
                 ..._finishingOptions.map((finishing) {
                   return CheckboxListTile(
-                    title: Text(
-                      finishing,
-                      style: AppTheme.bodyLarge,
-                    ),
+                    title: Text(finishing, style: AppTheme.bodyLarge),
                     value: _selectedFinishing.contains(finishing),
                     onChanged: (bool? value) {
                       setState(() {
@@ -345,7 +332,7 @@ class _PrintPageState extends State<PrintPage> {
                     activeColor: AppTheme.primaryGreen,
                     contentPadding: EdgeInsets.zero,
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -402,25 +389,17 @@ class _PrintPageState extends State<PrintPage> {
     );
   }
 
-  Widget _buildSectionCard({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _buildSectionCard({required String title, required Widget child}) {
     return Card(
       elevation: 2,
       color: AppTheme.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: AppTheme.headingSmall,
-            ),
+            Text(title, style: AppTheme.headingSmall),
             const SizedBox(height: 12),
             child,
           ],
@@ -456,7 +435,9 @@ class _PrintPageState extends State<PrintPage> {
         jenisKertas: _selectedJenisKertas,
         jenisCover: _selectedJenisCover,
         finishingTambahan: _selectedFinishing,
-        catatan: _catatanController.text.isEmpty ? null : _catatanController.text,
+        catatan: _catatanController.text.isEmpty
+            ? null
+            : _catatanController.text,
       );
 
       if (mounted) {

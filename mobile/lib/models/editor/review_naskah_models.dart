@@ -1,5 +1,6 @@
 /// Review Naskah Models - Model untuk Naskah Submission Review
 /// Digunakan pada halaman review_naskah_page.dart dan detail_review_naskah_page.dart
+library;
 
 import 'package:publishify/models/editor/review_models.dart';
 
@@ -61,15 +62,16 @@ class NaskahSubmission {
     String namaPenulis = '';
     String emailPenulis = '';
     String idPenulis = '';
-    
+
     if (json['penulis'] is Map) {
       final penulisData = json['penulis'] as Map<String, dynamic>;
       emailPenulis = penulisData['email'] ?? '';
       idPenulis = penulisData['id'] ?? '';
-      
+
       if (penulisData['profilPengguna'] is Map) {
         final profil = penulisData['profilPengguna'] as Map<String, dynamic>;
-        namaPenulis = profil['namaLengkap'] ?? profil['namaTampilan'] ?? emailPenulis;
+        namaPenulis =
+            profil['namaLengkap'] ?? profil['namaTampilan'] ?? emailPenulis;
       } else {
         namaPenulis = emailPenulis;
       }
@@ -104,9 +106,10 @@ class NaskahSubmission {
       final editorData = json['editor'] as Map<String, dynamic>;
       editorDitugaskan = editorData['id'];
       if (editorData['profilPengguna'] is Map) {
-        namaEditorDitugaskan = editorData['profilPengguna']['namaLengkap'] ?? 
-                               editorData['profilPengguna']['namaTampilan'] ?? 
-                               editorData['email'];
+        namaEditorDitugaskan =
+            editorData['profilPengguna']['namaLengkap'] ??
+            editorData['profilPengguna']['namaTampilan'] ??
+            editorData['email'];
       } else {
         namaEditorDitugaskan = editorData['email'];
       }
@@ -130,13 +133,17 @@ class NaskahSubmission {
       jumlahHalaman: json['jumlahHalaman'] ?? 0,
       jumlahKata: json['jumlahKata'] ?? 0,
       bahasaTulis: json['bahasaTulis'] ?? json['bahasa'] ?? 'Indonesia',
-      tanggalSubmit: DateTime.tryParse(json['dibuatPada'] ?? json['tanggalSubmit'] ?? '') ?? DateTime.now(),
+      tanggalSubmit:
+          DateTime.tryParse(
+            json['dibuatPada'] ?? json['tanggalSubmit'] ?? '',
+          ) ??
+          DateTime.now(),
       urlSampul: json['urlSampul'],
       urlFile: json['urlFile'],
       versi: json['versi'],
       editorDitugaskan: editorDitugaskan,
       namaEditorDitugaskan: namaEditorDitugaskan,
-      tanggalDitugaskan: json['tanggalDitugaskan'] != null 
+      tanggalDitugaskan: json['tanggalDitugaskan'] != null
           ? DateTime.tryParse(json['tanggalDitugaskan'])
           : null,
       catatan: json['catatan'],
@@ -148,8 +155,9 @@ class NaskahSubmission {
   factory NaskahSubmission.fromReviewNaskah(ReviewNaskah review) {
     final naskahData = review.naskah;
     final penulisData = naskahData.penulis;
-    final namaLengkap = penulisData.profilPengguna?.namaLengkap ?? penulisData.email;
-    
+    final namaLengkap =
+        penulisData.profilPengguna?.namaLengkap ?? penulisData.email;
+
     return NaskahSubmission(
       id: review.idNaskah,
       judul: naskahData.judul,
@@ -204,38 +212,58 @@ class NaskahSubmission {
   /// Helper untuk label status
   String get statusLabel {
     switch (status.toLowerCase()) {
-      case 'diajukan': return 'Diajukan';
-      case 'menunggu_review': return 'Menunggu Review';
-      case 'dalam_review': return 'Dalam Review';
-      case 'perlu_revisi': return 'Perlu Revisi';
-      case 'disetujui': return 'Disetujui';
-      case 'selesai_review': return 'Selesai Review';
-      case 'ditolak': return 'Ditolak';
-      default: return status;
+      case 'diajukan':
+        return 'Diajukan';
+      case 'menunggu_review':
+        return 'Menunggu Review';
+      case 'dalam_review':
+        return 'Dalam Review';
+      case 'perlu_revisi':
+        return 'Perlu Revisi';
+      case 'disetujui':
+        return 'Disetujui';
+      case 'selesai_review':
+        return 'Selesai Review';
+      case 'ditolak':
+        return 'Ditolak';
+      default:
+        return status;
     }
   }
 
   /// Helper untuk label prioritas
   String get prioritasLabel {
     switch (prioritas.toLowerCase()) {
-      case 'tinggi': return 'Prioritas Tinggi';
-      case 'normal': return 'Prioritas Normal';
-      case 'rendah': return 'Prioritas Rendah';
-      default: return prioritas;
+      case 'tinggi':
+        return 'Prioritas Tinggi';
+      case 'normal':
+        return 'Prioritas Normal';
+      case 'rendah':
+        return 'Prioritas Rendah';
+      default:
+        return prioritas;
     }
   }
 
   /// Helper untuk warna status
   int get statusColor {
     switch (status.toLowerCase()) {
-      case 'diajukan': return 0xFF2196F3; // Blue
-      case 'menunggu_review': return 0xFFFF9800; // Orange
-      case 'dalam_review': return 0xFF03A9F4; // Light Blue
-      case 'perlu_revisi': return 0xFFFFC107; // Amber
-      case 'disetujui': return 0xFF4CAF50; // Green
-      case 'selesai_review': return 0xFF4CAF50; // Green
-      case 'ditolak': return 0xFFF44336; // Red
-      default: return 0xFF9E9E9E; // Grey
+      case 'diajukan':
+        return 0xFF2196F3; // Blue
+      case 'menunggu_review':
+        return 0xFFFF9800; // Orange
+      case 'dalam_review':
+        return 0xFF03A9F4; // Light Blue
+      case 'perlu_revisi':
+        return 0xFFFFC107; // Amber
+      case 'disetujui':
+        return 0xFF4CAF50; // Green
+      case 'selesai_review':
+        return 0xFF4CAF50; // Green
+      case 'ditolak':
+        return 0xFFF44336; // Red
+      default:
+        return 0xFF9E9E9E; // Grey
     }
   }
 }
@@ -266,14 +294,16 @@ class RiwayatReview {
     // Extract editor name
     String namaEditor = '';
     String? idEditor;
-    
+
     if (json['editor'] is Map) {
       final editorData = json['editor'] as Map<String, dynamic>;
       idEditor = editorData['id'];
       if (editorData['profilPengguna'] is Map) {
-        namaEditor = editorData['profilPengguna']['namaLengkap'] ?? 
-                     editorData['profilPengguna']['namaTampilan'] ?? 
-                     editorData['email'] ?? '';
+        namaEditor =
+            editorData['profilPengguna']['namaLengkap'] ??
+            editorData['profilPengguna']['namaTampilan'] ??
+            editorData['email'] ??
+            '';
       } else {
         namaEditor = editorData['email'] ?? '';
       }
@@ -287,7 +317,9 @@ class RiwayatReview {
       aksi: json['aksi'] ?? json['tipe'] ?? '',
       namaEditor: namaEditor,
       idEditor: idEditor,
-      tanggal: DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ?? DateTime.now(),
+      tanggal:
+          DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ??
+          DateTime.now(),
       catatan: json['catatan'] ?? json['keterangan'],
       status: json['status'],
       rekomendasi: json['rekomendasi'],
@@ -310,16 +342,26 @@ class RiwayatReview {
   /// Helper untuk label aksi
   String get aksiLabel {
     switch (aksi.toLowerCase()) {
-      case 'ditugaskan': return 'Ditugaskan';
-      case 'mulai_review': return 'Mulai Review';
-      case 'selesai_review': return 'Selesai Review';
-      case 'minta_revisi': return 'Minta Revisi';
-      case 'setujui': return 'Disetujui';
-      case 'tolak': return 'Ditolak';
-      case 'dibatalkan': return 'Dibatalkan';
-      case 'komentar': return 'Komentar';
-      case 'feedback': return 'Feedback';
-      default: return aksi;
+      case 'ditugaskan':
+        return 'Ditugaskan';
+      case 'mulai_review':
+        return 'Mulai Review';
+      case 'selesai_review':
+        return 'Selesai Review';
+      case 'minta_revisi':
+        return 'Minta Revisi';
+      case 'setujui':
+        return 'Disetujui';
+      case 'tolak':
+        return 'Ditolak';
+      case 'dibatalkan':
+        return 'Dibatalkan';
+      case 'komentar':
+        return 'Komentar';
+      case 'feedback':
+        return 'Feedback';
+      default:
+        return aksi;
     }
   }
 }
@@ -350,14 +392,16 @@ class KomentarReview {
     // Extract editor name
     String namaEditor = '';
     String? idEditor;
-    
+
     if (json['editor'] is Map) {
       final editorData = json['editor'] as Map<String, dynamic>;
       idEditor = editorData['id'];
       if (editorData['profilPengguna'] is Map) {
-        namaEditor = editorData['profilPengguna']['namaLengkap'] ?? 
-                     editorData['profilPengguna']['namaTampilan'] ?? 
-                     editorData['email'] ?? '';
+        namaEditor =
+            editorData['profilPengguna']['namaLengkap'] ??
+            editorData['profilPengguna']['namaTampilan'] ??
+            editorData['email'] ??
+            '';
       } else {
         namaEditor = editorData['email'] ?? '';
       }
@@ -372,7 +416,9 @@ class KomentarReview {
       komentar: json['komentar'] ?? json['isiKomentar'] ?? json['isi'] ?? '',
       namaEditor: namaEditor,
       idEditor: idEditor,
-      tanggal: DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ?? DateTime.now(),
+      tanggal:
+          DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ??
+          DateTime.now(),
       bab: json['bab'],
       halaman: json['halaman'],
     );
@@ -415,7 +461,7 @@ class DetailNaskahSubmission {
   factory DetailNaskahSubmission.fromJson(Map<String, dynamic> json) {
     // Parse naskah
     final naskah = NaskahSubmission.fromJson(json);
-    
+
     // Parse metadata
     Map<String, dynamic> metadata = {};
     if (json['metadata'] is Map) {
@@ -482,14 +528,16 @@ class DetailNaskahSubmission {
 
   factory DetailNaskahSubmission.fromReviewNaskah(ReviewNaskah review) {
     final naskah = NaskahSubmission.fromReviewNaskah(review);
-    
+
     return DetailNaskahSubmission(
       id: review.id,
       naskah: naskah,
       metadata: {},
       riwayatReview: [],
       komentar: [],
-      feedbacks: review.feedback.map((f) => FeedbackItem.fromFeedbackReview(f)).toList(),
+      feedbacks: review.feedback
+          .map((f) => FeedbackItem.fromFeedbackReview(f))
+          .toList(),
     );
   }
 
@@ -527,7 +575,9 @@ class RiwayatRevisi {
       id: json['id'] ?? '',
       versi: json['versi'] ?? 1,
       catatan: json['catatan'] ?? '',
-      tanggal: DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ?? DateTime.now(),
+      tanggal:
+          DateTime.tryParse(json['tanggal'] ?? json['dibuatPada'] ?? '') ??
+          DateTime.now(),
       urlFile: json['urlFile'],
     );
   }
@@ -567,9 +617,11 @@ class FeedbackItem {
     if (json['editor'] is Map) {
       final editorData = json['editor'] as Map<String, dynamic>;
       if (editorData['profilPengguna'] is Map) {
-        editor = editorData['profilPengguna']['namaLengkap'] ?? 
-                 editorData['profilPengguna']['namaTampilan'] ?? 
-                 editorData['email'] ?? '';
+        editor =
+            editorData['profilPengguna']['namaLengkap'] ??
+            editorData['profilPengguna']['namaTampilan'] ??
+            editorData['email'] ??
+            '';
       } else {
         editor = editorData['email'] ?? '';
       }
@@ -582,7 +634,9 @@ class FeedbackItem {
       komentar: json['isiKomentar'] ?? json['komentar'] ?? '',
       bab: json['bab'],
       halaman: json['halaman'],
-      tanggal: DateTime.tryParse(json['dibuatPada'] ?? json['tanggal'] ?? '') ?? DateTime.now(),
+      tanggal:
+          DateTime.tryParse(json['dibuatPada'] ?? json['tanggal'] ?? '') ??
+          DateTime.now(),
       editor: editor,
     );
   }
@@ -622,7 +676,10 @@ class NaskahSubmissionResponse {
     this.data,
   });
 
-  factory NaskahSubmissionResponse.success(List<NaskahSubmission> data, {String pesan = 'Berhasil'}) {
+  factory NaskahSubmissionResponse.success(
+    List<NaskahSubmission> data, {
+    String pesan = 'Berhasil',
+  }) {
     return NaskahSubmissionResponse(sukses: true, pesan: pesan, data: data);
   }
 
@@ -637,13 +694,12 @@ class DetailNaskahResponse {
   final String pesan;
   final DetailNaskahSubmission? data;
 
-  DetailNaskahResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  DetailNaskahResponse({required this.sukses, required this.pesan, this.data});
 
-  factory DetailNaskahResponse.success(DetailNaskahSubmission data, {String pesan = 'Berhasil'}) {
+  factory DetailNaskahResponse.success(
+    DetailNaskahSubmission data, {
+    String pesan = 'Berhasil',
+  }) {
     return DetailNaskahResponse(sukses: true, pesan: pesan, data: data);
   }
 
@@ -657,10 +713,7 @@ class ActionResponse {
   final bool sukses;
   final String pesan;
 
-  ActionResponse({
-    required this.sukses,
-    required this.pesan,
-  });
+  ActionResponse({required this.sukses, required this.pesan});
 
   factory ActionResponse.success(String pesan) {
     return ActionResponse(sukses: true, pesan: pesan);
@@ -698,7 +751,11 @@ class EditorTersedia {
     String nama = '';
     if (json['profilPengguna'] is Map) {
       final profil = json['profilPengguna'] as Map<String, dynamic>;
-      nama = profil['namaLengkap'] ?? profil['namaTampilan'] ?? json['email'] ?? '';
+      nama =
+          profil['namaLengkap'] ??
+          profil['namaTampilan'] ??
+          json['email'] ??
+          '';
     } else {
       nama = json['nama'] ?? json['email'] ?? '';
     }

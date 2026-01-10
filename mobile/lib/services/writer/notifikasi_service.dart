@@ -1,18 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:publishify/models/writer/notifikasi_models.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:logger/logger.dart';
 
 final logger = Logger();
-class NotifikasiService {
-  static final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
 
+class NotifikasiService {
   // Helper untuk mendapatkan token
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token'); // Fixed: use correct key with underscore
+    return prefs.getString(
+      'access_token',
+    ); // Fixed: use correct key with underscore
   }
 
   // Helper untuk membuat headers dengan auth
@@ -21,6 +22,7 @@ class NotifikasiService {
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
+      'X-Platform': 'mobile',
     };
   }
 
@@ -61,21 +63,28 @@ class NotifikasiService {
         queryParams['tanggalSelesai'] = tanggalSelesai;
       }
 
-      final uri = Uri.parse('$baseUrl/api/notifikasi')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.notifikasi,
+      ).replace(queryParameters: queryParams);
 
       logger.i('[NotifikasiService] GET $uri');
 
       final headers = await _getHeaders();
-      
+
       // Debug: Check if token exists
       final token = await _getToken();
-      logger.i('[NotifikasiService] Token exists: ${token != null}, Token length: ${token?.length ?? 0}');
+      logger.i(
+        '[NotifikasiService] Token exists: ${token != null}, Token length: ${token?.length ?? 0}',
+      );
       if (token != null && token.isNotEmpty) {
-        logger.i('[NotifikasiService] Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...');
+        logger.i(
+          '[NotifikasiService] Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...',
+        );
       }
 
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       logger.i('[NotifikasiService] Response status: ${response.statusCode}');
       logger.i('[NotifikasiService] Response body: ${response.body}');
@@ -86,22 +95,21 @@ class NotifikasiService {
         return NotifikasiListResponse.fromJson(jsonResponse);
       } else {
         // Handle unauthorized or other errors
-        String errorMessage = jsonResponse['pesan'] ?? 'Gagal mengambil notifikasi';
-        
+        String errorMessage =
+            jsonResponse['pesan'] ?? 'Gagal mengambil notifikasi';
+
         if (response.statusCode == 401) {
-          errorMessage = 'Unauthorized - Token tidak valid atau sudah kedaluwarsa';
+          errorMessage =
+              'Unauthorized - Token tidak valid atau sudah kedaluwarsa';
         }
 
         logger.e('[NotifikasiService] Error: $errorMessage');
 
-        return NotifikasiListResponse(
-          sukses: false,
-          pesan: errorMessage,
-        );
+        return NotifikasiListResponse(sukses: false, pesan: errorMessage);
       }
     } catch (e) {
       logger.e('[NotifikasiService] Exception: ${e.toString()}');
-      
+
       return NotifikasiListResponse(
         sukses: false,
         pesan: 'Terjadi kesalahan: ${e.toString()}',
@@ -113,9 +121,11 @@ class NotifikasiService {
   /// Ambil detail notifikasi berdasarkan ID
   static Future<NotifikasiResponse> getNotifikasiById(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id');
+      final uri = Uri.parse(ApiConfig.notifikasiById(id));
       final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -139,9 +149,11 @@ class NotifikasiService {
   /// Tandai notifikasi sebagai sudah dibaca
   static Future<NotifikasiResponse> tandaiDibaca(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id/baca');
+      final uri = Uri.parse('${ApiConfig.notifikasiById(id)}/baca');
       final headers = await _getHeaders();
-      final response = await http.put(uri, headers: headers);
+      final response = await http
+          .put(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -150,7 +162,9 @@ class NotifikasiService {
       } else {
         return NotifikasiResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menandai notifikasi sebagai dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menandai notifikasi sebagai dibaca',
         );
       }
     } catch (e) {
@@ -165,9 +179,11 @@ class NotifikasiService {
   /// Tandai semua notifikasi sebagai sudah dibaca
   static Future<NotifikasiResponse> tandaiSemuaDibaca() async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/baca-semua/all');
+      final uri = Uri.parse('${ApiConfig.notifikasi}/baca-semua/all');
       final headers = await _getHeaders();
-      final response = await http.put(uri, headers: headers);
+      final response = await http
+          .put(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -179,7 +195,9 @@ class NotifikasiService {
       } else {
         return NotifikasiResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menandai semua notifikasi sebagai dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menandai semua notifikasi sebagai dibaca',
         );
       }
     } catch (e) {
@@ -194,9 +212,11 @@ class NotifikasiService {
   /// Hapus notifikasi
   static Future<NotifikasiResponse> hapusNotifikasi(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/$id');
+      final uri = Uri.parse(ApiConfig.notifikasiById(id));
       final headers = await _getHeaders();
-      final response = await http.delete(uri, headers: headers);
+      final response = await http
+          .delete(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -223,9 +243,11 @@ class NotifikasiService {
   /// Hitung jumlah notifikasi yang belum dibaca
   static Future<NotifikasiBelumDibacaResponse> hitungBelumDibaca() async {
     try {
-      final uri = Uri.parse('$baseUrl/api/notifikasi/belum-dibaca/count');
+      final uri = Uri.parse('${ApiConfig.notifikasi}/belum-dibaca/count');
       final headers = await _getHeaders();
-      final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.defaultTimeout);
 
       final jsonResponse = json.decode(response.body);
 
@@ -234,7 +256,9 @@ class NotifikasiService {
       } else {
         return NotifikasiBelumDibacaResponse(
           sukses: false,
-          pesan: jsonResponse['pesan'] ?? 'Gagal menghitung notifikasi belum dibaca',
+          pesan:
+              jsonResponse['pesan'] ??
+              'Gagal menghitung notifikasi belum dibaca',
         );
       }
     } catch (e) {

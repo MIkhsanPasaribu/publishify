@@ -1,29 +1,33 @@
 /// Editor API Service - HTTP Client Layer
 /// Centralized API service untuk semua endpoint editor/review
 /// Best Practice: Single responsibility, proper error handling, authentication
+library;
 
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import 'package:publishify/services/general/auth_service.dart';
 import 'package:publishify/models/editor/review_models.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Logger untuk debugging
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Base API Response class untuk handling response
-class ApiResponse<T> {
+class EditorApiResponse<T> {
   final bool sukses;
   final String pesan;
   final T? data;
   final Map<String, dynamic>? metadata;
   final int? statusCode;
 
-  ApiResponse({
+  EditorApiResponse({
     required this.sukses,
     required this.pesan,
     this.data,
@@ -31,12 +35,25 @@ class ApiResponse<T> {
     this.statusCode,
   });
 
-  factory ApiResponse.success(T data, {String pesan = 'Sukses', Map<String, dynamic>? metadata}) {
-    return ApiResponse(sukses: true, pesan: pesan, data: data, metadata: metadata);
+  factory EditorApiResponse.success(
+    T data, {
+    String pesan = 'Sukses',
+    Map<String, dynamic>? metadata,
+  }) {
+    return EditorApiResponse(
+      sukses: true,
+      pesan: pesan,
+      data: data,
+      metadata: metadata,
+    );
   }
 
-  factory ApiResponse.error(String pesan, {int? statusCode}) {
-    return ApiResponse(sukses: false, pesan: pesan, statusCode: statusCode);
+  factory EditorApiResponse.error(String pesan, {int? statusCode}) {
+    return EditorApiResponse(
+      sukses: false,
+      pesan: pesan,
+      statusCode: statusCode,
+    );
   }
 }
 
@@ -47,14 +64,14 @@ class EditorApiService {
   factory EditorApiService() => _instance;
   EditorApiService._internal();
 
-  /// Base URL dari .env atau default
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:3000';
-  
+  /// Base URL dari ApiConfig (production: http://74.225.221.140)
+  static String get baseUrl => ApiConfig.baseUrl;
+
   /// Review API base path
   static const String reviewPath = '/api/review';
-  
+
   /// Timeout duration
-  static const Duration timeout = Duration(seconds: 30);
+  static Duration get timeout => ApiConfig.defaultTimeout;
 
   /// Get authorization headers dengan token
   static Future<Map<String, String>> _getHeaders() async {
@@ -62,12 +79,13 @@ class EditorApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Platform': 'mobile',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
   /// Generic GET request handler
-  static Future<ApiResponse<T>> get<T>(
+  static Future<EditorApiResponse<T>> get<T>(
     String endpoint, {
     Map<String, String>? queryParams,
     T Function(dynamic)? fromJson,
@@ -77,24 +95,26 @@ class EditorApiService {
       final uri = Uri.parse('$baseUrl$endpoint').replace(
         queryParameters: queryParams?.isNotEmpty == true ? queryParams : null,
       );
-      
+
       _logger.d('GET: $uri');
-      
+
       final response = await http.get(uri, headers: headers).timeout(timeout);
-      
+
       return _handleResponse<T>(response, fromJson);
     } on SocketException {
-      return ApiResponse.error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      return EditorApiResponse.error(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
+      );
     } on http.ClientException catch (e) {
-      return ApiResponse.error('Kesalahan jaringan: ${e.message}');
+      return EditorApiResponse.error('Kesalahan jaringan: ${e.message}');
     } catch (e) {
       _logger.e('GET Error: $e');
-      return ApiResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return EditorApiResponse.error('Terjadi kesalahan: ${e.toString()}');
     }
   }
 
   /// Generic POST request handler
-  static Future<ApiResponse<T>> post<T>(
+  static Future<EditorApiResponse<T>> post<T>(
     String endpoint, {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
@@ -102,29 +122,33 @@ class EditorApiService {
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$baseUrl$endpoint');
-      
+
       _logger.d('POST: $uri');
       _logger.d('Body: $body');
-      
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: body != null ? json.encode(body) : null,
-      ).timeout(timeout);
-      
+
+      final response = await http
+          .post(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          )
+          .timeout(timeout);
+
       return _handleResponse<T>(response, fromJson);
     } on SocketException {
-      return ApiResponse.error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      return EditorApiResponse.error(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
+      );
     } on http.ClientException catch (e) {
-      return ApiResponse.error('Kesalahan jaringan: ${e.message}');
+      return EditorApiResponse.error('Kesalahan jaringan: ${e.message}');
     } catch (e) {
       _logger.e('POST Error: $e');
-      return ApiResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return EditorApiResponse.error('Terjadi kesalahan: ${e.toString()}');
     }
   }
 
   /// Generic PUT request handler
-  static Future<ApiResponse<T>> put<T>(
+  static Future<EditorApiResponse<T>> put<T>(
     String endpoint, {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
@@ -132,29 +156,33 @@ class EditorApiService {
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$baseUrl$endpoint');
-      
+
       _logger.d('PUT: $uri');
       _logger.d('Body: $body');
-      
-      final response = await http.put(
-        uri,
-        headers: headers,
-        body: body != null ? json.encode(body) : null,
-      ).timeout(timeout);
-      
+
+      final response = await http
+          .put(
+            uri,
+            headers: headers,
+            body: body != null ? json.encode(body) : null,
+          )
+          .timeout(timeout);
+
       return _handleResponse<T>(response, fromJson);
     } on SocketException {
-      return ApiResponse.error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      return EditorApiResponse.error(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
+      );
     } on http.ClientException catch (e) {
-      return ApiResponse.error('Kesalahan jaringan: ${e.message}');
+      return EditorApiResponse.error('Kesalahan jaringan: ${e.message}');
     } catch (e) {
       _logger.e('PUT Error: $e');
-      return ApiResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return EditorApiResponse.error('Terjadi kesalahan: ${e.toString()}');
     }
   }
 
   /// Generic DELETE request handler
-  static Future<ApiResponse<T>> delete<T>(
+  static Future<EditorApiResponse<T>> delete<T>(
     String endpoint, {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
@@ -162,53 +190,54 @@ class EditorApiService {
     try {
       final headers = await _getHeaders();
       final uri = Uri.parse('$baseUrl$endpoint');
-      
+
       _logger.d('DELETE: $uri');
-      
-      final request = http.Request('DELETE', uri)
-        ..headers.addAll(headers);
-      
+
+      final request = http.Request('DELETE', uri)..headers.addAll(headers);
+
       if (body != null) {
         request.body = json.encode(body);
       }
-      
+
       final streamedResponse = await request.send().timeout(timeout);
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       return _handleResponse<T>(response, fromJson);
     } on SocketException {
-      return ApiResponse.error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      return EditorApiResponse.error(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
+      );
     } on http.ClientException catch (e) {
-      return ApiResponse.error('Kesalahan jaringan: ${e.message}');
+      return EditorApiResponse.error('Kesalahan jaringan: ${e.message}');
     } catch (e) {
       _logger.e('DELETE Error: $e');
-      return ApiResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return EditorApiResponse.error('Terjadi kesalahan: ${e.toString()}');
     }
   }
 
-  /// Handle HTTP response dan convert ke ApiResponse
-  static ApiResponse<T> _handleResponse<T>(
+  /// Handle HTTP response dan convert ke EditorApiResponse
+  static EditorApiResponse<T> _handleResponse<T>(
     http.Response response,
     T Function(dynamic)? fromJson,
   ) {
     _logger.d('Response Status: ${response.statusCode}');
     _logger.d('Response Body: ${response.body}');
-    
+
     try {
       final Map<String, dynamic> body = json.decode(response.body);
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return ApiResponse<T>(
+        return EditorApiResponse<T>(
           sukses: body['sukses'] ?? true,
           pesan: body['pesan'] ?? 'Sukses',
-          data: body['data'] != null && fromJson != null 
-              ? fromJson(body['data']) 
+          data: body['data'] != null && fromJson != null
+              ? fromJson(body['data'])
               : body['data'] as T?,
           metadata: body['metadata'],
           statusCode: response.statusCode,
         );
       } else {
-        return ApiResponse<T>(
+        return EditorApiResponse<T>(
           sukses: false,
           pesan: body['pesan'] ?? _getErrorMessage(response.statusCode),
           statusCode: response.statusCode,
@@ -216,7 +245,7 @@ class EditorApiService {
       }
     } catch (e) {
       _logger.e('Parse Response Error: $e');
-      return ApiResponse<T>(
+      return EditorApiResponse<T>(
         sukses: false,
         pesan: 'Gagal memproses response dari server',
         statusCode: response.statusCode,
@@ -251,7 +280,7 @@ class EditorApiService {
   // =====================================================
 
   /// POST /review/tugaskan - Tugaskan review ke editor
-  static Future<ApiResponse<ReviewNaskah>> tugaskanReview(
+  static Future<EditorApiResponse<ReviewNaskah>> tugaskanReview(
     TugaskanReviewRequest request,
   ) async {
     return post<ReviewNaskah>(
@@ -262,18 +291,19 @@ class EditorApiService {
   }
 
   /// GET /review - Ambil semua review dengan filter
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilSemuaReview({
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilSemuaReview({
     FilterReview? filter,
   }) async {
     return get<List<ReviewNaskah>>(
       reviewPath,
       queryParams: filter?.toQueryParams(),
-      fromJson: (data) => (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
+      fromJson: (data) =>
+          (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
     );
   }
 
   /// GET /review/statistik - Ambil statistik review
-  static Future<ApiResponse<StatistikReview>> ambilStatistikReview({
+  static Future<EditorApiResponse<StatistikReview>> ambilStatistikReview({
     String? idEditor,
   }) async {
     return get<StatistikReview>(
@@ -284,30 +314,34 @@ class EditorApiService {
   }
 
   /// GET /review/editor/saya - Ambil review milik editor yang login
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewSaya({
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewSaya({
     FilterReview? filter,
   }) async {
     return get<List<ReviewNaskah>>(
       '$reviewPath/editor/saya',
       queryParams: filter?.toQueryParams(),
-      fromJson: (data) => (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
+      fromJson: (data) =>
+          (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
     );
   }
 
   /// GET /review/naskah/:idNaskah - Ambil review untuk naskah tertentu
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewNaskah(
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewNaskah(
     String idNaskah, {
     FilterReview? filter,
   }) async {
     return get<List<ReviewNaskah>>(
       '$reviewPath/naskah/$idNaskah',
       queryParams: filter?.toQueryParams(),
-      fromJson: (data) => (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
+      fromJson: (data) =>
+          (data as List).map((e) => ReviewNaskah.fromJson(e)).toList(),
     );
   }
 
   /// GET /review/:id - Ambil detail review by ID
-  static Future<ApiResponse<ReviewNaskah>> ambilReviewById(String id) async {
+  static Future<EditorApiResponse<ReviewNaskah>> ambilReviewById(
+    String id,
+  ) async {
     return get<ReviewNaskah>(
       '$reviewPath/$id',
       fromJson: (data) => ReviewNaskah.fromJson(data),
@@ -315,7 +349,7 @@ class EditorApiService {
   }
 
   /// PUT /review/:id - Perbarui review
-  static Future<ApiResponse<ReviewNaskah>> perbaruiReview(
+  static Future<EditorApiResponse<ReviewNaskah>> perbaruiReview(
     String id,
     PerbaruiReviewRequest request,
   ) async {
@@ -327,7 +361,7 @@ class EditorApiService {
   }
 
   /// POST /review/:id/feedback - Tambah feedback ke review
-  static Future<ApiResponse<FeedbackReview>> tambahFeedback(
+  static Future<EditorApiResponse<FeedbackReview>> tambahFeedback(
     String idReview,
     TambahFeedbackRequest request,
   ) async {
@@ -339,7 +373,7 @@ class EditorApiService {
   }
 
   /// PUT /review/:id/submit - Submit/finalisasi review
-  static Future<ApiResponse<ReviewNaskah>> submitReview(
+  static Future<EditorApiResponse<ReviewNaskah>> submitReview(
     String id,
     SubmitReviewRequest request,
   ) async {
@@ -351,7 +385,7 @@ class EditorApiService {
   }
 
   /// PUT /review/:id/batal - Batalkan review
-  static Future<ApiResponse<ReviewNaskah>> batalkanReview(
+  static Future<EditorApiResponse<ReviewNaskah>> batalkanReview(
     String id,
     String alasan,
   ) async {
@@ -367,7 +401,8 @@ class EditorApiService {
   // =====================================================
 
   /// GET /pengguna/editor - Ambil daftar editor yang tersedia
-  static Future<ApiResponse<List<Map<String, dynamic>>>> ambilDaftarEditor() async {
+  static Future<EditorApiResponse<List<Map<String, dynamic>>>>
+  ambilDaftarEditor() async {
     try {
       // Endpoint untuk daftar editor (jika tersedia di backend)
       // Jika tidak ada, gunakan placeholder
@@ -383,7 +418,10 @@ class EditorApiService {
     } catch (e) {
       // Return empty list sebagai fallback
       _logger.w('ambilDaftarEditor fallback: $e');
-      return ApiResponse.success(<Map<String, dynamic>>[], pesan: 'Daftar editor kosong');
+      return EditorApiResponse.success(
+        <Map<String, dynamic>>[],
+        pesan: 'Daftar editor kosong',
+      );
     }
   }
 }

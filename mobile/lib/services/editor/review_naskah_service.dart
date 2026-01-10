@@ -1,6 +1,7 @@
 /// Review Naskah Service - Service untuk Naskah Submissions
 /// Mengelola naskah yang disubmit untuk direview
 /// Best Practice: Integration dengan EditorApiService
+library;
 
 import 'package:publishify/models/editor/review_naskah_models.dart';
 import 'package:publishify/models/editor/review_models.dart';
@@ -8,7 +9,10 @@ import 'package:publishify/services/editor/editor_api_service.dart';
 import 'package:logger/logger.dart';
 
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Service untuk mengelola Naskah Submission Review
@@ -50,25 +54,30 @@ class ReviewNaskahService {
         );
       }
 
-      return NaskahSubmissionResponse.error(
-        response.pesan ?? 'Gagal memuat data naskah',
-      );
+      return NaskahSubmissionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error getNaskahSubmissions: $e');
-      return NaskahSubmissionResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return NaskahSubmissionResponse.error(
+        'Terjadi kesalahan: ${e.toString()}',
+      );
     }
   }
 
   /// Parse status string ke enum
   static StatusReview? _parseStatus(String? status) {
     if (status == null || status == 'semua') return null;
-    
+
     switch (status.toLowerCase()) {
-      case 'ditugaskan': return StatusReview.ditugaskan;
-      case 'dalam_proses': return StatusReview.dalam_proses;
-      case 'selesai': return StatusReview.selesai;
-      case 'dibatalkan': return StatusReview.dibatalkan;
-      default: return null;
+      case 'ditugaskan':
+        return StatusReview.ditugaskan;
+      case 'dalam_proses':
+        return StatusReview.dalam_proses;
+      case 'selesai':
+        return StatusReview.selesai;
+      case 'dibatalkan':
+        return StatusReview.dibatalkan;
+      default:
+        return null;
     }
   }
 
@@ -104,28 +113,34 @@ class ReviewNaskahService {
   // =====================================================
 
   /// Terima review - mulai proses review
-  static Future<ActionResponse> terimaReview(String idNaskah, String idEditor) async {
+  static Future<ActionResponse> terimaReview(
+    String idNaskah,
+    String idEditor,
+  ) async {
     try {
       // Update status review ke dalam_proses
-      final request = PerbaruiReviewRequest(
-        status: StatusReview.dalam_proses,
-      );
+      final request = PerbaruiReviewRequest(status: StatusReview.dalam_proses);
 
       // Cari review ID dari naskah
       final reviewResponse = await EditorApiService.ambilReviewNaskah(idNaskah);
-      
-      if (!reviewResponse.sukses || reviewResponse.data == null || reviewResponse.data!.isEmpty) {
+
+      if (!reviewResponse.sukses ||
+          reviewResponse.data == null ||
+          reviewResponse.data!.isEmpty) {
         return ActionResponse.error('Review tidak ditemukan untuk naskah ini');
       }
 
       final review = reviewResponse.data!.first;
-      final updateResponse = await EditorApiService.perbaruiReview(review.id, request);
+      final updateResponse = await EditorApiService.perbaruiReview(
+        review.id,
+        request,
+      );
 
       if (updateResponse.sukses) {
         return ActionResponse.success('Review berhasil diterima');
       }
 
-      return ActionResponse.error(updateResponse.pesan ?? 'Gagal menerima review');
+      return ActionResponse.error(updateResponse.pesan);
     } catch (e) {
       _logger.e('Error terimaReview: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -148,10 +163,12 @@ class ReviewNaskahService {
       final response = await EditorApiService.tugaskanReview(request);
 
       if (response.sukses) {
-        return ActionResponse.success('Naskah berhasil ditugaskan ke editor lain');
+        return ActionResponse.success(
+          'Naskah berhasil ditugaskan ke editor lain',
+        );
       }
 
-      return ActionResponse.error(response.pesan ?? 'Gagal menugaskan review');
+      return ActionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error tugaskanEditor: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -161,9 +178,7 @@ class ReviewNaskahService {
   /// Mulai review naskah
   static Future<ActionResponse> mulaiReview(String reviewId) async {
     try {
-      final request = PerbaruiReviewRequest(
-        status: StatusReview.dalam_proses,
-      );
+      final request = PerbaruiReviewRequest(status: StatusReview.dalam_proses);
 
       final response = await EditorApiService.perbaruiReview(reviewId, request);
 
@@ -171,7 +186,7 @@ class ReviewNaskahService {
         return ActionResponse.success('Review berhasil dimulai');
       }
 
-      return ActionResponse.error(response.pesan ?? 'Gagal memulai review');
+      return ActionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error mulaiReview: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -195,7 +210,7 @@ class ReviewNaskahService {
         return ActionResponse.success('Naskah berhasil ditolak');
       }
 
-      return ActionResponse.error(response.pesan ?? 'Gagal menolak naskah');
+      return ActionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error tolakNaskah: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -219,7 +234,7 @@ class ReviewNaskahService {
         return ActionResponse.success('Naskah berhasil disetujui');
       }
 
-      return ActionResponse.error(response.pesan ?? 'Gagal menyetujui naskah');
+      return ActionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error setujuiNaskah: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -243,7 +258,7 @@ class ReviewNaskahService {
         return ActionResponse.success('Permintaan revisi berhasil dikirim');
       }
 
-      return ActionResponse.error(response.pesan ?? 'Gagal mengirim permintaan revisi');
+      return ActionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error mintaRevisi: $e');
       return ActionResponse.error('Terjadi kesalahan: ${e.toString()}');
@@ -259,8 +274,12 @@ class ReviewNaskahService {
     try {
       final response = await EditorApiService.ambilReviewNaskah(id);
 
-      if (response.sukses && response.data != null && response.data!.isNotEmpty) {
-        final detail = DetailNaskahSubmission.fromReviewNaskah(response.data!.first);
+      if (response.sukses &&
+          response.data != null &&
+          response.data!.isNotEmpty) {
+        final detail = DetailNaskahSubmission.fromReviewNaskah(
+          response.data!.first,
+        );
         return DetailNaskahResponse.success(detail);
       }
 
@@ -276,7 +295,9 @@ class ReviewNaskahService {
     try {
       final response = await EditorApiService.ambilReviewNaskah(id);
 
-      if (response.sukses && response.data != null && response.data!.isNotEmpty) {
+      if (response.sukses &&
+          response.data != null &&
+          response.data!.isNotEmpty) {
         return NaskahSubmission.fromReviewNaskah(response.data!.first);
       }
 
@@ -301,11 +322,13 @@ class ReviewNaskahService {
         final keywordLower = keyword.toLowerCase();
         final submissions = response.data!
             .map((review) => NaskahSubmission.fromReviewNaskah(review))
-            .where((naskah) =>
-                naskah.judul.toLowerCase().contains(keywordLower) ||
-                naskah.penulis.toLowerCase().contains(keywordLower) ||
-                naskah.kategori.toLowerCase().contains(keywordLower) ||
-                naskah.genre.toLowerCase().contains(keywordLower))
+            .where(
+              (naskah) =>
+                  naskah.judul.toLowerCase().contains(keywordLower) ||
+                  naskah.penulis.toLowerCase().contains(keywordLower) ||
+                  naskah.kategori.toLowerCase().contains(keywordLower) ||
+                  naskah.genre.toLowerCase().contains(keywordLower),
+            )
             .toList();
 
         return NaskahSubmissionResponse.success(
@@ -317,7 +340,9 @@ class ReviewNaskahService {
       return NaskahSubmissionResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error searchNaskah: $e');
-      return NaskahSubmissionResponse.error('Terjadi kesalahan: ${e.toString()}');
+      return NaskahSubmissionResponse.error(
+        'Terjadi kesalahan: ${e.toString()}',
+      );
     }
   }
 
@@ -329,18 +354,20 @@ class ReviewNaskahService {
   static Future<EditorTersediaResponse> getEditorTersedia() async {
     try {
       final response = await EditorApiService.ambilDaftarEditor();
-      
+
       if (response.sukses && response.data != null) {
         final editors = response.data!
             .map((e) => EditorTersedia.fromJson(e))
             .toList();
         return EditorTersediaResponse.success(editors);
       }
-      
+
       return EditorTersediaResponse.error(response.pesan);
     } catch (e) {
       _logger.e('Error getEditorTersedia: $e');
-      return EditorTersediaResponse.error('Gagal mengambil daftar editor: ${e.toString()}');
+      return EditorTersediaResponse.error(
+        'Gagal mengambil daftar editor: ${e.toString()}',
+      );
     }
   }
 }

@@ -1,13 +1,17 @@
 /// Editor Review Service - Dedicated Service untuk Review Operations
 /// Service khusus untuk operasi review: feedback, submit, batal
 /// Best Practice: Single responsibility untuk review workflow
+library;
 
 import 'package:publishify/models/editor/review_models.dart';
 import 'package:publishify/services/editor/editor_api_service.dart';
 import 'package:logger/logger.dart';
 
 final _logger = Logger(
-  printer: PrettyPrinter(methodCount: 0, printTime: true),
+  printer: PrettyPrinter(
+    methodCount: 0,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );
 
 /// Response wrapper untuk review operations
@@ -24,8 +28,17 @@ class ReviewOperationResult {
     this.feedback,
   });
 
-  factory ReviewOperationResult.success(String pesan, {ReviewNaskah? review, FeedbackReview? feedback}) {
-    return ReviewOperationResult(sukses: true, pesan: pesan, review: review, feedback: feedback);
+  factory ReviewOperationResult.success(
+    String pesan, {
+    ReviewNaskah? review,
+    FeedbackReview? feedback,
+  }) {
+    return ReviewOperationResult(
+      sukses: true,
+      pesan: pesan,
+      review: review,
+      feedback: feedback,
+    );
   }
 
   factory ReviewOperationResult.error(String pesan) {
@@ -45,21 +58,21 @@ class EditorReviewService {
   // =====================================================
 
   /// Ambil detail review lengkap
-  static Future<ApiResponse<ReviewNaskah>> ambilDetailReview(String reviewId) async {
+  static Future<EditorApiResponse<ReviewNaskah>> ambilDetailReview(
+    String reviewId,
+  ) async {
     try {
       return await EditorApiService.ambilReviewById(reviewId);
     } catch (e) {
       _logger.e('Error ambilDetailReview: $e');
-      return ApiResponse.error('Gagal mengambil detail review');
+      return EditorApiResponse.error('Gagal mengambil detail review');
     }
   }
 
   /// Mulai proses review - ubah status dari ditugaskan ke dalam_proses
   static Future<ReviewOperationResult> mulaiReview(String reviewId) async {
     try {
-      final request = PerbaruiReviewRequest(
-        status: StatusReview.dalam_proses,
-      );
+      final request = PerbaruiReviewRequest(status: StatusReview.dalam_proses);
 
       final response = await EditorApiService.perbaruiReview(reviewId, request);
 
@@ -84,10 +97,7 @@ class EditorReviewService {
     StatusReview? status,
   }) async {
     try {
-      final request = PerbaruiReviewRequest(
-        catatan: catatan,
-        status: status,
-      );
+      final request = PerbaruiReviewRequest(catatan: catatan, status: status);
 
       final response = await EditorApiService.perbaruiReview(reviewId, request);
 
@@ -228,7 +238,9 @@ class EditorReviewService {
     try {
       // Validasi catatan minimal 50 karakter
       if (catatan.length < 50) {
-        return ReviewOperationResult.error('Catatan kesimpulan minimal 50 karakter');
+        return ReviewOperationResult.error(
+          'Catatan kesimpulan minimal 50 karakter',
+        );
       }
 
       final request = SubmitReviewRequest(
@@ -301,7 +313,7 @@ class EditorReviewService {
   // =====================================================
 
   /// Ambil review yang ditugaskan ke editor saya
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewSaya({
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewSaya({
     StatusReview? status,
     int halaman = 1,
     int limit = 20,
@@ -318,12 +330,12 @@ class EditorReviewService {
       return await EditorApiService.ambilReviewSaya(filter: filter);
     } catch (e) {
       _logger.e('Error ambilReviewSaya: $e');
-      return ApiResponse.error('Gagal mengambil daftar review');
+      return EditorApiResponse.error('Gagal mengambil daftar review');
     }
   }
 
   /// Ambil review berdasarkan status
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewByStatus(
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewByStatus(
     StatusReview status, {
     int halaman = 1,
     int limit = 20,
@@ -332,32 +344,38 @@ class EditorReviewService {
   }
 
   /// Ambil review yang sedang dalam proses
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewDalamProses() async {
+  static Future<EditorApiResponse<List<ReviewNaskah>>>
+  ambilReviewDalamProses() async {
     return ambilReviewByStatus(StatusReview.dalam_proses);
   }
 
   /// Ambil review yang menunggu dikerjakan
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewMenunggu() async {
+  static Future<EditorApiResponse<List<ReviewNaskah>>>
+  ambilReviewMenunggu() async {
     return ambilReviewByStatus(StatusReview.ditugaskan);
   }
 
   /// Ambil review yang sudah selesai
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewSelesai({
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewSelesai({
     int halaman = 1,
     int limit = 20,
   }) async {
-    return ambilReviewByStatus(StatusReview.selesai, halaman: halaman, limit: limit);
+    return ambilReviewByStatus(
+      StatusReview.selesai,
+      halaman: halaman,
+      limit: limit,
+    );
   }
 
   /// Ambil review untuk naskah tertentu
-  static Future<ApiResponse<List<ReviewNaskah>>> ambilReviewNaskah(
+  static Future<EditorApiResponse<List<ReviewNaskah>>> ambilReviewNaskah(
     String idNaskah,
   ) async {
     try {
       return await EditorApiService.ambilReviewNaskah(idNaskah);
     } catch (e) {
       _logger.e('Error ambilReviewNaskah: $e');
-      return ApiResponse.error('Gagal mengambil review naskah');
+      return EditorApiResponse.error('Gagal mengambil review naskah');
     }
   }
 
@@ -419,14 +437,14 @@ class EditorReviewService {
 
   /// Cek apakah review masih bisa diedit
   static bool canEditReview(StatusReview status) {
-    return status == StatusReview.ditugaskan || 
-           status == StatusReview.dalam_proses;
+    return status == StatusReview.ditugaskan ||
+        status == StatusReview.dalam_proses;
   }
 
   /// Cek apakah review sudah bisa di-submit
   static bool canSubmitReview(ReviewNaskah review) {
     // Review harus dalam proses dan sudah ada minimal 1 feedback
-    return review.status == StatusReview.dalam_proses && 
-           review.feedback.isNotEmpty;
+    return review.status == StatusReview.dalam_proses &&
+        review.feedback.isNotEmpty;
   }
 }

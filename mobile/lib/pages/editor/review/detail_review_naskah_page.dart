@@ -7,10 +7,7 @@ import 'package:publishify/services/editor/review_naskah_service.dart';
 class DetailReviewNaskahPage extends StatefulWidget {
   final String naskahId;
 
-  const DetailReviewNaskahPage({
-    super.key,
-    required this.naskahId,
-  });
+  const DetailReviewNaskahPage({super.key, required this.naskahId});
 
   @override
   State<DetailReviewNaskahPage> createState() => _DetailReviewNaskahPageState();
@@ -34,8 +31,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
     });
 
     try {
-      final response = await ReviewNaskahService.getDetailNaskah(widget.naskahId);
-      
+      final response = await ReviewNaskahService.getDetailNaskah(
+        widget.naskahId,
+      );
+
       if (response.sukses && response.data != null) {
         setState(() {
           _detailNaskah = response.data!;
@@ -58,18 +57,14 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
   Future<void> _downloadNaskah() async {
     // TODO: Implementasi download file naskah
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fitur download akan segera tersedia'),
-      ),
+      const SnackBar(content: Text('Fitur download akan segera tersedia')),
     );
   }
 
   Future<void> _previewNaskah() async {
     // TODO: Implementasi preview naskah dalam app
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fitur preview akan segera tersedia'),
-      ),
+      const SnackBar(content: Text('Fitur preview akan segera tersedia')),
     );
   }
 
@@ -86,10 +81,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
       body: _isLoading
           ? _buildLoadingState()
           : _errorMessage != null
-              ? _buildErrorState()
-              : _detailNaskah != null
-                  ? _buildDetailContent()
-                  : _buildEmptyState(),
+          ? _buildErrorState()
+          : _detailNaskah != null
+          ? _buildDetailContent()
+          : _buildEmptyState(),
     );
   }
 
@@ -100,7 +95,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
         children: [
           CircularProgressIndicator(color: AppTheme.primaryGreen),
           SizedBox(height: 16),
-          Text('Memuat detail naskah...', style: TextStyle(color: AppTheme.greyMedium)),
+          Text(
+            'Memuat detail naskah...',
+            style: TextStyle(color: AppTheme.greyMedium),
+          ),
         ],
       ),
     );
@@ -123,7 +121,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loadDetail,
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGreen),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+              ),
               child: const Text('Coba Lagi'),
             ),
           ],
@@ -133,39 +133,37 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Text('Detail naskah tidak ditemukan'),
-    );
+    return const Center(child: Text('Detail naskah tidak ditemukan'));
   }
 
   Widget _buildDetailContent() {
     final naskah = _detailNaskah!.naskah;
-    
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header dengan sampul dan info dasar
           _buildHeaderSection(naskah),
-          
+
           // Info detail naskah
           _buildInfoSection(naskah),
-          
+
           // Sinopsis
           _buildSinopsisSection(naskah),
-          
+
           // Metadata tambahan
           _buildMetadataSection(),
-          
+
           // Riwayat review
           _buildRiwayatSection(),
-          
+
           // Komentar review
           _buildKomentarSection(),
-          
+
           // Action buttons
           _buildActionButtons(naskah),
-          
+
           const SizedBox(height: 20),
         ],
       ),
@@ -173,21 +171,6 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
   }
 
   Widget _buildHeaderSection(NaskahSubmission naskah) {
-    Color statusColor;
-    switch (naskah.status) {
-      case 'menunggu_review':
-        statusColor = Colors.orange;
-        break;
-      case 'dalam_review':
-        statusColor = Colors.blue;
-        break;
-      case 'selesai_review':
-        statusColor = AppTheme.primaryGreen;
-        break;
-      default:
-        statusColor = AppTheme.greyMedium;
-    }
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -234,9 +217,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Info dasar
               Expanded(
                 child: Column(
@@ -249,7 +232,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    
+
                     if (naskah.subJudul?.isNotEmpty ?? false) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -260,9 +243,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                         ),
                       ),
                     ],
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       'oleh ${naskah.namaPenulis}',
                       style: AppTheme.bodyMedium.copyWith(
@@ -270,14 +253,17 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Status dan prioritas
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(6),
@@ -292,7 +278,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(6),
@@ -340,18 +329,27 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             style: AppTheme.headingSmall.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          
+
           _buildInfoRow('Kategori', '${naskah.kategori} • ${naskah.genre}'),
           _buildInfoRow('Jumlah Halaman', '${naskah.jumlahHalaman} halaman'),
-          _buildInfoRow('Jumlah Kata', '${_formatNumber(naskah.jumlahKata)} kata'),
+          _buildInfoRow(
+            'Jumlah Kata',
+            '${_formatNumber(naskah.jumlahKata)} kata',
+          ),
           _buildInfoRow('Bahasa', naskah.bahasaTulis),
           _buildInfoRow('Email Penulis', naskah.emailPenulis),
-          _buildInfoRow('Tanggal Submit', _formatTanggalLengkap(naskah.tanggalSubmit)),
-          
+          _buildInfoRow(
+            'Tanggal Submit',
+            _formatTanggalLengkap(naskah.tanggalSubmit),
+          ),
+
           if (naskah.namaEditorDitugaskan != null) ...[
             _buildInfoRow('Editor Ditugaskan', naskah.namaEditorDitugaskan!),
             if (naskah.tanggalDitugaskan != null)
-              _buildInfoRow('Tanggal Ditugaskan', _formatTanggalLengkap(naskah.tanggalDitugaskan!)),
+              _buildInfoRow(
+                'Tanggal Ditugaskan',
+                _formatTanggalLengkap(naskah.tanggalDitugaskan!),
+              ),
           ],
         ],
       ),
@@ -375,12 +373,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             ),
           ),
           const Text(': '),
-          Expanded(
-            child: Text(
-              value,
-              style: AppTheme.bodySmall,
-            ),
-          ),
+          Expanded(child: Text(value, style: AppTheme.bodySmall)),
         ],
       ),
     );
@@ -421,7 +414,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
 
   Widget _buildMetadataSection() {
     if (_detailNaskah!.metadata.isEmpty) return const SizedBox.shrink();
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -444,7 +437,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             style: AppTheme.headingSmall.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          
+
           Row(
             children: [
               Expanded(
@@ -463,9 +456,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           _buildMetadataItem(
             Icons.schedule,
             'Estimasi Review',
@@ -477,7 +470,12 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
     );
   }
 
-  Widget _buildMetadataItem(IconData icon, String label, String value, {bool fullWidth = false}) {
+  Widget _buildMetadataItem(
+    IconData icon,
+    String label,
+    String value, {
+    bool fullWidth = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -491,11 +489,15 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
                 children: [
                   Text(
                     label,
-                    style: AppTheme.bodySmall.copyWith(color: AppTheme.greyMedium),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.greyMedium,
+                    ),
                   ),
                   Text(
                     value,
-                    style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -518,7 +520,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
 
   Widget _buildRiwayatSection() {
     if (_detailNaskah!.riwayatReview.isEmpty) return const SizedBox.shrink();
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -541,8 +543,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             style: AppTheme.headingSmall.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          
-          ..._detailNaskah!.riwayatReview.map((riwayat) => _buildRiwayatItem(riwayat)),
+
+          ..._detailNaskah!.riwayatReview.map(
+            (riwayat) => _buildRiwayatItem(riwayat),
+          ),
         ],
       ),
     );
@@ -565,7 +569,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
               Expanded(
                 child: Text(
                   riwayat.aksiLabel,
-                  style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Text(
@@ -581,10 +587,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
           ),
           if (riwayat.catatan != null && riwayat.catatan!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(
-              riwayat.catatan!,
-              style: AppTheme.bodySmall,
-            ),
+            Text(riwayat.catatan!, style: AppTheme.bodySmall),
           ],
         ],
       ),
@@ -593,7 +596,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
 
   Widget _buildKomentarSection() {
     if (_detailNaskah!.komentar.isEmpty) return const SizedBox.shrink();
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -616,8 +619,10 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             style: AppTheme.headingSmall.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          
-          ..._detailNaskah!.komentar.map((komentar) => _buildKomentarItem(komentar)),
+
+          ..._detailNaskah!.komentar.map(
+            (komentar) => _buildKomentarItem(komentar),
+          ),
         ],
       ),
     );
@@ -626,7 +631,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
   Widget _buildKomentarItem(KomentarReview komentar) {
     Color tipeColor;
     IconData tipeIcon;
-    
+
     switch (komentar.tipe.toLowerCase()) {
       case 'saran':
         tipeColor = Colors.blue;
@@ -641,7 +646,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
         tipeColor = AppTheme.primaryGreen;
         tipeIcon = Icons.note;
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -672,10 +677,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            komentar.komentar,
-            style: AppTheme.bodyMedium,
-          ),
+          Text(komentar.komentar, style: AppTheme.bodyMedium),
           const SizedBox(height: 6),
           Text(
             'oleh ${komentar.namaEditor}',
@@ -720,7 +722,7 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
               ),
             ],
           ),
-          
+
           if (naskah.status == 'menunggu_review') ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -747,7 +749,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Konfirmasi'),
-        content: Text('Apakah Anda yakin ingin menerima review naskah "${naskah.judul}"?'),
+        content: Text(
+          'Apakah Anda yakin ingin menerima review naskah "${naskah.judul}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -755,7 +759,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGreen),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+            ),
             child: const Text('Ya, Terima'),
           ),
         ],
@@ -772,9 +778,9 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
         if (!mounted) return;
 
         if (response.sukses) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.pesan)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.pesan)));
           _loadDetail(); // Reload detail
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -808,10 +814,20 @@ class _DetailReviewNaskahPageState extends State<DetailReviewNaskahPage> {
 
   String _formatTanggalLengkap(DateTime tanggal) {
     final months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
-    
+
     return '${tanggal.day} ${months[tanggal.month - 1]} ${tanggal.year}';
   }
 }

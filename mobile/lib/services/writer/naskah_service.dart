@@ -1,15 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/models/writer/naskah_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 
 /// Naskah Service
 /// Handles all manuscript (naskah) related API calls
 class NaskahService {
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Get list of user's manuscripts (naskah penulis saya)
   /// GET /api/naskah/penulis/saya?halaman=1&limit=6&status=draft
   static Future<NaskahListResponse> getNaskahSaya({
@@ -20,7 +17,7 @@ class NaskahService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return NaskahListResponse(
           sukses: false,
@@ -33,13 +30,14 @@ class NaskahService {
         'halaman': halaman.toString(),
         'limit': limit.toString(),
       };
-      
+
       if (status != null && status.isNotEmpty) {
         queryParams['status'] = status;
       }
 
-      final uri = Uri.parse('$baseUrl/api/naskah/penulis/saya')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.naskahPenulisSaya,
+      ).replace(queryParameters: queryParams);
 
       // Make API request
       final response = await http.get(
@@ -47,6 +45,7 @@ class NaskahService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
+          'X-Platform': 'mobile',
         },
       );
 
@@ -65,14 +64,9 @@ class NaskahService {
   static Future<Map<String, int>> getStatusCount() async {
     try {
       final response = await getNaskahSaya(limit: 100); // Get all to count
-      
+
       if (!response.sukses || response.data == null) {
-        return {
-          'draft': 0,
-          'review': 0,
-          'revision': 0,
-          'published': 0,
-        };
+        return {'draft': 0, 'review': 0, 'revision': 0, 'published': 0};
       }
 
       // Count by status
@@ -92,22 +86,19 @@ class NaskahService {
 
       return statusCount;
     } catch (e) {
-      return {
-        'draft': 0,
-        'review': 0,
-        'revision': 0,
-        'published': 0,
-      };
+      return {'draft': 0, 'review': 0, 'revision': 0, 'published': 0};
     }
   }
 
   /// Get user's manuscripts with specific status
   /// GET /api/naskah/penulis/saya?status=diterbitkan&halaman=1&limit=100
-  static Future<List<NaskahData>> getNaskahPenulisWithStatus(String status) async {
+  static Future<List<NaskahData>> getNaskahPenulisWithStatus(
+    String status,
+  ) async {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         throw Exception('Token tidak ditemukan. Silakan login kembali.');
       }
@@ -119,21 +110,25 @@ class NaskahService {
         'limit': '100', // Get a large number to get all manuscripts
       };
 
-      final uri = Uri.parse('$baseUrl/api/naskah/penulis/saya')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.naskahPenulisSaya,
+      ).replace(queryParameters: queryParams);
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final naskahResponse = NaskahListResponse.fromJson(responseData);
-        
+
         if (naskahResponse.sukses && naskahResponse.data != null) {
           return naskahResponse.data!;
         } else {
@@ -151,27 +146,32 @@ class NaskahService {
   static Future<NaskahDetailResponse> ambilDetailNaskah(String id) async {
     try {
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         throw Exception('Token akses tidak ditemukan');
       }
 
-      final url = Uri.parse('$baseUrl/api/naskah/$id');
-      
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final url = Uri.parse(ApiConfig.naskahById(id));
+
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return NaskahDetailResponse.fromJson(responseData);
       } else {
-        throw Exception(responseData['pesan'] ?? 'Gagal mengambil detail naskah');
+        throw Exception(
+          responseData['pesan'] ?? 'Gagal mengambil detail naskah',
+        );
       }
     } catch (e) {
       throw Exception('Terjadi kesalahan: ${e.toString()}');
@@ -180,9 +180,7 @@ class NaskahService {
 
   /// Get published manuscripts (latest 10) - PUBLIC endpoint
   /// GET /api/naskah?status=diterbitkan&limit=10&urutkan=dibuatPada&arah=desc
-  static Future<NaskahListResponse> getNaskahTerbit({
-    int limit = 10,
-  }) async {
+  static Future<NaskahListResponse> getNaskahTerbit({int limit = 10}) async {
     try {
       // Build URL with query parameters
       final queryParams = {
@@ -193,16 +191,20 @@ class NaskahService {
         'halaman': '1',
       };
 
-      final uri = Uri.parse('$baseUrl/api/naskah')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.naskah,
+      ).replace(queryParameters: queryParams);
 
       // Make API request (PUBLIC, no auth required)
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return NaskahListResponse.fromJson(responseData);
@@ -233,7 +235,7 @@ class NaskahService {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return CreateNaskahResponse(
           sukses: false,
@@ -241,7 +243,7 @@ class NaskahService {
         );
       }
 
-      final uri = Uri.parse('$baseUrl/api/naskah');
+      final uri = Uri.parse(ApiConfig.naskah);
 
       // Build request body
       final Map<String, dynamic> body = {
@@ -277,14 +279,17 @@ class NaskahService {
       }
 
       // Make API request
-      final response = await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return CreateNaskahResponse.fromJson(responseData);
@@ -306,13 +311,13 @@ class NaskahService {
     String? status,
     String? idKategori,
     String? idGenre,
-    String urutkan = 'dibuatPada',  // dibuatPada, judul, status, jumlahHalaman
-    String arah = 'desc',  // asc, desc
+    String urutkan = 'dibuatPada', // dibuatPada, judul, status, jumlahHalaman
+    String arah = 'desc', // asc, desc
   }) async {
     try {
       // Get access token from cache
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return NaskahListResponse(
           sukses: false,
@@ -327,34 +332,38 @@ class NaskahService {
         'urutkan': urutkan,
         'arah': arah,
       };
-      
+
       if (cari != null && cari.isNotEmpty) {
         queryParams['cari'] = cari;
       }
-      
+
       if (status != null && status.isNotEmpty) {
         queryParams['status'] = status;
       }
-      
+
       if (idKategori != null && idKategori.isNotEmpty) {
         queryParams['idKategori'] = idKategori;
       }
-      
+
       if (idGenre != null && idGenre.isNotEmpty) {
         queryParams['idGenre'] = idGenre;
       }
 
-      final uri = Uri.parse('$baseUrl/api/naskah/penulis/saya')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiConfig.naskahPenulisSaya,
+      ).replace(queryParameters: queryParams);
 
       // Make API request
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       return NaskahListResponse.fromJson(responseData);
@@ -374,11 +383,7 @@ class CreateNaskahResponse {
   final String pesan;
   final NaskahData? data;
 
-  CreateNaskahResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  CreateNaskahResponse({required this.sukses, required this.pesan, this.data});
 
   factory CreateNaskahResponse.fromJson(Map<String, dynamic> json) {
     return CreateNaskahResponse(

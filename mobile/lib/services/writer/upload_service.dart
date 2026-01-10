@@ -2,16 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:mime/mime.dart';
 
 /// Upload Service
 /// Handles file upload to backend
 class UploadService {
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-
   /// Upload single file (naskah)
   /// POST /api/upload/single
   static Future<UploadResponse> uploadNaskah({
@@ -22,7 +19,7 @@ class UploadService {
     try {
       // Get access token
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return UploadResponse(
           sukses: false,
@@ -31,16 +28,17 @@ class UploadService {
       }
 
       // Create multipart request
-      final uri = Uri.parse('$baseUrl/api/upload/single');
+      final uri = Uri.parse(ApiConfig.uploadSingle);
       final request = http.MultipartRequest('POST', uri);
 
       // Add headers
       request.headers['Authorization'] = 'Bearer $accessToken';
+      request.headers['X-Platform'] = 'mobile';
 
       // Add file
       final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
       final mimeTypeData = mimeType.split('/');
-      
+
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
@@ -51,17 +49,19 @@ class UploadService {
 
       // Add form fields
       request.fields['tujuan'] = 'naskah';
-      
+
       if (deskripsi != null && deskripsi.isNotEmpty) {
         request.fields['deskripsi'] = deskripsi;
       }
-      
+
       if (idReferensi != null && idReferensi.isNotEmpty) {
         request.fields['idReferensi'] = idReferensi;
       }
 
       // Send request
-      final streamedResponse = await request.send();
+      final streamedResponse = await request.send().timeout(
+        const Duration(minutes: 5),
+      );
       final response = await http.Response.fromStream(streamedResponse);
 
       final responseData = jsonDecode(response.body);
@@ -91,7 +91,7 @@ class UploadService {
   }) async {
     try {
       final accessToken = await AuthService.getAccessToken();
-      
+
       if (accessToken == null) {
         return UploadResponse(
           sukses: false,
@@ -99,14 +99,15 @@ class UploadService {
         );
       }
 
-      final uri = Uri.parse('$baseUrl/api/upload/single');
+      final uri = Uri.parse(ApiConfig.uploadSingle);
       final request = http.MultipartRequest('POST', uri);
 
       request.headers['Authorization'] = 'Bearer $accessToken';
+      request.headers['X-Platform'] = 'mobile';
 
       final mimeType = lookupMimeType(file.path) ?? 'image/jpeg';
       final mimeTypeData = mimeType.split('/');
-      
+
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
@@ -116,16 +117,18 @@ class UploadService {
       );
 
       request.fields['tujuan'] = 'sampul';
-      
+
       if (deskripsi != null && deskripsi.isNotEmpty) {
         request.fields['deskripsi'] = deskripsi;
       }
-      
+
       if (idReferensi != null && idReferensi.isNotEmpty) {
         request.fields['idReferensi'] = idReferensi;
       }
 
-      final streamedResponse = await request.send();
+      final streamedResponse = await request.send().timeout(
+        const Duration(minutes: 2),
+      );
       final response = await http.Response.fromStream(streamedResponse);
 
       final responseData = jsonDecode(response.body);
@@ -153,11 +156,7 @@ class UploadResponse {
   final String pesan;
   final UploadData? data;
 
-  UploadResponse({
-    required this.sukses,
-    required this.pesan,
-    this.data,
-  });
+  UploadResponse({required this.sukses, required this.pesan, this.data});
 
   factory UploadResponse.fromJson(Map<String, dynamic> json) {
     return UploadResponse(

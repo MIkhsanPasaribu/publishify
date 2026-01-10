@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 import 'package:publishify/models/writer/update_profile_models.dart';
 import 'package:publishify/models/writer/profile_api_models.dart';
 import 'package:publishify/services/general/auth_service.dart';
+import 'package:publishify/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Profile Service
@@ -12,15 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ProfileService {
   static final logger = Logger();
 
-  // Get base URL from .env
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:4000';
-  
   // Cache expiry time (in hours)
   static const int cacheExpiryHours = 1;
 
   /// Get user profile from API or cache
   /// GET /api/pengguna/profil/saya
-  static Future<ProfileApiResponse> getProfile({bool forceRefresh = false}) async {
+  static Future<ProfileApiResponse> getProfile({
+    bool forceRefresh = false,
+  }) async {
     try {
       // Check cache first if not forced refresh
       if (!forceRefresh) {
@@ -44,16 +43,19 @@ class ProfileService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/pengguna/profil/saya');
+      final url = Uri.parse(ApiConfig.penggunaProfilSaya);
 
       // Make API request
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       final profileResponse = ProfileApiResponse.fromJson(responseData);
@@ -77,24 +79,24 @@ class ProfileService {
   static Future<ProfileUserData?> _getProfileFromCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Check if cache exists and not expired
       final cacheTime = prefs.getInt('profile_cache_time');
       if (cacheTime == null) return null;
-      
+
       final cacheDateTime = DateTime.fromMillisecondsSinceEpoch(cacheTime);
       final now = DateTime.now();
       final difference = now.difference(cacheDateTime).inHours;
-      
+
       // If cache expired, return null
       if (difference >= cacheExpiryHours) {
         return null;
       }
-      
+
       // Get cached profile data
       final profileJson = prefs.getString('profile_data');
       if (profileJson == null) return null;
-      
+
       final profileData = jsonDecode(profileJson);
       return ProfileUserData.fromJson(profileData);
     } catch (e) {
@@ -106,19 +108,22 @@ class ProfileService {
   static Future<void> _saveProfileToCache(ProfileUserData data) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Save profile data as JSON
       await prefs.setString('profile_data', jsonEncode(data.toJson()));
-      
+
       // Save cache timestamp
-      await prefs.setInt('profile_cache_time', DateTime.now().millisecondsSinceEpoch);
-      
+      await prefs.setInt(
+        'profile_cache_time',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+
       // Also save individual fields for backward compatibility
       await prefs.setString('email', data.email);
       if (data.telepon != null) {
         await prefs.setString('telepon', data.telepon!);
       }
-      
+
       if (data.profilPengguna != null) {
         final profil = data.profilPengguna!;
         if (profil.namaDepan != null) {
@@ -130,7 +135,7 @@ class ProfileService {
         if (profil.namaTampilan != null) {
           await prefs.setString('nama_tampilan', profil.namaTampilan!);
         }
-        
+
         if (profil.bio != null) {
           await prefs.setString('bio', profil.bio!);
         }
@@ -150,7 +155,7 @@ class ProfileService {
           await prefs.setString('kode_pos', profil.kodePos!);
         }
       }
-      
+
       // Save roles
       if (data.peranPengguna.isNotEmpty) {
         final roles = data.peranPengguna
@@ -191,17 +196,20 @@ class ProfileService {
         );
       }
 
-      final url = Uri.parse('$baseUrl/api/pengguna/profil/saya');
+      final url = Uri.parse(ApiConfig.penggunaProfilSaya);
 
       // Make API request
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: jsonEncode(request.toJson()),
-      );
+      final response = await http
+          .put(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+              'X-Platform': 'mobile',
+            },
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(ApiConfig.defaultTimeout);
 
       final responseData = jsonDecode(response.body);
       final updateResponse = UpdateProfileResponse.fromJson(responseData);
@@ -233,7 +241,7 @@ class ProfileService {
     // Update profile data if available
     if (data.profilPengguna != null) {
       final profil = data.profilPengguna!;
-      
+
       if (profil.namaDepan != null) {
         await prefs.setString('nama_depan', profil.namaDepan!);
       }
@@ -243,35 +251,35 @@ class ProfileService {
       if (profil.namaTampilan != null) {
         await prefs.setString('nama_tampilan', profil.namaTampilan!);
       }
-      
+
       if (profil.bio != null) {
         await prefs.setString('bio', profil.bio!);
       }
-      
+
       if (profil.urlAvatar != null) {
         await prefs.setString('url_avatar', profil.urlAvatar!);
       }
-      
+
       if (profil.tanggalLahir != null) {
         await prefs.setString('tanggal_lahir', profil.tanggalLahir!);
       }
-      
+
       if (profil.jenisKelamin != null) {
         await prefs.setString('jenis_kelamin', profil.jenisKelamin!);
       }
-      
+
       if (profil.alamat != null) {
         await prefs.setString('alamat', profil.alamat!);
       }
-      
+
       if (profil.kota != null) {
         await prefs.setString('kota', profil.kota!);
       }
-      
+
       if (profil.provinsi != null) {
         await prefs.setString('provinsi', profil.provinsi!);
       }
-      
+
       if (profil.kodePos != null) {
         await prefs.setString('kode_pos', profil.kodePos!);
       }
@@ -282,12 +290,12 @@ class ProfileService {
       final userDataJson = prefs.getString('user_data');
       if (userDataJson != null) {
         final userData = jsonDecode(userDataJson);
-        
+
         // Update user data with new values
         if (data.telepon != null) {
           userData['pengguna']['telepon'] = data.telepon;
         }
-        
+
         if (data.profilPengguna != null) {
           userData['pengguna']['profilPengguna'] = {
             'id': data.profilPengguna!.id,
@@ -305,7 +313,7 @@ class ProfileService {
             'diperbaruiPada': data.profilPengguna!.diperbaruiPada,
           };
         }
-        
+
         await prefs.setString('user_data', jsonEncode(userData));
       }
     } catch (e) {
