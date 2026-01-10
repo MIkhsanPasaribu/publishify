@@ -31,6 +31,292 @@ Automated testing pipeline ensure bahwa code quality maintained dan regressions 
 
 **Actual Results**: Testing pipeline successfully executing untuk all pull requests dengan average completion time tujuh menit for typical changes (linting: satu menit, unit tests: dua menit, integration tests: dua menit, E2E tests: dua menit when parallelized). Coverage reporting working reliably dengan current codebase coverage at sembilan puluh persen. Flaky tests identified dan fixed, achieving ninety-five percent success rate for test runs (failures only from actual code issues). Developer feedback positive regarding fast feedback dan confidence dalam merge decisions.
 
+**GitHub Actions Testing Workflow Example** (`.github/workflows/test.yml`):
+
+```yaml
+name: 🧪 Test Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "20.x"
+  BUN_VERSION: "1.0.0"
+
+jobs:
+  lint:
+    name: 🔍 Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend && bun install --frozen-lockfile
+          cd ../frontend && bun install --frozen-lockfile
+
+      - name: Run ESLint (Backend)
+        run: cd backend && bun run lint
+
+      - name: Run ESLint (Frontend)
+        run: cd frontend && bun run lint
+
+      - name: Check TypeScript (Backend)
+        run: cd backend && bun run build
+
+      - name: Check TypeScript (Frontend)
+        run: cd frontend && bun run type-check
+
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install backend dependencies
+        run: cd backend && bun install --frozen-lockfile
+
+      - name: Run unit tests
+        run: cd backend && bun run test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: unit-tests
+          name: unit-tests-coverage
+
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: publishify_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: cd backend && bun install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: cd backend && bunx prisma generate
+
+      - name: Run database migrations
+        run: cd backend && bunx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/publishify_test
+
+      - name: Run integration tests
+        run: cd backend && bun run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/publishify_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+  e2e-tests:
+    name: 🌐 E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: publishify_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend && bun install --frozen-lockfile
+          cd ../frontend && bun install --frozen-lockfile
+
+      - name: Setup database
+        run: |
+          cd backend
+          bunx prisma generate
+          bunx prisma migrate deploy
+          bunx prisma db seed
+        env:
+          DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/publishify_e2e
+
+      - name: Start backend server
+        run: cd backend && bun run start:dev &
+        env:
+          DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/publishify_e2e
+          REDIS_HOST: localhost
+          PORT: 4000
+
+      - name: Wait for backend
+        run: npx wait-on http://localhost:4000/health -t 30000
+
+      - name: Run Cypress E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          start: bun run dev
+          wait-on: "http://localhost:3000"
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+
+  test-summary:
+    name: ✅ Test Summary
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, integration-tests, e2e-tests]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.lint.result }}" == "failure" ] || \
+             [ "${{ needs.unit-tests.result }}" == "failure" ] || \
+             [ "${{ needs.integration-tests.result }}" == "failure" ] || \
+             [ "${{ needs.e2e-tests.result }}" == "failure" ]; then
+            echo "❌ Tests failed"
+            exit 1
+          else
+            echo "✅ All tests passed"
+          fi
+```
+
+**CI/CD Pipeline Flow Diagram**:
+
+```mermaid
+graph TD
+    A[Push/PR to main] --> B[Lint & Type Check]
+    B --> C{Lint Pass?}
+    C -->|No| D[❌ Fail Pipeline]
+    C -->|Yes| E[Unit Tests]
+    C -->|Yes| F[Integration Tests]
+
+    E --> G{Unit Tests Pass?}
+    F --> H{Integration Tests Pass?}
+
+    G -->|No| D
+    H -->|No| D
+    G -->|Yes| I[E2E Tests]
+    H -->|Yes| I
+
+    I --> J{E2E Pass?}
+    J -->|No| D
+    J -->|Yes| K[✅ Tests Complete]
+
+    K --> L{On Main Branch?}
+    L -->|No| M[Report Success]
+    L -->|Yes| N[Build Docker Images]
+
+    N --> O[Push to Registry]
+    O --> P[Deploy to Staging]
+    P --> Q[Run Smoke Tests]
+
+    Q --> R{Smoke Tests Pass?}
+    R -->|No| S[Auto Rollback]
+    R -->|Yes| T[✅ Deployment Complete]
+
+    style D fill:#ff6b6b
+    style K fill:#6bcf7f
+    style T fill:#6bcf7f
+    style S fill:#ffa94d
+```
+
+**Test Coverage Tracking**:
+
+```typescript
+// backend/jest.config.ts
+export default {
+  moduleFileExtensions: ["js", "json", "ts"],
+  rootDir: "src",
+  testRegex: ".*\\.spec\\.ts$",
+  transform: {
+    "^.+\\.(t|j)s$": "ts-jest",
+  },
+  collectCoverageFrom: [
+    "**/*.(t|j)s",
+    "!**/*.spec.ts",
+    "!**/*.dto.ts",
+    "!**/node_modules/**",
+  ],
+  coverageDirectory: "../coverage",
+  testEnvironment: "node",
+
+  // Coverage Thresholds
+  coverageThresholds: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+};
+```
+
 #### C.3.2 Docker Image Build Pipeline
 
 Docker image build pipeline automate creation dan publishing dari container images untuk deployment.
@@ -84,6 +370,271 @@ Winston logger provide flexible dan performant logging solution untuk NestJS bac
 **Sensitive Data Handling**: Special care taken to avoid logging sensitive information. Password fields automatically redacted from logs. JWT tokens truncated to only show last few characters. Database connection strings sanitized to hide credentials. Credit card numbers atau personal identification numbers never logged. Automated scanning dalam CI pipeline flag accidentally logged sensitive data patterns.
 
 **Actual Implementation**: Logger module created at `backend/src/common/logger/logger.module.ts` providing injectable LoggerService. HTTP logging interceptor at `backend/src/common/interceptors/logging.interceptor.ts` automatically logs all requests. Error logging filter at `backend/src/common/filters/http-exception.filter.ts` captures dan logs all errors dengan appropriate context. Service layer methods annotated dengan strategic log statements providing visibility into business logic execution.
+
+**Winston Logger Implementation** (`backend/src/common/logger/async-logger.service.ts`):
+
+```typescript
+import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+import { PrismaService } from "@/prisma/prisma.service";
+
+/**
+ * Interface untuk log entry
+ */
+export interface LogEntry {
+  idPengguna?: string;
+  jenis: string; // 'CREATE', 'READ', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'
+  aksi: string; // Deskripsi aksi spesifik
+  entitas?: string; // Nama tabel/resource
+  idEntitas?: string; // ID record yang diakses
+  deskripsi?: string; // Detail tambahan
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * AsyncLoggerService
+ *
+ * Service untuk logging asynchronous dengan buffer dan batch processing.
+ * Mengurangi blocking I/O untuk write ke database.
+ *
+ * Features:
+ * - Event-driven logging (non-blocking)
+ * - Buffer management (max 100 logs)
+ * - Auto-flush setiap 5 detik
+ * - Batch write ke database
+ * - Graceful shutdown (flush on destroy)
+ */
+@Injectable()
+export class AsyncLoggerService implements OnModuleDestroy {
+  private readonly logger = new Logger(AsyncLoggerService.name);
+  private logBuffer: LogEntry[] = [];
+  private readonly maxBufferSize = 100;
+  private readonly flushInterval = 5000; // 5 detik
+  private flushTimer?: NodeJS.Timeout;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2
+  ) {
+    this.startAutoFlush();
+    this.logger.log(
+      `AsyncLoggerService initialized with buffer size: ${this.maxBufferSize}`
+    );
+  }
+
+  /**
+   * Start auto-flush timer
+   */
+  private startAutoFlush(): void {
+    this.flushTimer = setInterval(() => {
+      this.flush().catch((error) => {
+        this.logger.error("Auto-flush error:", error.message);
+      });
+    }, this.flushInterval);
+  }
+
+  /**
+   * Log aktivitas secara asynchronous
+   * Emit event tanpa blocking
+   */
+  log(entry: LogEntry): void {
+    this.eventEmitter.emit("log.aktivitas", {
+      ...entry,
+      timestamp: new Date(),
+    });
+  }
+
+  /**
+   * Event listener untuk log aktivitas
+   */
+  @OnEvent("log.aktivitas", { async: true })
+  async handleLogEvent(payload: LogEntry): Promise<void> {
+    try {
+      // Add to buffer
+      this.logBuffer.push(payload);
+
+      // Flush jika buffer penuh
+      if (this.logBuffer.length >= this.maxBufferSize) {
+        await this.flush();
+      }
+    } catch (err) {
+      this.logger.error("Error handling log event:", err);
+    }
+  }
+
+  /**
+   * Flush buffer ke database (batch write)
+   */
+  async flush(): Promise<void> {
+    if (this.logBuffer.length === 0) {
+      return;
+    }
+
+    const logsToWrite = [...this.logBuffer];
+    this.logBuffer = []; // Clear buffer
+
+    try {
+      await this.prisma.logAktivitas.createMany({
+        data: logsToWrite,
+        skipDuplicates: true,
+      });
+
+      this.logger.debug(
+        `Flushed ${logsToWrite.length} log entries to database`
+      );
+    } catch (error) {
+      this.logger.error(`Failed to flush logs:`, error);
+      // Re-add failed logs untuk retry
+      this.logBuffer.unshift(...logsToWrite);
+    }
+  }
+
+  /**
+   * Graceful shutdown - flush remaining logs
+   */
+  async onModuleDestroy(): Promise<void> {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+    }
+
+    await this.flush();
+    this.logger.log("AsyncLoggerService destroyed, logs flushed");
+  }
+}
+```
+
+**HTTP Logging Interceptor** (`backend/src/common/interceptors/logging.interceptor.ts`):
+
+```typescript
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  private readonly logger = new Logger("HTTP");
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const { method, url, ip, headers } = request;
+    const userAgent = headers["user-agent"] || "";
+    const startTime = Date.now();
+
+    // Generate request ID untuk correlation
+    const requestId = Math.random().toString(36).substring(7);
+    request.requestId = requestId;
+
+    return next.handle().pipe(
+      tap({
+        next: () => {
+          const response = context.switchToHttp().getResponse();
+          const { statusCode } = response;
+          const duration = Date.now() - startTime;
+
+          // Log successful requests
+          this.logger.log({
+            requestId,
+            method,
+            url,
+            statusCode,
+            duration: `${duration}ms`,
+            ip,
+            userAgent,
+          });
+
+          // Warn untuk slow requests (> 1s)
+          if (duration > 1000) {
+            this.logger.warn(
+              `Slow request detected: ${method} ${url} - ${duration}ms`
+            );
+          }
+        },
+        error: (error) => {
+          const duration = Date.now() - startTime;
+
+          // Log error requests dengan stack trace
+          this.logger.error({
+            requestId,
+            method,
+            url,
+            error: error.message,
+            stack: error.stack,
+            duration: `${duration}ms`,
+            ip,
+            userAgent,
+          });
+        },
+      })
+    );
+  }
+}
+```
+
+**Logging Architecture Diagram**:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant LogInterceptor
+    participant AsyncLogger
+    participant EventEmitter
+    participant Buffer
+    participant Database
+
+    Client->>API: HTTP Request
+    API->>LogInterceptor: Intercept Request
+    LogInterceptor->>LogInterceptor: Start Timer
+
+    API->>API: Process Request
+
+    alt Success
+        API-->>LogInterceptor: Response
+        LogInterceptor->>AsyncLogger: log({ method, url, statusCode, duration })
+    else Error
+        API-->>LogInterceptor: Error
+        LogInterceptor->>AsyncLogger: log({ error, stack, duration })
+    end
+
+    AsyncLogger->>EventEmitter: emit('log.aktivitas')
+    EventEmitter->>Buffer: Add to Buffer (non-blocking)
+
+    alt Buffer Full (100 items)
+        Buffer->>Database: Batch Write
+        Database-->>Buffer: Acknowledge
+    else Timer (5s)
+        Buffer->>Database: Auto Flush
+        Database-->>Buffer: Acknowledge
+    end
+
+    LogInterceptor-->>Client: HTTP Response
+```
+
+**Structured Log Output Example**:
+
+```json
+{
+  "level": "info",
+  "timestamp": "2026-01-03T15:14:23.456Z",
+  "context": "HTTP",
+  "requestId": "a7c4e2f",
+  "method": "GET",
+  "url": "/api/naskah/123",
+  "statusCode": 200,
+  "duration": "45ms",
+  "ip": "192.168.1.1",
+  "userId": "uuid-123",
+  "userAgent": "Mozilla/5.0...",
+  "message": "Request completed"
+}
+```
 
 **Results**: Logging infrastructure working reliably dengan logs providing valuable debugging information. Average log volume approximately lima ratus entries per hour during normal operation, spiking to dua ribu during high traffic periods. Log file sizes manageable (under seratus MB per day) dengan log rotation configured to prevent disk space issues. Team successfully debugged multiple issues using logs yang would have been difficult to diagnose without structured logging.
 
