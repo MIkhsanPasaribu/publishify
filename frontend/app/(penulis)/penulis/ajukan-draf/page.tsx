@@ -250,16 +250,13 @@ export default function AjukanDrafPage() {
         : undefined;
       const jumlahKata = hitungJumlahKata && hitungJumlahKata >= 100 ? hitungJumlahKata : undefined;
 
-      // Konversi path relatif menjadi URL lengkap untuk validasi backend
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
-      const urlFileAbsolut = urlFile ? `${backendUrl}${urlFile}` : undefined;
-      const urlSampulAbsolut = urlSampul ? `${backendUrl}${urlSampul}` : undefined;
-
+      // Backend sekarang menerima path relatif atau URL lengkap
+      // Tidak perlu konversi lagi karena upload API sudah return format yang benar
       console.log("📋 Menyimpan naskah dengan data:", {
         judul: formData.judul,
         formatBuku: formData.formatBuku,
-        urlFile: urlFileAbsolut,
-        urlSampul: urlSampulAbsolut,
+        urlFile: urlFile,
+        urlSampul: urlSampul,
         modeInput,
       });
 
@@ -273,8 +270,8 @@ export default function AjukanDrafPage() {
         formatBuku: formData.formatBuku,
         bahasaTulis: formData.bahasaTulis,
         jumlahKata,
-        urlSampul: urlSampulAbsolut,
-        urlFile: urlFileAbsolut,
+        urlSampul: urlSampul,
+        urlFile: urlFile,
         publik: false,
       });
 

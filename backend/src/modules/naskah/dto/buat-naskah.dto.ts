@@ -66,9 +66,31 @@ export const BuatNaskahSchema = z.object({
     .optional()
     .nullable(),
 
-  urlSampul: z.string().url('URL sampul tidak valid').optional().nullable(),
+  urlSampul: z
+    .string()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        // Allow relative paths (/uploads/...) or full URLs (http://...)
+        return val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://');
+      },
+      { message: 'URL sampul harus berupa path relatif atau URL lengkap' }
+    )
+    .optional()
+    .nullable(),
 
-  urlFile: z.string().url('URL file tidak valid').optional().nullable(),
+  urlFile: z
+    .string()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        // Allow relative paths (/uploads/...) or full URLs (http://...)
+        return val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://');
+      },
+      { message: 'URL file harus berupa path relatif atau URL lengkap' }
+    )
+    .optional()
+    .nullable(),
 
   publik: z.boolean().default(false).optional(),
 });
