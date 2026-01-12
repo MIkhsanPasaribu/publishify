@@ -6,13 +6,8 @@ import { Card } from "@/components/ui/card";
 
 export function MobileAppSection() {
   const handleDownloadAndroid = () => {
-    // Force download APK instead of opening in browser
-    const link = document.createElement("a");
-    link.href = "/downloads/publishify.apk";
-    link.download = "publishify.apk";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Use API route to bypass middleware and force download
+    window.location.href = "/api/download/apk";
   };
 
   const handleDownloadIOS = () => {
