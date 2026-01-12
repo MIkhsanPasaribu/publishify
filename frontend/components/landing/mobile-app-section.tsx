@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 
 export function MobileAppSection() {
   const handleDownloadAndroid = () => {
-    // Use API route to bypass middleware and force download
-    window.location.href = "/api/download/apk";
+    // Use download route to bypass backend API proxy
+    window.location.href = "/download-app";
   };
 
   const handleDownloadIOS = () => {
