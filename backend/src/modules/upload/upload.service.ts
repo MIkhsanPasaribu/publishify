@@ -31,9 +31,19 @@ const libreConvert = promisify(libre.convert);
 @Injectable()
 export class UploadService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads');
+  private readonly baseUrl = process.env.FRONTEND_URL || 'http://localhost:4000';
 
   constructor(private readonly prisma: PrismaService) {
     this.ensureUploadDirectory();
+  }
+
+  /**
+   * Generate full URL untuk file
+   */
+  private getFullUrl(relativePath: string): string {
+    // Pastikan path dimulai dengan /
+    const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+    return `${this.baseUrl}${cleanPath}`;
   }
 
   /**
@@ -108,7 +118,8 @@ export class UploadService {
     // Generate unique filename
     const uniqueFilename = this.generateUniqueFilename(file.originalname);
     const filePath = path.join(this.uploadDir, dto.tujuan, uniqueFilename);
-    const relativeUrl = `/uploads/${dto.tujuan}/${uniqueFilename}`;
+    const relativePath = `/uploads/${dto.tujuan}/${uniqueFilename}`;
+    const fullUrl = this.getFullUrl(relativePath);
 
     try {
       // Simpan file ke disk
@@ -125,7 +136,7 @@ export class UploadService {
           ekstensi: path.extname(file.originalname),
           tujuan: dto.tujuan,
           path: filePath,
-          url: relativeUrl,
+          url: fullUrl,
           idReferensi: dto.idReferensi,
           deskripsi: dto.deskripsi,
         },
@@ -441,7 +452,8 @@ export class UploadService {
       const nameWithoutExt = path.basename(file.namaFileSimpan, file.ekstensi);
       const processedFilename = `${nameWithoutExt}_processed${ext}`;
       const processedPath = path.join(this.uploadDir, file.tujuan, processedFilename);
-      const processedUrl = `/uploads/${file.tujuan}/${processedFilename}`;
+      const processedRelativePath = `/uploads/${file.tujuan}/${processedFilename}`;
+      const processedUrl = this.getFullUrl(processedRelativePath);
 
       // Save processed image
       await fs.writeFile(processedPath, processedBuffer);
@@ -552,7 +564,8 @@ export class UploadService {
       // Generate nama file PDF baru
       const pdfFilename = file.namaFileSimpan.replace(/\.(docx|doc)$/i, '.pdf');
       const pdfPath = path.join(this.uploadDir, file.tujuan, pdfFilename);
-      const pdfRelativeUrl = `/uploads/${file.tujuan}/${pdfFilename}`;
+      const pdfRelativePath = `/uploads/${file.tujuan}/${pdfFilename}`;
+      const pdfUrl = this.getFullUrl(pdfRelativePath);
       
       // Simpan file PDF
       await fs.writeFile(pdfPath, pdfBuffer);
@@ -568,7 +581,7 @@ export class UploadService {
           ekstensi: '.pdf',
           tujuan: file.tujuan,
           path: pdfPath,
-          url: pdfRelativeUrl,
+          url: pdfUrl,
           idReferensi: file.idReferensi,
           deskripsi: `Hasil konversi dari ${file.namaFileAsli}`,
         },
@@ -665,7 +678,8 @@ export class UploadService {
       // Generate nama file PDF baru
       const pdfFilename = originalFilename.replace(/\.(docx|doc)$/i, '.pdf');
       const pdfPath = path.join(this.uploadDir, tujuan, pdfFilename);
-      const pdfRelativeUrl = `/uploads/${tujuan}/${pdfFilename}`;
+      const pdfRelativePath = `/uploads/${tujuan}/${pdfFilename}`;
+      const pdfUrl = this.getFullUrl(pdfRelativePath);
       
       // Simpan file PDF
       await fs.writeFile(pdfPath, pdfBuffer);
@@ -681,7 +695,7 @@ export class UploadService {
           ekstensi: '.pdf',
           tujuan: tujuan,
           path: pdfPath,
-          url: pdfRelativeUrl,
+          url: pdfUrl,
           deskripsi: `Hasil konversi dari ${originalFilename}`,
         },
       });
