@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   
   // Public routes yang tidak perlu authentication
-  const publicRoutes = ["/", "/login", "/register", "/verifikasi-email", "/auth/callback"];
+  const publicRoutes = ["/", "/login", "/register", "/verifikasi-email", "/auth/callback", "/download-app"];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith("/api/"));
   
   // Allow access to public files (downloads, images, etc)
