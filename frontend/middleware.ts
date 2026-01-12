@@ -11,8 +11,14 @@ export function middleware(request: NextRequest) {
   const publicRoutes = ["/", "/login", "/register", "/verifikasi-email", "/auth/callback"];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith("/api/"));
   
-  // Jika tidak ada token dan bukan public route, redirect ke login
-  if (!token && !isPublicRoute) {
+  // Allow access to public files (downloads, images, etc)
+  const isPublicFile = pathname.startsWith("/downloads/") || 
+                       pathname.startsWith("/_next/") || 
+                       pathname.startsWith("/images/") ||
+                       pathname.startsWith("/icons/");
+  
+  // Jika tidak ada token dan bukan public route/file, redirect ke login
+  if (!token && !isPublicRoute && !isPublicFile) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
