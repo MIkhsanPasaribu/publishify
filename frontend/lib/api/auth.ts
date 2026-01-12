@@ -45,6 +45,10 @@ export interface RegisterDto {
   namaBelakang?: string;
   telepon?: string;
   jenisPeran: "penulis" | "editor" | "percetakan";
+  alamat?: string;
+  kota?: string;
+  provinsi?: string;
+  kodePos?: string;
 }
 
 export interface LoginDto {
@@ -141,7 +145,9 @@ export const authApi = {
   /**
    * Request forgot password (kirim email reset)
    */
-  async forgotPassword(email: string): Promise<{ sukses: boolean; pesan: string }> {
+  async forgotPassword(
+    email: string
+  ): Promise<{ sukses: boolean; pesan: string }> {
     const response = await api.post("/auth/forgot-password", { email });
     return response.data;
   },
