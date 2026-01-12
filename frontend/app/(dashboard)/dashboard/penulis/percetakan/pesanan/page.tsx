@@ -43,15 +43,11 @@ function StatusBadge({ status }: { status: StatusPesanan }) {
     siap: { bg: "bg-cyan-100", text: "text-cyan-700", label: "Siap" },
     dikirim: { bg: "bg-teal-100", text: "text-teal-700", label: "Dikirim" },
     terkirim: { bg: "bg-green-100", text: "text-green-700", label: "Terkirim" },
-<<<<<<< HEAD
-    selesai: { bg: "bg-gray-100", text: "text-gray-700", label: "Selesai" },
-=======
     selesai: {
       bg: "bg-emerald-100",
       text: "text-emerald-700",
       label: "Selesai",
     },
->>>>>>> upstream/main
     dibatalkan: { bg: "bg-red-100", text: "text-red-700", label: "Dibatalkan" },
   };
 

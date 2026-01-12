@@ -47,12 +47,7 @@ export interface Naskah {
   diterbitkanPada?: string;
   dibuatPada: string;
   diperbaruiPada: string;
-<<<<<<< HEAD
-  
-  // Relations
-=======
   // Relasi - opsional karena tergantung include query
->>>>>>> upstream/main
   penulis?: {
     id: string;
     email: string;
@@ -60,20 +55,6 @@ export interface Naskah {
       namaDepan?: string;
       namaBelakang?: string;
       namaTampilan?: string;
-<<<<<<< HEAD
-    };
-  };
-  kategori?: {
-    id: string;
-    nama: string;
-    slug: string;
-  };
-  genre?: {
-    id: string;
-    nama: string;
-    slug: string;
-  };
-=======
       urlAvatar?: string;
     };
     profilPenulis?: {
@@ -82,7 +63,6 @@ export interface Naskah {
   };
   kategori?: Kategori;
   genre?: Genre;
->>>>>>> upstream/main
   review?: Array<{
     id: string;
     status: string;

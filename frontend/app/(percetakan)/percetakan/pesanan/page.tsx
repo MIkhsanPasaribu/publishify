@@ -277,38 +277,6 @@ export default function DaftarPesananPercetakanPage() {
         </div>
 
         {/* Table Pesanan */}
-<<<<<<< HEAD
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50/80 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Pesanan
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Pemesan
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Spesifikasi
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Progress
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredPesanan.map((pesanan) => {
-                    const config = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
-                    const StatusIcon = config.icon;
-=======
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -339,7 +307,6 @@ export default function DaftarPesananPercetakanPage() {
                   const config =
                     STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
                   const StatusIcon = config.icon;
->>>>>>> upstream/main
 
                   return (
                     <tr
