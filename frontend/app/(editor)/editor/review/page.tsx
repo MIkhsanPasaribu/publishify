@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { reviewApi, type Review, type StatusReview, type StatistikReview } from "@/lib/api/review";
 
-export default function DaftarReviewPage() {
+function DaftarReviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as StatusReview | null;
@@ -511,5 +511,21 @@ export default function DaftarReviewPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DaftarReviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-[50vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <DaftarReviewContent />
+    </Suspense>
   );
 }

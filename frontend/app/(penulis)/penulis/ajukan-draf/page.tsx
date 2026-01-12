@@ -279,7 +279,7 @@ export default function AjukanDrafPage() {
       const naskahId = responseNaskah.data.id;
 
       // VALIDASI: Pastikan naskah punya file sebelum diajukan
-      if (!urlFileAbsolut) {
+      if (!urlFile) {
         toast.error("Naskah berhasil disimpan sebagai draft, tapi tidak bisa diajukan karena tidak ada file");
         router.replace("/dashboard");
         return;

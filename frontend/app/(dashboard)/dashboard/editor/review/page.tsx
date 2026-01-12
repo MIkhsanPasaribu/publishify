@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { reviewApi, type Review, type StatusReview, type StatistikReview } from "@/lib/api/review";
 
-export default function DaftarReviewPage() {
+function DaftarReviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as StatusReview | null;
@@ -472,5 +472,13 @@ export default function DaftarReviewPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DaftarReviewPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <DaftarReviewContent />
+    </Suspense>
   );
 }

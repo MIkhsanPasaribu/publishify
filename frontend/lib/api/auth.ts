@@ -45,6 +45,10 @@ export interface RegisterDto {
   namaBelakang?: string;
   telepon?: string;
   jenisPeran: "penulis" | "editor" | "percetakan";
+  alamat?: string;
+  kota?: string;
+  provinsi?: string;
+  kodePos?: string;
 }
 
 export interface LoginDto {

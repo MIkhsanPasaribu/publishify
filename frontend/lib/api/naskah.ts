@@ -47,6 +47,27 @@ export interface Naskah {
   diterbitkanPada?: string;
   dibuatPada: string;
   diperbaruiPada: string;
+  
+  // Relations
+  penulis?: {
+    id: string;
+    email: string;
+    profilPengguna?: {
+      namaDepan?: string;
+      namaBelakang?: string;
+      namaTampilan?: string;
+    };
+  };
+  kategori?: {
+    id: string;
+    nama: string;
+    slug: string;
+  };
+  genre?: {
+    id: string;
+    nama: string;
+    slug: string;
+  };
   review?: Array<{
     id: string;
     status: string;

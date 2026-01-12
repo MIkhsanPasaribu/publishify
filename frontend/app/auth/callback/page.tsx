@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -19,7 +19,7 @@ import { useAuthStore } from "@/stores/use-auth-store";
  * 5. Backend generate JWT tokens & redirect ke sini dengan tokens di query params
  * 6. Simpan tokens & redirect ke dashboard
  */
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setTokens = useAuthStore((s) => s.setTokens);
@@ -201,5 +201,22 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50">
+        <div className="bg-white rounded-2xl shadow-xl p-12 max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 border-4 border-[#14b8a6] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Memuat...</h2>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

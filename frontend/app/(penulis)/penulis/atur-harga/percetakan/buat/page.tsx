@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { naskahApi } from "@/lib/api/naskah";
@@ -74,7 +74,7 @@ const HARGA_BASE = {
   },
 };
 
-export default function BuatPesananCetak() {
+function BuatPesananCetakContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const naskahIdParam = searchParams.get("naskahId");
@@ -479,5 +479,21 @@ export default function BuatPesananCetak() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function BuatPesananCetak() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-[50vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <BuatPesananCetakContent />
+    </Suspense>
   );
 }

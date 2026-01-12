@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
-export default function VerifikasiEmailPage() {
+function VerifikasiEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -62,5 +62,20 @@ export default function VerifikasiEmailPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function VerifikasiEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 text-center">
+          <Loader2 className="w-16 h-16 mx-auto text-teal-600 animate-spin mb-4" />
+          <p className="text-gray-600">Memuat...</p>
+        </Card>
+      </div>
+    }>
+      <VerifikasiEmailContent />
+    </Suspense>
   );
 }
