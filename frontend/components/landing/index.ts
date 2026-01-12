@@ -6,3 +6,4 @@ export { TestimoniSection } from "./testimoni-section";
 export { CTASection } from "./cta-section";
 export { Footer } from "./footer";
 export { BukuUnggulanSection } from "./buku-unggulan-section";
+export { MobileAppSection } from "./mobile-app-section";

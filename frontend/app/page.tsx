@@ -5,6 +5,7 @@ import {
   BukuUnggulanSection,
   ProsesPenerbitanSection,
   TestimoniSection,
+  MobileAppSection,
   CTASection,
   Footer,
 } from "@/components/landing";
@@ -19,6 +20,7 @@ export default function Home() {
         <BukuUnggulanSection />
         <ProsesPenerbitanSection />
         <TestimoniSection />
+        <MobileAppSection />
         <CTASection />
       </main>
       <Footer />
