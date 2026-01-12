@@ -41,8 +41,21 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('✅ Koneksi database berhasil');
+    try {
+      await this.$connect();
+      this.logger.log('✅ Koneksi database berhasil');
+    } catch (error: any) {
+      this.logger.error(`❌ Gagal koneksi ke database: ${error.message}`);
+
+      // Di development, log pesan bantuan
+      if (process.env.NODE_ENV === 'development') {
+        this.logger.warn('💡 Pastikan DATABASE_URL di file .env sudah benar');
+        this.logger.warn('💡 Format: postgresql://[user]:[password]@[host]:[port]/[database]?...');
+      }
+
+      // Throw error agar aplikasi tidak berjalan tanpa database
+      throw error;
+    }
   }
 
   async onModuleDestroy() {
