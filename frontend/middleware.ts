@@ -98,7 +98,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (images, etc)
+     * - download-app (APK download)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|logo.png|images|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|logo.png|images|download-app|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif).*)",
   ],
 };
