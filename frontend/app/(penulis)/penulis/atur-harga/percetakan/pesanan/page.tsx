@@ -24,21 +24,43 @@ import type { PesananCetak, StatusPesanan } from "@/types/percetakan";
 // Status Badge Component
 function StatusBadge({ status }: { status: StatusPesanan }) {
   const statusConfig = {
-    tertunda: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Tertunda" },
+    tertunda: {
+      bg: "bg-yellow-100",
+      text: "text-yellow-700",
+      label: "Tertunda",
+    },
     diterima: { bg: "bg-blue-100", text: "text-blue-700", label: "Diterima" },
-    dalam_produksi: { bg: "bg-purple-100", text: "text-purple-700", label: "Produksi" },
-    kontrol_kualitas: { bg: "bg-indigo-100", text: "text-indigo-700", label: "QC" },
+    dalam_produksi: {
+      bg: "bg-purple-100",
+      text: "text-purple-700",
+      label: "Produksi",
+    },
+    kontrol_kualitas: {
+      bg: "bg-indigo-100",
+      text: "text-indigo-700",
+      label: "QC",
+    },
     siap: { bg: "bg-cyan-100", text: "text-cyan-700", label: "Siap" },
     dikirim: { bg: "bg-teal-100", text: "text-teal-700", label: "Dikirim" },
     terkirim: { bg: "bg-green-100", text: "text-green-700", label: "Terkirim" },
+<<<<<<< HEAD
     selesai: { bg: "bg-gray-100", text: "text-gray-700", label: "Selesai" },
+=======
+    selesai: {
+      bg: "bg-emerald-100",
+      text: "text-emerald-700",
+      label: "Selesai",
+    },
+>>>>>>> upstream/main
     dibatalkan: { bg: "bg-red-100", text: "text-red-700", label: "Dibatalkan" },
   };
 
   const config = statusConfig[status] || statusConfig.tertunda;
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+    >
       {config.label}
     </span>
   );
@@ -65,7 +87,7 @@ export default function PesananSayaPage() {
       //   limit: 20,
       //   status: filterStatus || undefined,
       // });
-      
+
       // Dummy data
       setPesanan([]);
       setTotalHalaman(1);
@@ -76,9 +98,10 @@ export default function PesananSayaPage() {
     }
   }
 
-  const filteredPesanan = pesanan.filter((p) =>
-    p.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.naskah?.judul.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPesanan = pesanan.filter(
+    (p) =>
+      p.nomorPesanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.naskah?.judul.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   function formatRupiah(angka: number | string): string {
@@ -131,7 +154,9 @@ export default function PesananSayaPage() {
         </div>
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as StatusPesanan | "")}
+          onChange={(e) =>
+            setFilterStatus(e.target.value as StatusPesanan | "")
+          }
           className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
         >
           <option value="">Semua Status</option>
@@ -163,7 +188,8 @@ export default function PesananSayaPage() {
             Belum Ada Pesanan
           </h3>
           <p className="text-gray-600 mb-6">
-            Anda belum membuat pesanan cetak. Mulai dengan membuat pesanan pertama Anda!
+            Anda belum membuat pesanan cetak. Mulai dengan membuat pesanan
+            pertama Anda!
           </p>
           <Link
             href="/penulis/penulis/percetakan/buat"
@@ -205,7 +231,10 @@ export default function PesananSayaPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredPesanan.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {item.nomorPesanan}
@@ -220,7 +249,9 @@ export default function PesananSayaPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{item.jumlah} pcs</div>
+                      <div className="text-sm text-gray-900">
+                        {item.jumlah} pcs
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -324,7 +355,9 @@ export default function PesananSayaPage() {
                 Halaman {halaman} dari {totalHalaman}
               </span>
               <button
-                onClick={() => setHalaman((prev) => Math.min(totalHalaman, prev + 1))}
+                onClick={() =>
+                  setHalaman((prev) => Math.min(totalHalaman, prev + 1))
+                }
                 disabled={halaman === totalHalaman}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >

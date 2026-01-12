@@ -145,7 +145,9 @@ export const authApi = {
   /**
    * Request forgot password (kirim email reset)
    */
-  async forgotPassword(email: string): Promise<{ sukses: boolean; pesan: string }> {
+  async forgotPassword(
+    email: string
+  ): Promise<{ sukses: boolean; pesan: string }> {
     const response = await api.post("/auth/forgot-password", { email });
     return response.data;
   },

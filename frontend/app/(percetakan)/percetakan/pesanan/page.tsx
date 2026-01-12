@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -122,7 +123,8 @@ export default function DaftarPesananPercetakanPage() {
       pesanan.nomorPesanan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pesanan.judul?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pesanan.pemesan?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = filterStatus === "semua" || pesanan.status === filterStatus;
+    const matchStatus =
+      filterStatus === "semua" || pesanan.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
@@ -167,8 +169,12 @@ export default function DaftarPesananPercetakanPage() {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.total}</div>
-                <div className="text-xs sm:text-sm font-medium text-slate-700">Total</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {stats.total}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">
+                  Total
+                </div>
                 <div className="text-xs text-slate-500">Semua pesanan</div>
               </div>
             </div>
@@ -179,8 +185,12 @@ export default function DaftarPesananPercetakanPage() {
                 <Clock className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.tertunda}</div>
-                <div className="text-xs sm:text-sm font-medium text-slate-700">Tertunda</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {stats.tertunda}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">
+                  Tertunda
+                </div>
                 <div className="text-xs text-slate-500">Menunggu</div>
               </div>
             </div>
@@ -191,8 +201,12 @@ export default function DaftarPesananPercetakanPage() {
                 <Printer className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.produksi}</div>
-                <div className="text-xs sm:text-sm font-medium text-slate-700">Produksi</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {stats.produksi}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">
+                  Produksi
+                </div>
                 <div className="text-xs text-slate-500">Dikerjakan</div>
               </div>
             </div>
@@ -203,8 +217,12 @@ export default function DaftarPesananPercetakanPage() {
                 <CheckCircle2 className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.qc}</div>
-                <div className="text-xs sm:text-sm font-medium text-slate-700">QC</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {stats.qc}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">
+                  QC
+                </div>
                 <div className="text-xs text-slate-500">Kontrol kualitas</div>
               </div>
             </div>
@@ -215,8 +233,12 @@ export default function DaftarPesananPercetakanPage() {
                 <Play className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-slate-900">{stats.siap}</div>
-                <div className="text-xs sm:text-sm font-medium text-slate-700">Siap Kirim</div>
+                <div className="text-lg sm:text-xl font-bold text-slate-900">
+                  {stats.siap}
+                </div>
+                <div className="text-xs sm:text-sm font-medium text-slate-700">
+                  Siap Kirim
+                </div>
                 <div className="text-xs text-slate-500">Ready</div>
               </div>
             </div>
@@ -245,7 +267,9 @@ export default function DaftarPesananPercetakanPage() {
                 <SelectItem value="tertunda">Tertunda</SelectItem>
                 <SelectItem value="diterima">Diterima</SelectItem>
                 <SelectItem value="dalam_produksi">Dalam Produksi</SelectItem>
-                <SelectItem value="kontrol_kualitas">Quality Control</SelectItem>
+                <SelectItem value="kontrol_kualitas">
+                  Quality Control
+                </SelectItem>
                 <SelectItem value="siap">Siap Kirim</SelectItem>
               </SelectContent>
             </Select>
@@ -253,6 +277,7 @@ export default function DaftarPesananPercetakanPage() {
         </div>
 
         {/* Table Pesanan */}
+<<<<<<< HEAD
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -283,81 +308,119 @@ export default function DaftarPesananPercetakanPage() {
                   {filteredPesanan.map((pesanan) => {
                     const config = STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
                     const StatusIcon = config.icon;
+=======
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50/80 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Pesanan
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Pemesan
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Spesifikasi
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Progress
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredPesanan.map((pesanan) => {
+                  const config =
+                    STATUS_CONFIG[pesanan.status as keyof typeof STATUS_CONFIG];
+                  const StatusIcon = config.icon;
+>>>>>>> upstream/main
 
-                    return (
-                      <tr
-                        key={pesanan.id}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="font-semibold text-sm text-gray-900 mb-1">
-                            {pesanan.judul}
+                  return (
+                    <tr
+                      key={pesanan.id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-sm text-gray-900 mb-1">
+                          {pesanan.judul}
+                        </div>
+                        <div className="text-xs text-gray-600 font-mono">
+                          {pesanan.nomorPesanan}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {formatTanggal(pesanan.tanggalPesan)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {pesanan.pemesan}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {pesanan.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {pesanan.jumlah} eks
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {pesanan.formatKertas} • {pesanan.jenisKertas}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {pesanan.jenisCover}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          className={`${config.color} border flex items-center gap-1.5 w-fit`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${config.dotColor} animate-pulse`}
+                          />
+                          <StatusIcon className="h-3 w-3" />
+                          <span className="text-xs">{config.label}</span>
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full transition-all"
+                              style={{ width: `${pesanan.progress}%` }}
+                            />
                           </div>
-                          <div className="text-xs text-gray-600 font-mono">
-                            {pesanan.nomorPesanan}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {formatTanggal(pesanan.tanggalPesan)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">{pesanan.pemesan}</div>
-                          <div className="text-xs text-gray-500">{pesanan.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {pesanan.jumlah} eks
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {pesanan.formatKertas} • {pesanan.jenisKertas}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {pesanan.jenisCover}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge
-                            className={`${config.color} border flex items-center gap-1.5 w-fit`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor} animate-pulse`} />
-                            <StatusIcon className="h-3 w-3" />
-                            <span className="text-xs">{config.label}</span>
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full transition-all"
-                                style={{ width: `${pesanan.progress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium text-gray-700">
-                              {pesanan.progress}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Tombol Konfirmasi untuk status tertunda */}
-                            {pesanan.status === "tertunda" && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedPesanan(pesanan);
-                                  setShowKonfirmasiDialog(true);
-                                }}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-3.5 w-3.5 mr-1" />
-                                Konfirmasi
-                              </Button>
-                            )}
-                            
-                            {/* Tombol Update Status untuk status lainnya */}
-                            {pesanan.status !== "tertunda" && 
-                             pesanan.status !== "terkirim" && 
-                             pesanan.status !== "dibatalkan" && (
+                          <span className="text-xs font-medium text-gray-700">
+                            {pesanan.progress}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Tombol Konfirmasi untuk status tertunda */}
+                          {pesanan.status === "tertunda" && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPesanan(pesanan);
+                                setShowKonfirmasiDialog(true);
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Check className="h-3.5 w-3.5 mr-1" />
+                              Konfirmasi
+                            </Button>
+                          )}
+
+                          {/* Tombol Update Status untuk status lainnya */}
+                          {pesanan.status !== "tertunda" &&
+                            pesanan.status !== "terkirim" &&
+                            pesanan.status !== "dibatalkan" && (
                               <Button
                                 size="sm"
                                 onClick={() => {
@@ -370,50 +433,48 @@ export default function DaftarPesananPercetakanPage() {
                                 Update Status
                               </Button>
                             )}
-                            
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-slate-300"
-                            >
-                              <Eye className="h-3.5 w-3.5 mr-1" />
-                              Detail
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Dialog Konfirmasi Pesanan */}
-      {selectedPesanan && (
-        <KonfirmasiPesananDialog
-          pesananId={selectedPesanan.id}
-          nomorPesanan={selectedPesanan.nomorPesanan}
-          judul={selectedPesanan.judul}
-          open={showKonfirmasiDialog}
-          onOpenChange={setShowKonfirmasiDialog}
-          onSuccess={handleRefresh}
-        />
-      )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-300"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            Detail
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      {/* Dialog Update Status */}
-      {selectedPesanan && (
-        <UpdateStatusDialog
-          pesananId={selectedPesanan.id}
-          nomorPesanan={selectedPesanan.nomorPesanan}
-          statusSaatIni={selectedPesanan.status}
-          open={showUpdateStatusDialog}
-          onOpenChange={setShowUpdateStatusDialog}
-          onSuccess={handleRefresh}
-        />
-      )}
+        {/* Dialog Konfirmasi Pesanan */}
+        {selectedPesanan && (
+          <KonfirmasiPesananDialog
+            pesananId={selectedPesanan.id}
+            nomorPesanan={selectedPesanan.nomorPesanan}
+            judul={selectedPesanan.judul}
+            open={showKonfirmasiDialog}
+            onOpenChange={setShowKonfirmasiDialog}
+            onSuccess={handleRefresh}
+          />
+        )}
+
+        {/* Dialog Update Status */}
+        {selectedPesanan && (
+          <UpdateStatusDialog
+            pesananId={selectedPesanan.id}
+            nomorPesanan={selectedPesanan.nomorPesanan}
+            statusSaatIni={selectedPesanan.status}
+            open={showUpdateStatusDialog}
+            onOpenChange={setShowUpdateStatusDialog}
+            onSuccess={handleRefresh}
+          />
+        )}
       </div>
     </div>
   );

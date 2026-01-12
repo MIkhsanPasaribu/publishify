@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -141,13 +141,14 @@ export class AppModule implements NestModule {
       .apply(PrismaRlsMiddleware)
       .exclude(
         // Exclude public routes yang tidak memerlukan RLS
-        '/auth/login',
-        '/auth/register',
-        '/auth/verify-email/(.*)',
-        '/auth/forgot-password',
-        '/auth/reset-password/(.*)',
-        '/health',
-        '/api/docs(.*)', // Swagger docs
+        { path: 'auth/login', method: RequestMethod.ALL },
+        { path: 'auth/register', method: RequestMethod.ALL },
+        { path: 'auth/verify-email/{*path}', method: RequestMethod.ALL },
+        { path: 'auth/forgot-password', method: RequestMethod.ALL },
+        { path: 'auth/reset-password/{*path}', method: RequestMethod.ALL },
+        { path: 'health', method: RequestMethod.ALL },
+        { path: 'docs', method: RequestMethod.ALL }, // Swagger docs
+        { path: 'docs/{*path}', method: RequestMethod.ALL }, // Swagger docs assets
       )
       .forRoutes('*'); // Apply ke semua routes lainnya
   }
