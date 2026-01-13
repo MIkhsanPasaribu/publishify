@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { naskahApi } from "@/lib/api/naskah";
+import { getSampulUrl, getFileNaskahUrl } from "@/lib/utils/url";
 
 // Placeholder halaman detail buku terbit
 export default function DetailBukuTerbitPage({ params }: { params: { id: string } }) {
@@ -65,8 +66,8 @@ export default function DetailBukuTerbitPage({ params }: { params: { id: string 
           tanggalTerbit: naskahData.diterbitkanPada || naskahData.dibuatPada,
           isbn: naskahData.isbn || "-",
           sinopsis: naskahData.sinopsis,
-          urlSampul: naskahData.urlSampul,
-          urlFile: naskahData.urlFile,
+          urlSampul: getSampulUrl(naskahData.urlSampul),
+          urlFile: getFileNaskahUrl(naskahData.urlFile),
           halamanPublik: `${window.location.origin}/buku/${naskahData.id}`,
           jumlahHalaman: naskahData.jumlahHalaman || 0,
           formatBuku: naskahData.formatBuku || "A5",

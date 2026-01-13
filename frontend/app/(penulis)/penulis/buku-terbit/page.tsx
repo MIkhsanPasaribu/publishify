@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Printer, Settings, ExternalLink, BookOpen, Calendar, Filter } from "lucide-react";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
 import { percetakanApi, type BuatPesananCetakPayload } from "@/lib/api/percetakan";
+import { getSampulUrl } from "@/lib/utils/url";
 
 // Fungsi untuk mendapatkan sapaan berdasarkan waktu
 function getGreeting() {
@@ -70,7 +71,7 @@ export default function BukuTerbitPage() {
         const buku: BukuTerbit[] = (res.data || []).map((naskah: Naskah) => ({
           id: naskah.id,
           judul: naskah.judul,
-          urlSampul: naskah.urlSampul,
+          urlSampul: getSampulUrl(naskah.urlSampul),
           terbitPada: naskah.diperbaruiPada, // Gunakan diperbaruiPada sebagai tanggal terbit
           kategori: (naskah as any).kategori?.nama,
           genre: (naskah as any).genre?.nama,

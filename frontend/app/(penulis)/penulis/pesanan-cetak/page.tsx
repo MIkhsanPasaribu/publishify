@@ -30,6 +30,7 @@ import {
 import { ambilDaftarPesananPenulis, konfirmasiPenerimaanPesanan } from "@/lib/api/percetakan";
 import type { PesananCetak } from "@/types/percetakan";
 import { toast } from "sonner";
+import { getSampulUrl } from "@/lib/utils/url";
 
 const STATUS_CONFIG = {
   tertunda: {
@@ -371,7 +372,7 @@ export default function RiwayatPesananCetakPage() {
                         <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-lg overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 shadow-md hover:shadow-lg transition-shadow ring-2 ring-slate-200 hover:ring-teal-300">
                           {pesanan.naskah?.urlSampul ? (
                             <img
-                              src={pesanan.naskah.urlSampul}
+                              src={getSampulUrl(pesanan.naskah.urlSampul)}
                               alt={pesanan.naskah.judul}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />
