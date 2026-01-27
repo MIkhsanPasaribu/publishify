@@ -177,8 +177,8 @@ export default function DetailNaskahPage() {
             {/* Feedback dari Editor (tampil jika ada review) */}
             <FeedbackReviewer idNaskah={naskah.id} />
 
-            {/* Form Revisi (Jika status ditolak - perlu revisi) */}
-            {naskah.status === "ditolak" && (
+            {/* Form Revisi (Jika status dalam_editing - editor minta revisi) */}
+            {naskah.status === "dalam_editing" && (
               <EditorRevisi idNaskah={naskah.id} onSuccess={muatUlang} />
             )}
 
