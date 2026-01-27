@@ -1187,11 +1187,18 @@ export class NaskahService {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
     }
 
-    // Ambil semua review yang sudah selesai
+    // Ambil semua review yang sudah selesai ATAU yang masih dalam proses dengan rekomendasi (revisi)
     const reviews = await this.prisma.reviewNaskah.findMany({
       where: {
         idNaskah,
-        status: StatusReview.selesai,
+        OR: [
+          { status: StatusReview.selesai },
+          // Review dalam proses dengan rekomendasi revisi (editor sudah beri feedback)
+          {
+            status: StatusReview.dalam_proses,
+            rekomendasi: { not: null },
+          },
+        ],
       },
       include: {
         editor: {
