@@ -70,6 +70,14 @@ export const BuatNaskahSchema = z.object({
 
   urlFile: z.string().url('URL file tidak valid').optional().nullable(),
 
+  // Konten naskah dari rich text editor (HTML)
+  // Akan dikonversi ke DOCX jika diisi
+  konten: z
+    .string()
+    .min(100, 'Konten naskah minimal 100 karakter')
+    .optional()
+    .nullable(),
+
   publik: z.boolean().default(false).optional(),
 });
 
