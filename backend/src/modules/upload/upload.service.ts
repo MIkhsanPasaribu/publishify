@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
@@ -23,6 +24,8 @@ import * as crypto from 'crypto';
 import sharp from 'sharp';
 // @ts-ignore - libreoffice-convert tidak punya types
 import libre from 'libreoffice-convert';
+// @ts-ignore - html-to-docx tidak punya types yang bagus
+import HTMLtoDOCX from 'html-to-docx';
 import { promisify } from 'util';
 
 // Promisify libre.convert
@@ -31,6 +34,7 @@ const libreConvert = promisify(libre.convert);
 @Injectable()
 export class UploadService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads');
+  private readonly logger = new Logger(UploadService.name);
 
   constructor(private readonly prisma: PrismaService) {
     this.ensureUploadDirectory();
@@ -516,10 +520,7 @@ export class UploadService {
   /**
    * Konversi file DOCX ke PDF menggunakan LibreOffice
    */
-  async konversiDocxKePdf(
-    id: string,
-    idPengguna: string,
-  ): Promise<UploadResponseDto> {
+  async konversiDocxKePdf(id: string, idPengguna: string): Promise<UploadResponseDto> {
     // Ambil data file dari database
     const file = await this.prisma.file.findUnique({
       where: { id },
@@ -545,18 +546,18 @@ export class UploadService {
     try {
       // Baca file DOCX
       const docxBuffer = await fs.readFile(file.path);
-      
+
       // Konversi ke PDF menggunakan LibreOffice
       const pdfBuffer = await libreConvert(docxBuffer, '.pdf', undefined);
-      
+
       // Generate nama file PDF baru
       const pdfFilename = file.namaFileSimpan.replace(/\.(docx|doc)$/i, '.pdf');
       const pdfPath = path.join(this.uploadDir, file.tujuan, pdfFilename);
       const pdfRelativeUrl = `/uploads/${file.tujuan}/${pdfFilename}`;
-      
+
       // Simpan file PDF
       await fs.writeFile(pdfPath, pdfBuffer);
-      
+
       // Simpan metadata ke database
       const pdfRecord = await this.prisma.file.create({
         data: {
@@ -601,14 +602,14 @@ export class UploadService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       // Cek jika LibreOffice tidak terinstall
       if (errorMessage.includes('soffice') || errorMessage.includes('libreoffice')) {
         throw new InternalServerErrorException(
-          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.'
+          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.',
         );
       }
-      
+
       throw new InternalServerErrorException('Gagal mengkonversi file ke PDF: ' + errorMessage);
     }
   }
@@ -616,29 +617,26 @@ export class UploadService {
   /**
    * Konversi file DOCX ke PDF dari URL (untuk file yang belum ada di database)
    */
-  async konversiDocxKePdfDariUrl(
-    fileUrl: string,
-    idPengguna: string,
-  ): Promise<UploadResponseDto> {
+  async konversiDocxKePdfDariUrl(fileUrl: string, idPengguna: string): Promise<UploadResponseDto> {
     // Parse URL untuk mendapatkan path file
     // Support berbagai format URL:
     // - http://localhost:4000/uploads/naskah/filename.docx (full URL)
     // - /uploads/naskah/filename.docx (relative URL)
     // - uploads/naskah/filename.docx (path only)
-    
+
     let urlPath = fileUrl;
-    
+
     // Remove full URL prefix jika ada (http://host:port)
     const urlMatch = fileUrl.match(/^https?:\/\/[^\/]+(.+)$/);
     if (urlMatch) {
       urlPath = urlMatch[1]; // /uploads/naskah/filename.docx
     }
-    
+
     // Remove /uploads/ prefix
     urlPath = urlPath.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
-    
+
     const filePath = path.join(this.uploadDir, urlPath);
-    
+
     // Cek apakah file fisik exists
     try {
       await fs.access(filePath);
@@ -658,18 +656,18 @@ export class UploadService {
     try {
       // Baca file DOCX
       const docxBuffer = await fs.readFile(filePath);
-      
+
       // Konversi ke PDF menggunakan LibreOffice
       const pdfBuffer = await libreConvert(docxBuffer, '.pdf', undefined);
-      
+
       // Generate nama file PDF baru
       const pdfFilename = originalFilename.replace(/\.(docx|doc)$/i, '.pdf');
       const pdfPath = path.join(this.uploadDir, tujuan, pdfFilename);
       const pdfRelativeUrl = `/uploads/${tujuan}/${pdfFilename}`;
-      
+
       // Simpan file PDF
       await fs.writeFile(pdfPath, pdfBuffer);
-      
+
       // Simpan metadata ke database
       const pdfRecord = await this.prisma.file.create({
         data: {
@@ -713,15 +711,196 @@ export class UploadService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       // Cek jika LibreOffice tidak terinstall
       if (errorMessage.includes('soffice') || errorMessage.includes('libreoffice')) {
         throw new InternalServerErrorException(
-          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.'
+          'LibreOffice tidak terinstall di server. Silakan install LibreOffice untuk menggunakan fitur konversi PDF otomatis, atau upload file PDF manual.',
         );
       }
-      
+
       throw new InternalServerErrorException('Gagal mengkonversi file ke PDF: ' + errorMessage);
     }
+  }
+
+  /**
+   * Konversi konten HTML dari TipTap editor ke file DOCX
+   * Digunakan saat penulis submit naskah atau revisi via rich text editor
+   *
+   * @param htmlContent - Konten HTML dari TipTap editor
+   * @param judul - Judul untuk nama file
+   * @param idPengguna - ID pengguna yang melakukan konversi
+   * @param tujuan - Tujuan file (default: naskah)
+   * @returns UploadResponseDto dengan URL file DOCX
+   */
+  async konversiHtmlKeDocx(
+    htmlContent: string,
+    judul: string,
+    idPengguna: string,
+    tujuan: TipeFile = TipeFile.NASKAH,
+  ): Promise<UploadResponseDto> {
+    // Validasi konten HTML
+    if (!htmlContent || htmlContent.trim().length < 10) {
+      throw new BadRequestException('Konten HTML tidak boleh kosong');
+    }
+
+    // Buat HTML lengkap dengan styling yang baik untuk dokumen
+    const htmlLengkap = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${judul}</title>
+        <style>
+          body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            margin: 2.54cm;
+          }
+          h1 { font-size: 18pt; font-weight: bold; margin-top: 24pt; margin-bottom: 12pt; }
+          h2 { font-size: 16pt; font-weight: bold; margin-top: 18pt; margin-bottom: 10pt; }
+          h3 { font-size: 14pt; font-weight: bold; margin-top: 14pt; margin-bottom: 8pt; }
+          p { margin-bottom: 10pt; text-align: justify; }
+          ul, ol { margin-left: 24pt; margin-bottom: 10pt; }
+          li { margin-bottom: 4pt; }
+          blockquote { 
+            margin-left: 24pt; 
+            margin-right: 24pt; 
+            font-style: italic;
+            padding-left: 12pt;
+            border-left: 3pt solid #ccc;
+          }
+          strong, b { font-weight: bold; }
+          em, i { font-style: italic; }
+          u { text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+
+    try {
+      // Opsi untuk html-to-docx
+      const opsiDocx = {
+        table: { row: { cantSplit: true } },
+        footer: false,
+        header: false,
+        pageNumber: true,
+        margins: {
+          top: 720, // 1 inch = 1440 twips, 0.5 inch = 720
+          right: 720,
+          bottom: 720,
+          left: 720,
+        },
+      };
+
+      // Konversi HTML ke DOCX
+      const docxBuffer = await HTMLtoDOCX(htmlLengkap, null, opsiDocx);
+
+      // Generate nama file unik
+      const timestamp = new Date().toISOString().split('T')[0];
+      const randomString = crypto.randomBytes(8).toString('hex');
+      const sanitizedJudul = judul
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .substring(0, 50);
+      const namaFile = `${timestamp}_${sanitizedJudul}_${randomString}.docx`;
+
+      // Path file
+      const filePath = path.join(this.uploadDir, tujuan, namaFile);
+      const relativeUrl = `/uploads/${tujuan}/${namaFile}`;
+
+      // Pastikan direktori ada
+      await fs.mkdir(path.join(this.uploadDir, tujuan), { recursive: true });
+
+      // Simpan file DOCX
+      await fs.writeFile(filePath, docxBuffer);
+
+      // Dapatkan ukuran file
+      const stats = await fs.stat(filePath);
+
+      // Simpan metadata ke database
+      const fileRecord = await this.prisma.file.create({
+        data: {
+          idPengguna,
+          namaFileAsli: `${judul}.docx`,
+          namaFileSimpan: namaFile,
+          ukuran: stats.size,
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ekstensi: '.docx',
+          tujuan,
+          path: filePath,
+          url: relativeUrl,
+          deskripsi: 'Naskah dikonversi dari editor',
+        },
+      });
+
+      // Log aktivitas
+      await this.prisma.logAktivitas.create({
+        data: {
+          idPengguna,
+          jenis: 'konversi_docx',
+          aksi: 'Konversi HTML ke DOCX',
+          entitas: 'File',
+          idEntitas: fileRecord.id,
+          deskripsi: `Naskah "${judul}" berhasil dikonversi ke format DOCX`,
+        },
+      });
+
+      this.logger.log(`Berhasil konversi HTML ke DOCX: ${namaFile} untuk pengguna ${idPengguna}`);
+
+      return {
+        id: fileRecord.id,
+        namaFileAsli: fileRecord.namaFileAsli,
+        namaFileSimpan: fileRecord.namaFileSimpan,
+        url: fileRecord.url,
+        urlPublik: fileRecord.urlPublik ?? undefined,
+        ukuran: fileRecord.ukuran,
+        mimeType: fileRecord.mimeType,
+        ekstensi: fileRecord.ekstensi,
+        tujuan: fileRecord.tujuan,
+        path: fileRecord.path,
+        diuploadPada: fileRecord.diuploadPada,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Gagal konversi HTML ke DOCX: ${errorMessage}`);
+      throw new InternalServerErrorException('Gagal mengkonversi konten ke DOCX: ' + errorMessage);
+    }
+  }
+
+  /**
+   * Simpan konten teks langsung ke file DOCX
+   * Digunakan untuk mode "ketik langsung" tanpa rich text editor
+   *
+   * @param kontenTeks - Konten teks mentah
+   * @param judul - Judul untuk nama file
+   * @param idPengguna - ID pengguna
+   * @param tujuan - Tujuan file
+   */
+  async simpanTeksKeDocx(
+    kontenTeks: string,
+    judul: string,
+    idPengguna: string,
+    tujuan: TipeFile = TipeFile.NASKAH,
+  ): Promise<UploadResponseDto> {
+    // Validasi konten
+    if (!kontenTeks || kontenTeks.trim().length < 10) {
+      throw new BadRequestException('Konten teks tidak boleh kosong');
+    }
+
+    // Konversi teks biasa ke HTML dengan paragraf yang benar
+    const paragraf = kontenTeks
+      .split('\n\n')
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0)
+      .map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+      .join('\n');
+
+    // Gunakan method konversi HTML ke DOCX
+    return this.konversiHtmlKeDocx(paragraf, judul, idPengguna, tujuan);
   }
 }
