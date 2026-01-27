@@ -342,16 +342,30 @@ export class ReviewService {
     }
 
     // Update review
-    const updatedReview = await this.prisma.reviewNaskah.update({
-      where: { id },
-      data: {
-        ...dto,
-        dimulaiPada: dto.dimulaiPada ? new Date(dto.dimulaiPada) : undefined,
-      },
-      include: {
-        naskah: true,
-        editor: true,
-      },
+    const updatedReview = await this.prisma.$transaction(async (prisma) => {
+      const reviewUpdated = await prisma.reviewNaskah.update({
+        where: { id },
+        data: {
+          ...dto,
+          dimulaiPada: dto.dimulaiPada ? new Date(dto.dimulaiPada) : undefined,
+        },
+        include: {
+          naskah: true,
+          editor: true,
+        },
+      });
+
+      // Jika rekomendasi adalah "revisi", update status naskah ke dalam_editing
+      if (dto.rekomendasi === Rekomendasi.revisi) {
+        await prisma.naskah.update({
+          where: { id: reviewUpdated.naskah.id },
+          data: {
+            status: StatusNaskah.dalam_editing,
+          },
+        });
+      }
+
+      return reviewUpdated;
     });
 
     // Log activity
@@ -362,13 +376,19 @@ export class ReviewService {
         aksi: 'Perbarui Review',
         entitas: 'ReviewNaskah',
         idEntitas: id,
-        deskripsi: `Review diperbarui: ${dto.status || 'update catatan'}`,
+        deskripsi:
+          dto.rekomendasi === Rekomendasi.revisi
+            ? `Review meminta revisi - Naskah masuk Dalam Editing`
+            : `Review diperbarui: ${dto.status || 'update catatan'}`,
       },
     });
 
     return {
       sukses: true,
-      pesan: 'Review berhasil diperbarui',
+      pesan:
+        dto.rekomendasi === Rekomendasi.revisi
+          ? 'Permintaan revisi berhasil dikirim ke penulis'
+          : 'Review berhasil diperbarui',
       data: updatedReview,
     };
   }
@@ -512,13 +532,13 @@ export class ReviewService {
       let newNaskahStatus: StatusNaskah;
       switch (dto.rekomendasi) {
         case Rekomendasi.setujui:
-          newNaskahStatus = StatusNaskah.dalam_editing; // Approved → goes to editing
+          newNaskahStatus = StatusNaskah.siap_terbit; // Disetujui → siap terbit (urus ISBN & kelengkapan)
           break;
         case Rekomendasi.revisi:
-          newNaskahStatus = StatusNaskah.ditolak; // Needs revision → rejected (can resubmit)
+          newNaskahStatus = StatusNaskah.dalam_editing; // Perlu revisi → penulis edit dulu
           break;
         case Rekomendasi.tolak:
-          newNaskahStatus = StatusNaskah.ditolak;
+          newNaskahStatus = StatusNaskah.ditolak; // Ditolak permanen
           break;
       }
 
