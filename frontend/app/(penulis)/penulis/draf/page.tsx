@@ -119,7 +119,8 @@ export default function DrafPage() {
   );
 
   const onLihatDetail = (id: string) => router.push(`/penulis/draf/${id}`);
-  const onEdit = (id: string) => router.push(`/penulis/draf/edit/${id}`);
+  // Edit naskah - redirect ke halaman detail yang sudah ada form EditorRevisi
+  const onEdit = (id: string) => router.push(`/penulis/draf/${id}`);
   const onHapus = async (id: string) => {
     const konfirmasi = window.confirm("Yakin ingin menghapus draf ini?");
     if (!konfirmasi) return;

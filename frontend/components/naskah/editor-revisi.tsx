@@ -58,6 +58,7 @@ export function EditorRevisi({
       }),
     ],
     content: kontenAwal,
+    immediatelyRender: false, // Fix SSR hydration mismatch di Next.js
     editorProps: {
       attributes: {
         class:
