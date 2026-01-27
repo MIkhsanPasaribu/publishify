@@ -146,7 +146,7 @@ export function EditorRevisi({
     try {
       const payload = {
         konten: mode === "editor" ? editor?.getHTML() : undefined,
-        urlFile: mode === "upload" ? uploadedUrl : undefined,
+        urlFile: mode === "upload" && uploadedUrl ? uploadedUrl : undefined,
         catatan: catatan || undefined,
       };
 
