@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
@@ -12,16 +13,25 @@ import {
   FilterNaskahDto,
   AjukanNaskahDto,
   TerbitkanNaskahDto,
+  SubmitRevisiDto,
 } from './dto';
 import { StatusNaskah, StatusReview, Rekomendasi } from '@prisma/client';
 import {
   CursorPaginationDto,
   buildCursorPaginationResponse,
 } from '@/common/dto/cursor-pagination.dto';
+import { EmailService } from '@/modules/notifikasi/email.service';
+import { NotifikasiService } from '@/modules/notifikasi/notifikasi.service';
 
 @Injectable()
 export class NaskahService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(NaskahService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+    private readonly notifikasiService: NotifikasiService,
+  ) {}
 
   /**
    * Buat naskah baru
@@ -189,7 +199,6 @@ export class NaskahService {
           status: true,
           urlSampul: true,
           urlFile: true,
-          formatBuku: true,
           jumlahHalaman: true,
           jumlahKata: true,
           publik: true,
@@ -320,7 +329,6 @@ export class NaskahService {
         status: true,
         urlSampul: true,
         urlFile: true,
-        formatBuku: true,
         jumlahHalaman: true,
         jumlahKata: true,
         publik: true,
@@ -447,7 +455,7 @@ export class NaskahService {
     // 3. Penulis SELALU bisa akses naskah mereka sendiri (termasuk draft, diajukan, dll)
     const isPenulisNaskah = idPengguna && naskah.idPenulis === idPengguna;
     const isPublicAccess = naskah.publik || naskah.status === 'diterbitkan';
-    
+
     // Jika bukan penulis pemilik DAN bukan public access, tolak
     if (!isPenulisNaskah && !isPublicAccess) {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
@@ -471,19 +479,13 @@ export class NaskahService {
   /**
    * Ambil naskah yang sudah diterbitkan dan siap cetak
    * Role: penulis
-   * Filter: status = 'disetujui' & review.status = 'selesai' & review.rekomendasi = 'setujui'
+   * Filter: status = 'diterbitkan' (sudah publish)
    */
   async ambilNaskahDiterbitkan(idPenulis: string) {
     const naskah = await this.prisma.naskah.findMany({
       where: {
         idPenulis,
-        status: StatusNaskah.disetujui,
-        review: {
-          some: {
-            status: StatusReview.selesai,
-            rekomendasi: Rekomendasi.setujui,
-          },
-        },
+        status: StatusNaskah.diterbitkan,
       },
       include: {
         penulis: {
@@ -586,13 +588,13 @@ export class NaskahService {
       throw new ForbiddenException('Anda tidak memiliki akses untuk mengubah naskah ini');
     }
 
-    // Validasi: tidak bisa edit jika status bukan draft atau perlu_revisi
+    // Validasi: tidak bisa edit jika status bukan draft atau ditolak
     if (
       !isAdmin &&
       naskahLama.status !== StatusNaskah.draft &&
-      naskahLama.status !== StatusNaskah.perlu_revisi
+      naskahLama.status !== StatusNaskah.ditolak
     ) {
-      throw new BadRequestException('Naskah hanya bisa diubah saat status draft atau perlu revisi');
+      throw new BadRequestException('Naskah hanya bisa diubah saat status draft atau ditolak');
     }
 
     // Validasi kategori dan genre jika ada update
@@ -675,11 +677,9 @@ export class NaskahService {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
     }
 
-    // Validasi status: hanya draft atau perlu_revisi yang bisa diajukan
-    if (naskah.status !== StatusNaskah.draft && naskah.status !== StatusNaskah.perlu_revisi) {
-      throw new BadRequestException(
-        'Naskah hanya bisa diajukan saat status draft atau perlu revisi',
-      );
+    // Validasi status: hanya draft atau ditolak yang bisa diajukan
+    if (naskah.status !== StatusNaskah.draft && naskah.status !== StatusNaskah.ditolak) {
+      throw new BadRequestException('Naskah hanya bisa diajukan saat status draft atau ditolak');
     }
 
     // Validasi: harus ada file naskah
@@ -746,9 +746,9 @@ export class NaskahService {
       throw new NotFoundException('Naskah tidak ditemukan');
     }
 
-    // Validasi status: hanya disetujui yang bisa diterbitkan
-    if (naskah.status !== StatusNaskah.disetujui) {
-      throw new BadRequestException('Naskah hanya bisa diterbitkan jika sudah disetujui');
+    // Validasi status: hanya siap_terbit yang bisa diterbitkan
+    if (naskah.status !== StatusNaskah.siap_terbit) {
+      throw new BadRequestException('Naskah hanya bisa diterbitkan jika sudah siap terbit');
     }
 
     // Validasi ISBN unique
@@ -762,12 +762,11 @@ export class NaskahService {
       }
     }
 
-    // Update naskah dengan ISBN, format buku, jumlah halaman, dan status diterbitkan
+    // Update naskah dengan ISBN, jumlah halaman, dan status diterbitkan
     const naskahUpdated = await this.prisma.naskah.update({
       where: { id },
       data: {
         isbn: dto.isbn,
-        formatBuku: dto.formatBuku,
         jumlahHalaman: dto.jumlahHalaman,
         status: StatusNaskah.diterbitkan,
         diterbitkanPada: new Date(),
@@ -805,9 +804,114 @@ export class NaskahService {
 
     return {
       sukses: true,
-      pesan: 'Naskah berhasil diterbitkan. Penulis akan menerima notifikasi untuk mengatur harga jual.',
+      pesan:
+        'Naskah berhasil diterbitkan. Penulis akan menerima notifikasi untuk mengatur harga jual.',
       data: naskahUpdated,
     };
+  }
+
+  /**
+   * Ubah status naskah (admin/editor)
+   */
+  async ubahStatus(id: string, status: StatusNaskah, idPengguna: string) {
+    const naskah = await this.prisma.naskah.findUnique({
+      where: { id },
+      select: { id: true, judul: true, status: true, idPenulis: true },
+    });
+
+    if (!naskah) {
+      throw new NotFoundException('Naskah tidak ditemukan');
+    }
+
+    const statusLama = naskah.status;
+
+    const updated = await this.prisma.naskah.update({
+      where: { id },
+      data: { status },
+      include: {
+        penulis: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaDepan: true,
+                namaBelakang: true,
+                namaTampilan: true,
+              },
+            },
+          },
+        },
+        kategori: true,
+        genre: true,
+      },
+    });
+
+    // Log activity
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna,
+        jenis: 'ubah_status_naskah',
+        aksi: 'Ubah Status',
+        entitas: 'Naskah',
+        idEntitas: id,
+        deskripsi: `Mengubah status naskah "${naskah.judul}" dari ${statusLama} menjadi ${status}`,
+      },
+    });
+
+    // Kirim notifikasi ke penulis
+    const namaPenulis =
+      updated.penulis?.profilPengguna?.namaTampilan ||
+      updated.penulis?.profilPengguna?.namaDepan ||
+      'Penulis';
+
+    // In-app notification
+    try {
+      await this.notifikasiService.kirimNotifikasi({
+        idPengguna: naskah.idPenulis,
+        judul: `Status Naskah Diperbarui`,
+        pesan: `Naskah "${naskah.judul}" telah diubah statusnya menjadi ${this.getLabelStatus(status)}`,
+        tipe: status === 'ditolak' ? 'peringatan' : 'info',
+        url: `/penulis/draf/${id}`,
+      });
+    } catch (e) {
+      this.logger.warn(`Gagal mengirim notifikasi in-app: ${e}`);
+    }
+
+    // Email notification (async, don't block response)
+    if (updated.penulis?.email) {
+      this.emailService
+        .kirimEmailStatusNaskah({
+          emailPenerima: updated.penulis.email,
+          namaPenerima: namaPenulis,
+          judulNaskah: naskah.judul,
+          statusBaru: status,
+          statusLama: statusLama,
+        })
+        .catch((e) => this.logger.warn(`Gagal mengirim email: ${e}`));
+    }
+
+    return {
+      sukses: true,
+      pesan: 'Status naskah berhasil diubah',
+      data: updated,
+    };
+  }
+
+  /**
+   * Helper untuk mendapatkan label status yang readable
+   */
+  private getLabelStatus(status: StatusNaskah): string {
+    const labels: Record<StatusNaskah, string> = {
+      draft: 'Draf',
+      diajukan: 'Diajukan',
+      dalam_review: 'Dalam Review',
+      dalam_editing: 'Dalam Editing',
+      siap_terbit: 'Siap Terbit',
+      diterbitkan: 'Diterbitkan',
+      ditolak: 'Ditolak',
+    };
+    return labels[status] || status;
   }
 
   /**
@@ -822,7 +926,6 @@ export class NaskahService {
         idPenulis: true,
         judul: true,
         status: true,
-        biayaProduksi: true,
         hargaJual: true,
       },
     });
@@ -838,15 +941,14 @@ export class NaskahService {
 
     // Validasi: status harus "diterbitkan"
     if (naskah.status !== StatusNaskah.diterbitkan) {
-      throw new BadRequestException('Harga jual hanya bisa diatur untuk naskah yang sudah diterbitkan');
+      throw new BadRequestException(
+        'Harga jual hanya bisa diatur untuk naskah yang sudah diterbitkan',
+      );
     }
 
-    // Validasi: harga jual harus lebih besar dari biaya produksi
-    const biayaProduksi = naskah.biayaProduksi ? parseFloat(naskah.biayaProduksi.toString()) : 0;
-    if (hargaJual <= biayaProduksi) {
-      throw new BadRequestException(
-        `Harga jual (Rp ${hargaJual.toLocaleString('id-ID')}) harus lebih besar dari biaya produksi (Rp ${biayaProduksi.toLocaleString('id-ID')})`
-      );
+    // Validasi: harga jual harus positif
+    if (hargaJual <= 0) {
+      throw new BadRequestException('Harga jual harus lebih dari 0');
     }
 
     // Update harga jual dan set publik = true
@@ -864,14 +966,11 @@ export class NaskahService {
     });
 
     // Kirim notifikasi ke penulis
-    const margin = hargaJual - biayaProduksi;
-    const marginPercentage = ((margin / biayaProduksi) * 100).toFixed(1);
-    
     await this.prisma.notifikasi.create({
       data: {
         idPengguna: naskah.idPenulis,
         judul: 'Harga Jual Berhasil Ditetapkan!',
-        pesan: `Harga jual buku "${naskah.judul}" telah ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')}. Estimasi keuntungan Anda: Rp ${margin.toLocaleString('id-ID')} (${marginPercentage}%). Buku sekarang tersedia di katalog!`,
+        pesan: `Harga jual buku "${naskah.judul}" telah ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')}. Buku sekarang tersedia di katalog!`,
         tipe: 'info',
         url: `/dashboard/buku-terbit`,
       },
@@ -885,7 +984,7 @@ export class NaskahService {
         aksi: 'Atur Harga Jual',
         entitas: 'Naskah',
         idEntitas: id,
-        deskripsi: `Harga jual buku "${naskah.judul}" ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')} (margin: Rp ${margin.toLocaleString('id-ID')})`,
+        deskripsi: `Harga jual buku "${naskah.judul}" ditetapkan sebesar Rp ${hargaJual.toLocaleString('id-ID')}`,
       },
     });
 
@@ -1029,6 +1128,181 @@ export class NaskahService {
         perStatus,
         perKategori,
         naskahTerbaru,
+      },
+    };
+  }
+
+  /**
+   * Ambil feedback/review untuk naskah tertentu
+   * Digunakan oleh penulis untuk melihat hasil review editor
+   * Role: penulis (pemilik naskah)
+   */
+  async ambilFeedbackNaskah(idNaskah: string, idPenulis: string) {
+    // Validasi naskah milik penulis
+    const naskah = await this.prisma.naskah.findUnique({
+      where: { id: idNaskah },
+      select: {
+        id: true,
+        idPenulis: true,
+        judul: true,
+        status: true,
+      },
+    });
+
+    if (!naskah) {
+      throw new NotFoundException('Naskah tidak ditemukan');
+    }
+
+    if (naskah.idPenulis !== idPenulis) {
+      throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
+    }
+
+    // Ambil semua review yang sudah selesai
+    const reviews = await this.prisma.reviewNaskah.findMany({
+      where: {
+        idNaskah,
+        status: StatusReview.selesai,
+      },
+      include: {
+        editor: {
+          select: {
+            id: true,
+            email: true,
+            profilPengguna: {
+              select: {
+                namaTampilan: true,
+                urlAvatar: true,
+              },
+            },
+          },
+        },
+        feedback: {
+          orderBy: { dibuatPada: 'asc' },
+        },
+      },
+      orderBy: { selesaiPada: 'desc' },
+    });
+
+    return {
+      sukses: true,
+      pesan: 'Feedback berhasil diambil',
+      data: {
+        naskah: {
+          id: naskah.id,
+          judul: naskah.judul,
+          status: naskah.status,
+        },
+        reviews,
+        totalReview: reviews.length,
+        // Review terakhir dengan rekomendasi revisi
+        reviewTerakhir: reviews[0] || null,
+      },
+    };
+  }
+
+  /**
+   * Submit revisi naskah oleh penulis
+   * Penulis bisa submit melalui konten HTML atau upload file
+   * Role: penulis (pemilik naskah)
+   */
+  async submitRevisi(idNaskah: string, idPenulis: string, dto: SubmitRevisiDto) {
+    // Ambil naskah dan validasi ownership
+    const naskah = await this.prisma.naskah.findUnique({
+      where: { id: idNaskah },
+      include: {
+        revisi: {
+          orderBy: { versi: 'desc' },
+          take: 1,
+        },
+        penulis: {
+          select: {
+            email: true,
+            profilPengguna: {
+              select: { namaTampilan: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!naskah) {
+      throw new NotFoundException('Naskah tidak ditemukan');
+    }
+
+    if (naskah.idPenulis !== idPenulis) {
+      throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
+    }
+
+    // Validasi status: hanya bisa submit revisi saat status ditolak
+    if (naskah.status !== StatusNaskah.ditolak) {
+      throw new BadRequestException('Revisi hanya bisa disubmit saat naskah berstatus ditolak');
+    }
+
+    // Hitung versi baru
+    const versiTerakhir = naskah.revisi[0]?.versi || 0;
+    const versiBaru = versiTerakhir + 1;
+
+    // URL file: bisa dari upload atau konten HTML akan dikonversi nanti
+    const urlFile = dto.urlFile || naskah.urlFile;
+
+    // Transaction: buat revisi baru dan update status naskah
+    const result = await this.prisma.$transaction(async (prisma) => {
+      // Buat revisi baru
+      const revisi = await prisma.revisiNaskah.create({
+        data: {
+          idNaskah,
+          versi: versiBaru,
+          catatan: dto.catatan || `Revisi versi ${versiBaru}`,
+          urlFile: urlFile || '',
+        },
+      });
+
+      // Update naskah: ubah status ke diajukan dan update file jika ada
+      const naskahUpdated = await prisma.naskah.update({
+        where: { id: idNaskah },
+        data: {
+          status: StatusNaskah.diajukan,
+          urlFile: urlFile,
+          // Simpan konten HTML jika ada (untuk rich text editor)
+          // konten akan disimpan terpisah atau dikonversi ke DOCX
+        },
+        include: {
+          kategori: true,
+          genre: true,
+          revisi: {
+            orderBy: { versi: 'desc' },
+            take: 3,
+          },
+        },
+      });
+
+      return { revisi, naskah: naskahUpdated };
+    });
+
+    // Log aktivitas
+    await this.prisma.logAktivitas.create({
+      data: {
+        idPengguna: idPenulis,
+        jenis: 'submit_revisi',
+        aksi: 'Submit Revisi',
+        entitas: 'Naskah',
+        idEntitas: idNaskah,
+        deskripsi: `Submit revisi naskah "${naskah.judul}" versi ${versiBaru}`,
+      },
+    });
+
+    // Kirim notifikasi ke admin bahwa ada revisi baru
+    this.logger.log(
+      `Penulis ${naskah.penulis?.profilPengguna?.namaTampilan || naskah.penulis?.email} submit revisi untuk "${naskah.judul}"`,
+    );
+
+    return {
+      sukses: true,
+      pesan: `Revisi versi ${versiBaru} berhasil disubmit. Naskah akan direview ulang.`,
+      data: {
+        naskah: result.naskah,
+        revisi: result.revisi,
+        versiBaru,
       },
     };
   }
