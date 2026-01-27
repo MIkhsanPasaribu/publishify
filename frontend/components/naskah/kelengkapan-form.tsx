@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { uploadApi } from "@/lib/api/upload";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
 import { StatusNaskah } from "@/lib/constants/status-naskah";
+import { getFileUrl } from "@/lib/utils";
 
 interface KelengkapanFormProps {
   naskah: Naskah;
@@ -145,7 +146,7 @@ export function KelengkapanForm({
           {url ? (
             <div className="flex items-center gap-3">
               <a
-                href={url}
+                href={getFileUrl(url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"

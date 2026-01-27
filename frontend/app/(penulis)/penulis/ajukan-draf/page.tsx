@@ -238,6 +238,9 @@ export default function AjukanDrafPage() {
       }
 
       // Siapkan file naskah
+      // Variabel untuk menyimpan konten HTML jika mode tulis
+      let kontenHtml: string | undefined;
+
       if (modeInput === "upload" && fileNaskah) {
         console.log("📁 Mengupload file Word:", fileNaskah.name);
         const res = await uploadApi.uploadFile(
@@ -251,22 +254,23 @@ export default function AjukanDrafPage() {
         urlFile = res.urlPublik || res.url;
         console.log("✅ Upload Word berhasil, urlFile:", urlFile);
       } else if (modeInput === "tulis") {
-        console.log("📝 Membuat file .txt dari konten...");
-        const blob = new Blob([formData.kontenTeks], {
-          type: "text/plain;charset=utf-8",
-        });
-        const nama = `${slugify(formData.judul) || "naskah"}.txt`;
-        const fileTxt = new File([blob], nama, { type: "text/plain" });
-        const res = await uploadApi.uploadFile(
-          fileTxt,
-          "naskah",
-          "Naskah teks",
-          undefined,
-          (p) => setProgressNaskah(p),
+        // Mode ketik langsung: konversi plain text ke HTML sederhana
+        // Backend akan mengkonversi HTML ini ke DOCX
+        console.log("📝 Menyiapkan konten untuk konversi ke DOCX...");
+        setProgressNaskah(50);
+
+        // Konversi plain text ke HTML dengan paragraf
+        const paragrafList = formData.kontenTeks
+          .split(/\n\n+/)
+          .filter((p) => p.trim());
+        kontenHtml = paragrafList
+          .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+          .join("");
+
+        console.log(
+          "✅ Konten HTML siap dikirim ke backend untuk konversi DOCX",
         );
-        console.log("📦 Response upload:", res);
-        urlFile = res.urlPublik || res.url;
-        console.log("✅ Upload .txt berhasil, urlFile:", urlFile);
+        setProgressNaskah(100);
       }
 
       // Validasi UUID untuk idKategori & idGenre (hindari kirim dummy)
@@ -309,10 +313,13 @@ export default function AjukanDrafPage() {
         formatBuku: formData.formatBuku,
         urlFile: urlFileAbsolut,
         urlSampul: urlSampulAbsolut,
+        kontenHtml: kontenHtml ? "ada (akan dikonversi ke DOCX)" : "tidak ada",
         modeInput,
       });
 
       // LANGKAH 1: Buat naskah baru (status: DRAFT)
+      // Jika mode tulis, kirim konten HTML untuk dikonversi ke DOCX oleh backend
+      // Jika mode upload, kirim urlFile langsung
       const responseNaskah = await naskahApi.buatNaskah({
         judul: formData.judul,
         subJudul: formData.subJudul || undefined,
@@ -323,7 +330,9 @@ export default function AjukanDrafPage() {
         bahasaTulis: formData.bahasaTulis,
         jumlahKata,
         urlSampul: urlSampulAbsolut,
+        // Kirim urlFile jika mode upload, atau konten HTML jika mode tulis
         urlFile: urlFileAbsolut,
+        konten: kontenHtml, // Backend akan konversi HTML ke DOCX
         publik: false,
       });
 
@@ -334,7 +343,8 @@ export default function AjukanDrafPage() {
       const naskahId = responseNaskah.data.id;
 
       // VALIDASI: Pastikan naskah punya file sebelum diajukan
-      if (!urlFileAbsolut) {
+      // Jika mode tulis, backend sudah mengkonversi konten ke DOCX
+      if (!urlFileAbsolut && !kontenHtml) {
         toast.error(
           "Naskah berhasil disimpan sebagai draft, tapi tidak bisa diajukan karena tidak ada file",
         );

@@ -28,6 +28,7 @@ import {
   ambilKonfigurasiStatus,
 } from "@/lib/constants/status-naskah";
 import { naskahApi, type Naskah } from "@/lib/api/naskah";
+import { getFileUrl } from "@/lib/utils";
 import { KelengkapanForm } from "@/components/naskah/kelengkapan-form";
 import { FeedbackReviewer } from "@/components/naskah/feedback-reviewer";
 import { EditorRevisi } from "@/components/naskah/editor-revisi";
@@ -325,7 +326,7 @@ export default function DetailNaskahPage() {
                         File Naskah
                       </div>
                       <a
-                        href={naskah.urlFile}
+                        href={getFileUrl(naskah.urlFile)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 hover:underline break-all"
@@ -334,7 +335,7 @@ export default function DetailNaskahPage() {
                       </a>
                     </div>
                     <a
-                      href={naskah.urlFile}
+                      href={getFileUrl(naskah.urlFile)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-medium text-xs hover:bg-blue-100 transition"

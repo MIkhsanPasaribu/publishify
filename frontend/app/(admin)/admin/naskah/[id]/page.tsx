@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getFileUrl } from "@/lib/utils";
 
 export default function AdminDetailNaskahPage() {
   const params = useParams();
@@ -308,7 +309,7 @@ export default function AdminDetailNaskahPage() {
                         File Naskah Utama
                       </p>
                       <a
-                        href={naskah.urlFile}
+                        href={getFileUrl(naskah.urlFile)}
                         target="_blank"
                         className="text-xs text-blue-600 hover:underline"
                       >
@@ -319,7 +320,9 @@ export default function AdminDetailNaskahPage() {
                       variant="outline"
                       size="sm"
                       className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
-                      onClick={() => window.open(naskah.urlFile!, "_blank")}
+                      onClick={() =>
+                        window.open(getFileUrl(naskah.urlFile!), "_blank")
+                      }
                     >
                       Unduh
                     </Button>

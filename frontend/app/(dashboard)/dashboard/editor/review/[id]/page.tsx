@@ -9,6 +9,7 @@ import {
   type FeedbackReview,
   type Rekomendasi,
 } from "@/lib/api/review";
+import { getFileUrl } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -573,7 +574,7 @@ export default function DetailReviewPage() {
                           </span>
                         </div>
                         <a
-                          href={revisi.urlFile}
+                          href={getFileUrl(revisi.urlFile)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -624,7 +625,7 @@ export default function DetailReviewPage() {
                   <p>Belum ada revisi</p>
                   {review.naskah.urlFile && (
                     <a
-                      href={review.naskah.urlFile}
+                      href={getFileUrl(review.naskah.urlFile)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
