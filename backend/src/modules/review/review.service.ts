@@ -244,6 +244,7 @@ export class ReviewService {
 
   /**
    * Ambil detail review by ID
+   * Termasuk semua revisi naskah untuk perbandingan
    */
   async ambilReviewById(id: string, idPengguna?: string, peranPengguna?: string[]) {
     const review = await this.prisma.reviewNaskah.findUnique({
@@ -260,6 +261,10 @@ export class ReviewService {
             },
             kategori: true,
             genre: true,
+            // Sertakan semua revisi untuk ditampilkan ke editor
+            revisi: {
+              orderBy: { versi: 'desc' },
+            },
           },
         },
         editor: {

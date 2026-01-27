@@ -1313,7 +1313,7 @@ export class NaskahService {
     // Gunakan file lama jika tidak ada file baru
     urlFile = urlFile || naskah.urlFile;
 
-    // Transaction: buat revisi baru dan update status naskah
+    // Transaction: buat revisi baru, update status naskah, dan reset review
     const result = await this.prisma.$transaction(async (prisma) => {
       // Buat revisi baru
       const revisi = await prisma.revisiNaskah.create({
@@ -1322,6 +1322,19 @@ export class NaskahService {
           versi: versiBaru,
           catatan: dto.catatan || `Revisi versi ${versiBaru}`,
           urlFile: urlFile || '',
+        },
+      });
+
+      // Reset review terakhir yang masih dalam_proses dengan rekomendasi revisi
+      // Agar editor bisa melanjutkan review setelah penulis submit revisi
+      await prisma.reviewNaskah.updateMany({
+        where: {
+          idNaskah,
+          status: StatusReview.dalam_proses,
+          rekomendasi: Rekomendasi.revisi,
+        },
+        data: {
+          rekomendasi: null, // Reset rekomendasi agar editor bisa beri rekomendasi baru
         },
       });
 
@@ -1357,25 +1370,36 @@ export class NaskahService {
       },
     });
 
-    // Kirim notifikasi ke admin/editor bahwa ada revisi baru
+    // Kirim notifikasi ke editor yang menangani review naskah ini
     try {
-      // Ambil semua admin dan editor
-      const adminEditors = await this.prisma.peranPengguna.findMany({
+      // Ambil editor yang sedang menangani naskah ini (review dalam_proses)
+      const reviewAktif = await this.prisma.reviewNaskah.findFirst({
         where: {
-          jenisPeran: { in: ['admin', 'editor'] },
-          aktif: true,
+          idNaskah,
+          status: StatusReview.dalam_proses,
         },
-        select: { idPengguna: true },
+        select: {
+          id: true,
+          idEditor: true,
+          editor: {
+            select: { email: true },
+          },
+        },
       });
 
-      for (const user of adminEditors) {
+      if (reviewAktif) {
+        // Kirim notifikasi ke editor yang menangani
         await this.notifikasiService.kirimNotifikasi({
-          idPengguna: user.idPengguna,
-          judul: 'Ada Revisi Naskah Baru',
-          pesan: `Penulis telah mengirim revisi untuk naskah "${naskah.judul}" (versi ${versiBaru}). Silakan review ulang.`,
+          idPengguna: reviewAktif.idEditor,
+          judul: 'Penulis Sudah Submit Revisi',
+          pesan: `Penulis telah mengirim revisi untuk naskah "${naskah.judul}" (versi ${versiBaru}). Silakan lanjutkan review.`,
           tipe: 'info',
-          url: `/editor/review/${idNaskah}`,
+          url: `/editor/review/${reviewAktif.id}`,
         });
+
+        this.logger.log(
+          `Notifikasi dikirim ke editor ${reviewAktif.editor?.email} untuk review ${reviewAktif.id}`,
+        );
       }
     } catch (e) {
       this.logger.warn(`Gagal mengirim notifikasi revisi: ${e}`);
