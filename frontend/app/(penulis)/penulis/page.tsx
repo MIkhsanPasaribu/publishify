@@ -115,8 +115,8 @@ export default function DashboardPage() {
 
   // Fetch statistik dari API
   useEffect(() => {
-    // Jangan fetch jika sedang redirect
-    if (isRedirecting) return;
+    // Jangan fetch jika sedang redirect atau belum ada pengguna (token belum ready)
+    if (isRedirecting || !pengguna) return;
 
     const fetchStatistik = async () => {
       setLoadingStats(true);
@@ -125,14 +125,17 @@ export default function DashboardPage() {
         setStatistik(res.data);
       } catch (e: any) {
         console.error("Gagal memuat statistik:", e);
-        toast.error("Gagal memuat statistik");
+        // Jangan tampilkan toast untuk error 401 karena mungkin token belum ready
+        if (e?.response?.status !== 401) {
+          toast.error("Gagal memuat statistik");
+        }
       } finally {
         setLoadingStats(false);
       }
     };
 
     fetchStatistik();
-  }, [isRedirecting]);
+  }, [isRedirecting, pengguna]);
 
   // Get current year
   const currentYear = new Date().getFullYear();
