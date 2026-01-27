@@ -618,13 +618,47 @@ export class NaskahService {
       throw new ForbiddenException('Anda tidak memiliki akses untuk mengubah naskah ini');
     }
 
+    // Cek apakah ini update kelengkapan dokumen siap terbit
+    const isUpdateKelengkapan =
+      dto.isbn !== undefined ||
+      dto.urlSuratPerjanjian !== undefined ||
+      dto.urlSuratKeaslian !== undefined ||
+      dto.urlProposalNaskah !== undefined ||
+      dto.urlBuktiTransfer !== undefined;
+
+    // Field yang boleh diupdate saat status siap_terbit (kelengkapan dokumen)
+    const fieldKelengkapan = [
+      'isbn',
+      'urlSuratPerjanjian',
+      'urlSuratKeaslian',
+      'urlProposalNaskah',
+      'urlBuktiTransfer',
+    ];
+
     // Validasi: tidak bisa edit jika status bukan draft atau ditolak
-    if (
-      !isAdmin &&
-      naskahLama.status !== StatusNaskah.draft &&
-      naskahLama.status !== StatusNaskah.ditolak
-    ) {
-      throw new BadRequestException('Naskah hanya bisa diubah saat status draft atau ditolak');
+    // KECUALI: update kelengkapan dokumen saat status siap_terbit
+    if (!isAdmin) {
+      const statusDapatDiedit =
+        naskahLama.status === StatusNaskah.draft || naskahLama.status === StatusNaskah.ditolak;
+
+      const statusSiapTerbit = naskahLama.status === StatusNaskah.siap_terbit;
+
+      if (!statusDapatDiedit) {
+        // Jika status siap_terbit, hanya izinkan update kelengkapan dokumen
+        if (statusSiapTerbit && isUpdateKelengkapan) {
+          // Filter hanya field kelengkapan yang boleh diupdate
+          const dtoKeys = Object.keys(dto);
+          const hasNonKelengkapanField = dtoKeys.some((key) => !fieldKelengkapan.includes(key));
+
+          if (hasNonKelengkapanField) {
+            throw new BadRequestException(
+              'Saat status siap terbit, hanya kelengkapan dokumen yang bisa diperbarui (ISBN, surat perjanjian, surat keaslian, proposal, bukti transfer)',
+            );
+          }
+        } else {
+          throw new BadRequestException('Naskah hanya bisa diubah saat status draft atau ditolak');
+        }
+      }
     }
 
     // Validasi kategori dan genre jika ada update

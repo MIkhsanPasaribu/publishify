@@ -3,6 +3,23 @@ import { ApiProperty } from '@nestjs/swagger';
 import { FormatBukuEnum } from './buat-naskah.dto';
 
 /**
+ * Custom validator untuk URL atau path relatif
+ * Menerima URL lengkap (http://, https://) atau path relatif (/uploads/...)
+ */
+const urlAtauPath = (fieldName: string) =>
+  z
+    .string()
+    .refine(
+      (val) => {
+        // Terima URL lengkap atau path relatif yang dimulai dengan /
+        return val.startsWith('http://') || val.startsWith('https://') || val.startsWith('/');
+      },
+      { message: `${fieldName} harus berupa URL valid atau path yang dimulai dengan /` },
+    )
+    .optional()
+    .nullable();
+
+/**
  * Schema Zod untuk update naskah
  * Semua field optional (partial update)
  */
@@ -45,19 +62,27 @@ export const PerbaruiNaskahSchema = z.object({
     .optional()
     .nullable(),
 
-  urlSampul: z.string().url('URL sampul tidak valid').optional().nullable(),
+  urlSampul: urlAtauPath('URL sampul'),
 
-  urlFile: z.string().url('URL file tidak valid').optional().nullable(),
+  urlFile: urlAtauPath('URL file'),
 
   publik: z.boolean().optional(),
 
-  urlSuratPerjanjian: z.string().url('URL surat perjanjian tidak valid').optional().nullable(),
+  // ISBN untuk naskah yang siap terbit
+  isbn: z
+    .string()
+    .min(10, 'ISBN minimal 10 karakter')
+    .max(17, 'ISBN maksimal 17 karakter')
+    .optional()
+    .nullable(),
 
-  urlSuratKeaslian: z.string().url('URL surat keaslian tidak valid').optional().nullable(),
+  urlSuratPerjanjian: urlAtauPath('URL surat perjanjian'),
 
-  urlProposalNaskah: z.string().url('URL proposal naskah tidak valid').optional().nullable(),
+  urlSuratKeaslian: urlAtauPath('URL surat keaslian'),
 
-  urlBuktiTransfer: z.string().url('URL bukti transfer tidak valid').optional().nullable(),
+  urlProposalNaskah: urlAtauPath('URL proposal naskah'),
+
+  urlBuktiTransfer: urlAtauPath('URL bukti transfer'),
 });
 
 /**
@@ -164,6 +189,14 @@ export class PerbaruiNaskahDtoClass {
     type: Boolean,
   })
   publik?: boolean;
+
+  @ApiProperty({
+    description: 'Nomor ISBN naskah',
+    example: '978-602-1234-56-7',
+    required: false,
+    type: String,
+  })
+  isbn?: string;
 
   @ApiProperty({
     description: 'URL surat perjanjian',

@@ -2,6 +2,23 @@ import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
+ * Custom validator untuk URL atau path relatif
+ * Menerima URL lengkap (http://, https://) atau path relatif (/uploads/...)
+ */
+const urlAtauPath = (fieldName: string) =>
+  z
+    .string()
+    .refine(
+      (val) => {
+        // Terima URL lengkap atau path relatif yang dimulai dengan /
+        return val.startsWith('http://') || val.startsWith('https://') || val.startsWith('/');
+      },
+      { message: `${fieldName} harus berupa URL valid atau path yang dimulai dengan /` },
+    )
+    .optional()
+    .nullable();
+
+/**
  * Enum untuk format/ukuran buku
  */
 export const FormatBukuEnum = z.enum(['A4', 'A5', 'B5'], {
@@ -66,9 +83,9 @@ export const BuatNaskahSchema = z.object({
     .optional()
     .nullable(),
 
-  urlSampul: z.string().url('URL sampul tidak valid').optional().nullable(),
+  urlSampul: urlAtauPath('URL sampul'),
 
-  urlFile: z.string().url('URL file tidak valid').optional().nullable(),
+  urlFile: urlAtauPath('URL file'),
 
   // Konten naskah dari rich text editor (HTML)
   // Akan dikonversi ke DOCX jika diisi

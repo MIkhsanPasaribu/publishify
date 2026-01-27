@@ -788,12 +788,15 @@ export class UploadService {
         table: { row: { cantSplit: true } },
         footer: false,
         header: false,
-        pageNumber: true,
+        pageNumber: false,
         margins: {
-          top: 720, // 1 inch = 1440 twips, 0.5 inch = 720
-          right: 720,
-          bottom: 720,
-          left: 720,
+          top: 1440, // 1 inch = 1440 twips
+          right: 1440,
+          bottom: 1440,
+          left: 1440,
+          header: 720, // 0.5 inch
+          footer: 720, // 0.5 inch
+          gutter: 0,
         },
       };
 
