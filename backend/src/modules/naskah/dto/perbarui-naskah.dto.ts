@@ -50,6 +50,14 @@ export const PerbaruiNaskahSchema = z.object({
   urlFile: z.string().url('URL file tidak valid').optional().nullable(),
 
   publik: z.boolean().optional(),
+
+  urlSuratPerjanjian: z.string().url('URL surat perjanjian tidak valid').optional().nullable(),
+
+  urlSuratKeaslian: z.string().url('URL surat keaslian tidak valid').optional().nullable(),
+
+  urlProposalNaskah: z.string().url('URL proposal naskah tidak valid').optional().nullable(),
+
+  urlBuktiTransfer: z.string().url('URL bukti transfer tidak valid').optional().nullable(),
 });
 
 /**
@@ -156,4 +164,32 @@ export class PerbaruiNaskahDtoClass {
     type: Boolean,
   })
   publik?: boolean;
+
+  @ApiProperty({
+    description: 'URL surat perjanjian',
+    required: false,
+    type: String,
+  })
+  urlSuratPerjanjian?: string;
+
+  @ApiProperty({
+    description: 'URL surat keaslian karya',
+    required: false,
+    type: String,
+  })
+  urlSuratKeaslian?: string;
+
+  @ApiProperty({
+    description: 'URL proposal naskah',
+    required: false,
+    type: String,
+  })
+  urlProposalNaskah?: string;
+
+  @ApiProperty({
+    description: 'URL bukti transfer',
+    required: false,
+    type: String,
+  })
+  urlBuktiTransfer?: string;
 }
