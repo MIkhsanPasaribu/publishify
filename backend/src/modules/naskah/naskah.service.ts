@@ -38,6 +38,9 @@ export class NaskahService {
   /**
    * Buat naskah baru
    * Role: penulis
+   * Mendukung input via:
+   * 1. URL file langsung (upload file terlebih dahulu)
+   * 2. Konten HTML dari rich text editor (akan dikonversi ke DOCX)
    */
   async buatNaskah(idPenulis: string, dto: BuatNaskahDto) {
     // Validasi kategori exists
@@ -58,12 +61,37 @@ export class NaskahService {
       throw new BadRequestException('Genre tidak valid atau tidak aktif');
     }
 
+    // Proses konten HTML ke DOCX jika ada konten dari editor
+    let urlFile = dto.urlFile || null;
+    if (dto.konten && !dto.urlFile) {
+      try {
+        this.logger.log(`Mengkonversi konten HTML ke DOCX untuk naskah baru: ${dto.judul}`);
+
+        const hasilKonversi = await this.uploadService.konversiHtmlKeDocx(
+          dto.konten,
+          dto.judul,
+          idPenulis,
+        );
+
+        urlFile = hasilKonversi.url;
+        this.logger.log(`Berhasil konversi ke DOCX: ${urlFile}`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Gagal konversi HTML ke DOCX: ${errorMsg}`);
+        throw new BadRequestException('Gagal menyimpan konten naskah: ' + errorMsg);
+      }
+    }
+
+    // Siapkan data untuk create (hapus field konten karena tidak ada di schema database)
+    const { konten, ...dataCreate } = dto;
+
     // Buat naskah dengan revisi pertama
     const naskah = await this.prisma.$transaction(async (prisma) => {
       // Create naskah
       const newNaskah = await prisma.naskah.create({
         data: {
-          ...dto,
+          ...dataCreate,
+          urlFile, // Gunakan urlFile yang sudah diproses
           idPenulis,
           status: StatusNaskah.draft,
         },
@@ -87,13 +115,13 @@ export class NaskahService {
       });
 
       // Create revisi pertama jika ada file
-      if (dto.urlFile) {
+      if (urlFile) {
         await prisma.revisiNaskah.create({
           data: {
             idNaskah: newNaskah.id,
             versi: 1,
             catatan: 'Versi awal naskah',
-            urlFile: dto.urlFile,
+            urlFile: urlFile,
           },
         });
       }
