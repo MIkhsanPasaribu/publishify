@@ -798,7 +798,13 @@ export class UploadService {
       };
 
       // Konversi HTML ke DOCX
-      const docxBuffer = await HTMLtoDOCX(htmlLengkap, null, opsiDocx);
+      const docxResult = await HTMLtoDOCX(htmlLengkap, null, opsiDocx);
+      // Convert ArrayBuffer/Blob ke Buffer untuk fs.writeFile
+      const docxBuffer = Buffer.from(
+        docxResult instanceof Blob 
+          ? await docxResult.arrayBuffer() 
+          : docxResult
+      );
 
       // Generate nama file unik
       const timestamp = new Date().toISOString().split('T')[0];
