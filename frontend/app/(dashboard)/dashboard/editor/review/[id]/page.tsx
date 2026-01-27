@@ -526,13 +526,108 @@ export default function DetailReviewPage() {
                   <p className="text-gray-700 leading-relaxed">
                     {review.naskah.sinopsis}
                   </p>
+                </div>
+              </div>
+            </div>
 
+            {/* Daftar Revisi Naskah */}
+            <div className="bg-white rounded-xl border p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg
+                  className="w-6 h-6 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Riwayat Revisi Naskah
+              </h3>
+
+              {review.naskah.revisi && review.naskah.revisi.length > 0 ? (
+                <div className="space-y-3">
+                  {review.naskah.revisi.map((revisi, index) => (
+                    <div
+                      key={revisi.id}
+                      className={`border rounded-lg p-4 ${index === 0 ? "bg-green-50 border-green-200" : "bg-gray-50"}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              index === 0
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-200 text-gray-600"
+                            }`}
+                          >
+                            Versi {revisi.versi}
+                            {index === 0 && " (Terbaru)"}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatTanggal(revisi.dibuatPada)}
+                          </span>
+                        </div>
+                        <a
+                          href={revisi.urlFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            index === 0
+                              ? "bg-green-600 text-white hover:bg-green-700"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          }`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          Unduh
+                        </a>
+                      </div>
+                      {revisi.catatan && (
+                        <p className="text-sm text-gray-600 mt-2 pl-2 border-l-2 border-gray-300">
+                          {revisi.catatan}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <svg
+                    className="w-12 h-12 mx-auto mb-2 text-gray-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <p>Belum ada revisi</p>
                   {review.naskah.urlFile && (
                     <a
                       href={review.naskah.urlFile}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <svg
                         className="w-5 h-5"
@@ -547,11 +642,11 @@ export default function DetailReviewPage() {
                           d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
-                      Unduh File Naskah
+                      Unduh File Naskah Asli
                     </a>
                   )}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Feedback List */}
