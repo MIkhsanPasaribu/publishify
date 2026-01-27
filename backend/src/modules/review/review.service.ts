@@ -512,10 +512,10 @@ export class ReviewService {
       let newNaskahStatus: StatusNaskah;
       switch (dto.rekomendasi) {
         case Rekomendasi.setujui:
-          newNaskahStatus = StatusNaskah.disetujui;
+          newNaskahStatus = StatusNaskah.dalam_editing; // Approved → goes to editing
           break;
         case Rekomendasi.revisi:
-          newNaskahStatus = StatusNaskah.perlu_revisi;
+          newNaskahStatus = StatusNaskah.ditolak; // Needs revision → rejected (can resubmit)
           break;
         case Rekomendasi.tolak:
           newNaskahStatus = StatusNaskah.ditolak;
