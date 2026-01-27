@@ -22,6 +22,7 @@ import {
 } from '@/common/dto/cursor-pagination.dto';
 import { EmailService } from '@/modules/notifikasi/email.service';
 import { NotifikasiService } from '@/modules/notifikasi/notifikasi.service';
+import { UploadService } from '@/modules/upload/upload.service';
 
 @Injectable()
 export class NaskahService {
@@ -31,6 +32,7 @@ export class NaskahService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly notifikasiService: NotifikasiService,
+    private readonly uploadService: UploadService,
   ) {}
 
   /**
