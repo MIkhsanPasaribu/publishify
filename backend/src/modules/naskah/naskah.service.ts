@@ -1264,9 +1264,11 @@ export class NaskahService {
       throw new ForbiddenException('Anda tidak memiliki akses ke naskah ini');
     }
 
-    // Validasi status: hanya bisa submit revisi saat status ditolak
-    if (naskah.status !== StatusNaskah.ditolak) {
-      throw new BadRequestException('Revisi hanya bisa disubmit saat naskah berstatus ditolak');
+    // Validasi status: hanya bisa submit revisi saat status dalam_editing (editor minta revisi)
+    if (naskah.status !== StatusNaskah.dalam_editing) {
+      throw new BadRequestException(
+        'Revisi hanya bisa disubmit saat naskah berstatus Dalam Editing',
+      );
     }
 
     // Hitung versi baru
@@ -1316,11 +1318,11 @@ export class NaskahService {
         },
       });
 
-      // Update naskah: ubah status ke diajukan dan update file jika ada
+      // Update naskah: ubah status ke dalam_review dan update file jika ada
       const naskahUpdated = await prisma.naskah.update({
         where: { id: idNaskah },
         data: {
-          status: StatusNaskah.diajukan,
+          status: StatusNaskah.dalam_review,
           urlFile: urlFile,
         },
         include: {
