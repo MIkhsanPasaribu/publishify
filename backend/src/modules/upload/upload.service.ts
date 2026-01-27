@@ -801,9 +801,7 @@ export class UploadService {
       const docxResult = await HTMLtoDOCX(htmlLengkap, null, opsiDocx);
       // Convert ArrayBuffer/Blob ke Buffer untuk fs.writeFile
       const docxBuffer = Buffer.from(
-        docxResult instanceof Blob 
-          ? await docxResult.arrayBuffer() 
-          : docxResult
+        docxResult instanceof Blob ? await docxResult.arrayBuffer() : docxResult,
       );
 
       // Generate nama file unik
