@@ -1205,6 +1205,7 @@ export class NaskahService {
   /**
    * Submit revisi naskah oleh penulis
    * Penulis bisa submit melalui konten HTML atau upload file
+   * Jika submit via HTML editor, konten akan dikonversi ke DOCX
    * Role: penulis (pemilik naskah)
    */
   async submitRevisi(idNaskah: string, idPenulis: string, dto: SubmitRevisiDto) {
@@ -1244,8 +1245,36 @@ export class NaskahService {
     const versiTerakhir = naskah.revisi[0]?.versi || 0;
     const versiBaru = versiTerakhir + 1;
 
-    // URL file: bisa dari upload atau konten HTML akan dikonversi nanti
-    const urlFile = dto.urlFile || naskah.urlFile;
+    // Tentukan URL file
+    let urlFile: string | null = dto.urlFile || null;
+
+    // Jika ada konten HTML dari editor, konversi ke DOCX
+    if (dto.konten && !dto.urlFile) {
+      try {
+        this.logger.log(`Mengkonversi konten HTML ke DOCX untuk naskah: ${naskah.judul}`);
+
+        const hasilKonversi = await this.uploadService.konversiHtmlKeDocx(
+          dto.konten,
+          `${naskah.judul} - Revisi v${versiBaru}`,
+          idPenulis,
+        );
+
+        urlFile = hasilKonversi.url;
+        this.logger.log(`Berhasil konversi ke DOCX: ${urlFile}`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Gagal konversi HTML ke DOCX: ${errorMsg}`);
+        throw new BadRequestException('Gagal menyimpan konten naskah: ' + errorMsg);
+      }
+    }
+
+    // Pastikan ada file untuk revisi
+    if (!urlFile && !naskah.urlFile) {
+      throw new BadRequestException('Harus mengisi konten atau upload file untuk revisi');
+    }
+
+    // Gunakan file lama jika tidak ada file baru
+    urlFile = urlFile || naskah.urlFile;
 
     // Transaction: buat revisi baru dan update status naskah
     const result = await this.prisma.$transaction(async (prisma) => {
@@ -1265,8 +1294,6 @@ export class NaskahService {
         data: {
           status: StatusNaskah.diajukan,
           urlFile: urlFile,
-          // Simpan konten HTML jika ada (untuk rich text editor)
-          // konten akan disimpan terpisah atau dikonversi ke DOCX
         },
         include: {
           kategori: true,
@@ -1293,9 +1320,32 @@ export class NaskahService {
       },
     });
 
-    // Kirim notifikasi ke admin bahwa ada revisi baru
+    // Kirim notifikasi ke admin/editor bahwa ada revisi baru
+    try {
+      // Ambil semua admin dan editor
+      const adminEditors = await this.prisma.peranPengguna.findMany({
+        where: {
+          jenisPeran: { in: ['admin', 'editor'] },
+          aktif: true,
+        },
+        select: { idPengguna: true },
+      });
+
+      for (const user of adminEditors) {
+        await this.notifikasiService.kirimNotifikasi({
+          idPengguna: user.idPengguna,
+          judul: 'Ada Revisi Naskah Baru',
+          pesan: `Penulis telah mengirim revisi untuk naskah "${naskah.judul}" (versi ${versiBaru}). Silakan review ulang.`,
+          tipe: 'info',
+          url: `/editor/review/${idNaskah}`,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`Gagal mengirim notifikasi revisi: ${e}`);
+    }
+
     this.logger.log(
-      `Penulis ${naskah.penulis?.profilPengguna?.namaTampilan || naskah.penulis?.email} submit revisi untuk "${naskah.judul}"`,
+      `Penulis ${naskah.penulis?.profilPengguna?.namaTampilan || naskah.penulis?.email} submit revisi untuk "${naskah.judul}" (v${versiBaru})`,
     );
 
     return {
