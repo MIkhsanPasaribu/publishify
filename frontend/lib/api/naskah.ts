@@ -60,6 +60,7 @@ export interface Naskah {
       namaBelakang?: string;
       namaTampilan?: string;
       urlAvatar?: string;
+      bio?: string;
     };
     profilPenulis?: {
       namaPena?: string;
@@ -108,6 +109,7 @@ export interface FilterNaskahParams {
   cari?: string;
   idKategori?: string;
   idGenre?: string;
+  publik?: boolean;
 }
 
 export interface ResponseSukses<T> {
