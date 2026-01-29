@@ -167,18 +167,18 @@ Notifikasi diterima secara real-time melalui WebSocket connection yang persisten
 - Pesanan dikonfirmasi (notifikasi ke pemesan)
 
 ```mermaid
-sequenceDiagram
-    participant FE as Frontend
-    participant BE as Backend
-    participant WS as WebSocket
-    participant DB as Database
+  sequenceDiagram
+      participant FE as Frontend
+      participant BE as Backend
+      participant WS as WebSocket
+      participant DB as Database
 
-    FE->>BE: Submit Review
-    BE->>DB: Update Status Naskah
-    DB-->>BE: Konfirmasi
-    BE->>WS: Emit Notifikasi
-    WS-->>FE: Real-time Update
-    FE->>FE: Update UI
+      FE->>BE: Submit Review
+      BE->>DB: Update Status Naskah
+      DB-->>BE: Konfirmasi
+      BE->>WS: Emit Notifikasi
+      WS-->>FE: Real-time Update
+      FE->>FE: Update UI
 ```
 
 _Gambar 4.1 Diagram Alur Notifikasi Real-time_
